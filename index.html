@@ -33,202 +33,131 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--font-kurdish);
-      overflow: hidden;
-    }
-
-    .app-layout {
-      display: flex;
-      width: 100%;
-      height: 100dvh;
-      position: relative;
-    }
+    html, body { width: 100%; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font-kurdish); overflow: hidden; }
+    .app-layout { display: flex; width: 100%; height: 100dvh; position: relative; }
 
     /* سایدبار */
-    .sidebar {
-      width: 280px;
-      height: 100%;
-      background: var(--bg);
-      background-color: color-mix(in srgb, var(--bg) 95%, transparent);
-      border-left: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      gap: 12px;
-      z-index: 100;
-      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
-    }
-    
+    .sidebar { width: 280px; height: 100%; background: var(--bg); background-color: color-mix(in srgb, var(--bg) 95%, transparent); border-left: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px; gap: 12px; z-index: 100; transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1); }
     .brand-header { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
     .brand-logo { width: 34px; height: 34px; background: #000; border-radius: 8px; display: grid; place-items: center; }
     html.dark .brand-logo { background: #fff; }
     .brand-logo svg path { stroke: #fff; }
     html.dark .brand-logo svg path { stroke: #000; }
     .brand-title { font-size: 18px; font-weight: 800; }
-
-    .new-chat-btn {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px;
-      background: var(--user-bubble); border: 0; color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer;
-    }
+    .new-chat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px; background: var(--user-bubble); border: 0; color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer; }
     .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
     .theme-toggle-btn { padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 13px; cursor: pointer; }
-    
     .scrim { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 90; }
 
     /* بەشی سەرەکی */
-    .main-content {
-      flex: 1;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
+    .main-content { flex: 1; height: 100%; display: flex; flex-direction: column; position: relative; }
     .topbar { height: 60px; display: flex; align-items: center; padding: 0 16px; z-index: 10; }
     .menu-btn { display: none; background: transparent; border: 0; color: var(--ink); cursor: pointer; padding: 8px; }
 
     /* شوێنی چات */
-    .chat-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px 16px 140px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px 16px 140px; display: flex; flex-direction: column; align-items: center; }
     .welcome-box { margin: auto 0; text-align: center; }
-    .welcome-box h1 {
-      font-size: 28px; font-weight: 700; margin-top: 12px;
-      background: linear-gradient(135deg, #1f1f1f, #5f6368); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    .welcome-box h1 { font-size: 28px; font-weight: 700; margin-top: 12px; background: linear-gradient(135deg, #1f1f1f, #5f6368); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     html.dark .welcome-box h1 { background: linear-gradient(135deg, #ffffff, #9aa0a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
     .messages-stream { width: min(800px, 100%); display: flex; flex-direction: column; gap: 32px; }
-    
     .message-bubble { display: flex; gap: 16px; width: 100%; }
     .message-bubble.user, .message-bubble.assistant { justify-content: flex-start; }
-    
     .assistant-avatar { width: 36px; height: 36px; background: #000; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
     html.dark .assistant-avatar { background: #fff; }
     .assistant-avatar svg path { stroke: #fff; }
     html.dark .assistant-avatar svg path { stroke: #000; }
-    
     .user-avatar-placeholder { width: 36px; height: 36px; flex-shrink: 0; }
-    
     .message-content-wrapper { display: flex; flex-direction: column; max-width: calc(100% - 52px); }
-    
-    .user .text-content { 
-      background: var(--user-bubble); color: var(--ink); 
-      padding: 14px 20px; border-radius: 8px 24px 24px 24px; 
-      line-height: 1.7; font-size: 15px; width: fit-content;
-    }
-    
-    .assistant .text-content { 
-      background: transparent; color: var(--ink); 
-      padding: 4px 0 0 0; line-height: 1.85; font-size: 15px; 
-    }
-
-    /* ✨ ئەنیمەیشنی بیرکردنەوە (قۆناغی سێیەم) */
-    .thinking-anim {
-      width: 36px; height: 36px; background: #000; border-radius: 8px;
-      display: grid; place-items: center; flex-shrink: 0;
-      animation: pulseGlow 1.2s infinite alternate ease-in-out;
-    }
+    .user .text-content { background: var(--user-bubble); color: var(--ink); padding: 14px 20px; border-radius: 8px 24px 24px 24px; line-height: 1.7; font-size: 15px; width: fit-content; }
+    .assistant .text-content { background: transparent; color: var(--ink); padding: 4px 0 0 0; line-height: 1.85; font-size: 15px; }
+    .thinking-anim { width: 36px; height: 36px; background: #000; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; animation: pulseGlow 1.2s infinite alternate ease-in-out; }
     html.dark .thinking-anim { background: #fff; animation: pulseGlowDark 1.2s infinite alternate ease-in-out; }
     .thinking-anim svg path { stroke: #fff; }
     html.dark .thinking-anim svg path { stroke: #000; }
-
-    @keyframes pulseGlow {
-      0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0,0,0,0.2); }
-      100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(0,0,0,0.1); }
-    }
-    @keyframes pulseGlowDark {
-      0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255,255,255,0.2); }
-      100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(255,255,255,0.1); }
-    }
-
+    @keyframes pulseGlow { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0,0,0,0.2); } 100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(0,0,0,0.1); } }
+    @keyframes pulseGlowDark { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255,255,255,0.2); } 100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(255,255,255,0.1); } }
     .action-bar { display: flex; gap: 4px; margin-top: 12px; opacity: 0; transition: opacity 0.5s ease; }
     .action-bar.show { opacity: 1; }
-    .action-bar button { 
-      background: transparent; border: none; color: var(--muted); 
-      padding: 8px; border-radius: 50%; cursor: pointer; 
-      transition: background 0.2s; display: grid; place-items: center; 
-    }
+    .action-bar button { background: transparent; border: none; color: var(--muted); padding: 8px; border-radius: 50%; cursor: pointer; transition: background 0.2s; display: grid; place-items: center; }
     .action-bar button:hover { background: var(--user-bubble); color: var(--ink); }
     .action-bar svg { width: 18px; height: 18px; }
 
-    /* بۆکسی نووسین */
-    .composer-container {
-      position: fixed; bottom: max(16px, env(safe-area-inset-bottom));
-      left: 0; right: 0; width: min(800px, calc(100% - 32px));
-      margin: 0 auto; z-index: 50;
-    }
+    /* ✨ بۆکسی نووسینی پێشکەوتوو و دوگمەی ناردن */
+    .composer-container { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 0; right: 0; width: min(800px, calc(100% - 32px)); margin: 0 auto; z-index: 50; }
+    
     .composer-box {
-      display: flex; align-items: flex-end; gap: 12px;
+      display: flex; 
+      align-items: flex-end; /* هێشتنەوەی دوگمەکان لە خوارەوە کاتێک بۆکسەکە گەورە دەبێت */
+      gap: 12px;
       background: rgba(255, 255, 255, 0.75);
       backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--line-strong);
-      border-radius: 50px; padding: 10px 16px;
-      box-shadow: var(--shadow); transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      border-radius: 28px; /* ڕێکخستنی شێوەی حەبی بۆ ئەوەی گونجاو بێت لەگەڵ گەورەبوون */
+      padding: 10px 16px;
+      box-shadow: var(--shadow); 
+      transition: all 0.3s ease;
     }
     html.dark .composer-box { background: rgba(30, 31, 32, 0.75); }
-    .composer-box:focus-within { box-shadow: 0 12px 36px rgba(0,0,0,0.15); border-color: var(--muted); }
-    html.dark .composer-box:focus-within { box-shadow: 0 12px 36px rgba(0,0,0,0.6); }
-    .composer-box textarea {
-      flex: 1; max-height: 150px; min-height: 24px; border: 0; background: transparent; color: var(--ink);
-      font-family: inherit; font-size: 15px; line-height: 1.6; resize: none; outline: none; padding: 6px 0;
+    
+    /* درەوشانەوەی نەرمی مۆدێرن لە کاتی کرتەکردندا */
+    .composer-box:focus-within { 
+      box-shadow: 0 0 0 1px transparent, 0 12px 36px rgba(0,0,0,0.12); 
+      border-color: transparent; 
+      background: rgba(255, 255, 255, 0.95);
     }
+    html.dark .composer-box:focus-within { 
+      box-shadow: 0 0 0 1px transparent, 0 12px 36px rgba(0,0,0,0.5);
+      background: rgba(30, 31, 32, 0.95);
+    }
+
+    .composer-box textarea { flex: 1; max-height: 150px; min-height: 24px; border: 0; background: transparent; color: var(--ink); font-family: inherit; font-size: 15px; line-height: 1.6; resize: none; outline: none; padding: 6px 0; }
     .composer-box textarea::placeholder { color: var(--muted); }
-    .action-btn {
-      background: transparent; border: 0; color: var(--muted); cursor: pointer; padding: 8px;
-      display: grid; place-items: center; border-radius: 50%; flex-shrink: 0;
-    }
+    
+    .action-btn { background: transparent; border: 0; color: var(--muted); cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; flex-shrink: 0; transition: background 0.2s ease, color 0.2s ease; margin-bottom: 2px; }
     .action-btn:hover { background: var(--user-bubble); color: var(--ink); }
-    .send-btn { color: var(--ink); }
-    .hidden { display: none !important; }
+
+    /* کۆنتڕۆڵکردنی شوێنی دوگمەکانی چەپ */
+    .left-actions { position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+
+    /* دوگمەی دەنگ */
+    .mic-btn { position: absolute; transition: all 0.25s cubic-bezier(0.2, 0, 0, 1); opacity: 1; transform: scale(1); visibility: visible; }
+    .mic-btn.hidden { opacity: 0; transform: scale(0.6); visibility: hidden; }
+
+    /* ✨ دوگمەی ناردنی پڕکراو بە ئەنیمەیشن */
+    .send-btn { 
+      position: absolute;
+      background: var(--ink); 
+      color: var(--bg); 
+      width: 36px; height: 36px; 
+      border-radius: 50%; 
+      display: grid; place-items: center;
+      border: 0; cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+      /* لە سەرەتادا نادیارە و بچووکە */
+      opacity: 0; transform: scale(0.6); visibility: hidden;
+    }
+    .send-btn:hover { background: var(--muted); color: var(--bg); }
+    .send-btn.visible { opacity: 1; transform: scale(1); visibility: visible; }
 
     @media (max-width: 768px) {
-      .menu-btn { display: block; }
-      .sidebar { position: fixed; top: 0; right: 0; transform: translateX(100%); }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar.open + .scrim { display: block; }
-      .chat-container { padding-top: 10px; }
-      .composer-box { padding: 8px 12px; }
-      .message-content-wrapper { max-width: calc(100% - 46px); }
+      .menu-btn { display: block; } .sidebar { position: fixed; top: 0; right: 0; transform: translateX(100%); } .sidebar.open { transform: translateX(0); } .sidebar.open + .scrim { display: block; }
+      .chat-container { padding-top: 10px; } .composer-box { padding: 8px 12px; } .message-content-wrapper { max-width: calc(100% - 46px); }
     }
   </style>
 </head>
 <body>
   <div class="app-layout">
     <aside class="sidebar" id="sidebar">
-      <div class="brand-header">
-        <div class="brand-logo">
-          <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <span class="brand-title">ژیر</span>
-      </div>
-      <button class="new-chat-btn" id="newChatBtn">＋ گفتوگۆی نوێ</button>
-      <div class="history-list" id="historyList"></div>
-      <button class="theme-toggle-btn" id="themeBtn">دۆخی تاریک / ڕووناک</button>
+      <div class="brand-header"><div class="brand-logo"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 2 7l11 25-13-22c-5-9-15-5-14 3 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="brand-title">ژیر</span></div>
+      <button class="new-chat-btn" id="newChatBtn">＋ گفتوگۆی نوێ</button><div class="history-list" id="historyList"></div><button class="theme-toggle-btn" id="themeBtn">دۆخی تاریک / ڕووناک</button>
     </aside>
     <div class="scrim" id="scrim"></div>
 
     <main class="main-content">
-      <header class="topbar">
-        <button class="menu-btn" id="menuBtn" aria-label="مێنۆ">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-      </header>
-
+      <header class="topbar"><button class="menu-btn" id="menuBtn" aria-label="مێنۆ"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></header>
       <div class="chat-container" id="chatContainer">
         <div class="welcome-box" id="welcomeBox">
-          <div class="brand-logo" style="width: 48px; height: 48px; margin: 0 auto; border-radius: 12px;">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
+          <div class="brand-logo" style="width: 48px; height: 48px; margin: 0 auto; border-radius: 12px;"><svg width="28" height="28" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <h1>سڵاو، چۆن دەتوانم یارمەتیت بدەم؟</h1>
         </div>
         <div class="messages-stream" id="messagesStream"></div>
@@ -236,16 +165,22 @@
 
       <div class="composer-container">
         <form class="composer-box" id="composerForm">
-          <button type="button" class="action-btn attach-btn" aria-label="پاشکۆ">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
+          <button type="button" class="action-btn attach-btn" aria-label="پاشکۆ"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+          
           <textarea id="userInput" rows="1" placeholder="پرسیارێک لە ژیر بکە..."></textarea>
-          <button type="button" class="action-btn mic-btn" id="micBtn" aria-label="دەنگ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-          </button>
-          <button type="submit" class="action-btn send-btn hidden" id="sendBtn" aria-label="ناردن">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
+          
+          <div class="left-actions">
+            <!-- دوگمەی مایکرۆفۆن -->
+            <button type="button" class="action-btn mic-btn" id="micBtn" aria-label="دەنگ"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></button>
+            
+            <!-- دوگمەی ناردنی نوێ (بازنەی پڕکراو لەگەڵ تیری سەرەوە) -->
+            <button type="submit" class="send-btn" id="sendBtn" aria-label="ناردن">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </button>
+          </div>
         </form>
       </div>
     </main>
@@ -276,13 +211,17 @@
     menuBtn.addEventListener('click', () => toggleMenu(true));
     scrim.addEventListener('click', () => toggleMenu(false));
 
+    // بەڕێوەبردنی ئەنیمەیشنی دوگمەکان لە کاتی نووسیندا
     userInput.addEventListener('input', () => {
       userInput.style.height = 'auto';
       userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+      
       if (userInput.value.trim().length > 0) {
-        micBtn.classList.add('hidden'); sendBtn.classList.remove('hidden');
+        micBtn.classList.add('hidden'); 
+        sendBtn.classList.add('visible');
       } else {
-        micBtn.classList.remove('hidden'); sendBtn.classList.add('hidden');
+        micBtn.classList.remove('hidden'); 
+        sendBtn.classList.remove('visible');
       }
     });
 
@@ -290,55 +229,29 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); composerForm.requestSubmit(); }
     });
 
-    // زیادکردنی نامەی بەکارهێنەر ڕاستەوخۆ
     function appendUserMessage(text) {
       const bubble = document.createElement('div');
       bubble.className = `message-bubble user`;
-      bubble.innerHTML = `
-        <div class="user-avatar-placeholder"></div>
-        <div class="message-content-wrapper">
-          <div class="text-content">${text.replace(/\n/g, '<br>')}</div>
-        </div>
-      `;
+      bubble.innerHTML = `<div class="user-avatar-placeholder"></div><div class="message-content-wrapper"><div class="text-content">${text.replace(/\n/g, '<br>')}</div></div>`;
       messagesStream.appendChild(bubble);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // ✨ ناردنی وەڵامی ژیر بە لێشاو (Streaming Effect)
     function streamAssistantMessage(text) {
       const bubble = document.createElement('div');
       bubble.className = `message-bubble assistant`;
-      
-      const actionButtons = `
-        <div class="action-bar" id="actionBar-${Date.now()}">
-          <button aria-label="کۆپیکردن" title="کۆپیکردن"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-          <button aria-label="بەسوود بوو" title="بەسوود بوو"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg></button>
-          <button aria-label="کێشەی هەیە" title="کێشەی هەیە"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2"></path></svg></button>
-          <button aria-label="دووبارە وەڵامدانەوە" title="دووبارە وەڵامدانەوە"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg></button>
-        </div>`;
-
-      bubble.innerHTML = `
-        <div class="assistant-avatar"><svg width="18" height="18" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="message-content-wrapper">
-          <div class="text-content" id="textContent-${Date.now()}"></div>
-          ${actionButtons}
-        </div>
-      `;
+      const actionButtons = `<div class="action-bar" id="actionBar-${Date.now()}"><button aria-label="کۆپیکردن"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div>`;
+      bubble.innerHTML = `<div class="assistant-avatar"><svg width="18" height="18" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="message-content-wrapper"><div class="text-content" id="textContent-${Date.now()}"></div>${actionButtons}</div>`;
       messagesStream.appendChild(bubble);
       
       const textElement = bubble.querySelector('.text-content');
       const actionBar = bubble.querySelector('.action-bar');
-      
       let i = 0;
-      // نیشاندانی پیت بە پیت بۆ دروستکردنی هەستی بیرکردنەوەی زیندوو
       const interval = setInterval(() => {
         textElement.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
         chatContainer.scrollTop = chatContainer.scrollHeight;
         i++;
-        if (i >= text.length) {
-          clearInterval(interval);
-          actionBar.classList.add('show'); // دەرخستنی دوگمەکان دوای تەواوبوونی نووسین
-        }
+        if (i >= text.length) { clearInterval(interval); actionBar.classList.add('show'); }
       }, 25);
     }
 
@@ -350,26 +263,22 @@
       welcomeBox.style.display = 'none';
       appendUserMessage(val);
       
+      // گەڕاندنەوەی بۆکسەکە بۆ دۆخی سەرەتا
       userInput.value = '';
       userInput.style.height = 'auto';
-      micBtn.classList.remove('hidden'); sendBtn.classList.add('hidden');
+      micBtn.classList.remove('hidden'); 
+      sendBtn.classList.remove('visible');
 
-      // نیشاندانی ئەنیمەیشنی بیرکردنەوە بەر لە وەڵامدانەوە
       const thinkingBubble = document.createElement('div');
       thinkingBubble.className = `message-bubble assistant`;
-      thinkingBubble.innerHTML = `
-        <div class="thinking-anim">
-          <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      `;
+      thinkingBubble.innerHTML = `<div class="thinking-anim"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
       messagesStream.appendChild(thinkingBubble);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      // دوای ١.٥ چرکە لە بیرکردنەوە، دەست دەکات بە نووسینی وەڵام
       setTimeout(() => {
         thinkingBubble.remove();
-        streamAssistantMessage('سڵاو! من «ژیر»م.\nئێستا دیزاینەکەم بەتەواوی ئامادەیە. هەروەک دەبینیت، سەرەتا بیرم کردەوە، پاشانیش وەڵامەکەم بە لێشاو (Streaming) بۆت نووسی.\nئەمە ڕێک ئەو هەستەیە کە لە جەمینای وەری دەگریت!');
-      }, 1500);
+        streamAssistantMessage('دیزاینەکە سەد لە سەد تەواو بوو! ئێستا دوگمەی ناردنەکە ڕێک بە ستایلی مۆدێرنی جەمینای کار دەکات.');
+      }, 1000);
     });
 
     newChatBtn.addEventListener('click', () => {
