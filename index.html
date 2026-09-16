@@ -37,16 +37,34 @@
     .app-layout { display: flex; width: 100%; height: 100dvh; position: relative; }
 
     /* سایدبار */
-    .sidebar { width: 280px; height: 100%; background: var(--bg); background-color: color-mix(in srgb, var(--bg) 95%, transparent); border-left: 1px solid var(--line); display: flex; flex-direction: column; padding: 16px; gap: 12px; z-index: 100; transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1); }
-    .brand-header { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-    .brand-logo { width: 34px; height: 34px; background: #000; border-radius: 8px; display: grid; place-items: center; }
-    html.dark .brand-logo { background: #fff; }
-    .brand-logo svg path { stroke: #fff; }
-    html.dark .brand-logo svg path { stroke: #000; }
-    .brand-title { font-size: 18px; font-weight: 800; }
-    .new-chat-btn { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px; background: var(--user-bubble); border: 0; color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer; }
-    .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-    .theme-toggle-btn { padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 13px; cursor: pointer; }
+    .sidebar { width: 292px; height: 100%; background: color-mix(in srgb, var(--bg) 98%, var(--user-bubble)); border-left: 1px solid var(--line); display: flex; flex-direction: column; padding: 20px 16px 14px; gap: 18px; z-index: 100; transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1); }
+    .brand-header { display: flex; align-items: center; gap: 11px; padding: 0 2px 18px; border-bottom: 1px solid var(--line); }
+    .brand-logo { width: 34px; height: 34px; background: #000; border-radius: 8px; display: grid; place-items: center; overflow: hidden; }
+    .brand-logo img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .brand-title { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+    .new-chat-btn { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 14px; border-radius: 10px; background: var(--user-bubble); border: 1px solid var(--line-strong); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s, border-color .2s, transform .2s; }
+    .new-chat-btn:hover { background: var(--surface); border-color: var(--ink); transform: translateY(-1px); }
+    .new-chat-btn span { font-size: 19px; line-height: 12px; font-weight: 400; }
+    .menu-section-title { display: flex; align-items: center; color: var(--muted); font-size: 10px; font-weight: 800; padding: 0 5px 8px; letter-spacing: .5px; }
+    .history-list, .tools-list { overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+    .history-list { flex: 1; min-height: 80px; padding: 2px 4px; }
+    .history-empty { display: none; }
+    .tools-list { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 2px; padding: 3px 0 11px; border-bottom: 1px solid var(--line); background: transparent; overflow: hidden; }
+    .menu-item { position: relative; display: flex; flex: 0 0 44px; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 44px; height: 44px; min-width: 0; padding: 8px 2px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); text-align: center; font: inherit; font-size: 10px; cursor: pointer; transition: background .2s, color .2s, transform .2s; }
+    .tools-list .menu-item span, .settings-theme span { display: none; }
+    .menu-item:hover { background: var(--user-bubble); color: var(--ink); transform: translateY(-1px); }
+    .menu-item svg { width: 17px; height: 17px; flex: 0 0 17px; color: var(--muted); transition: color .2s; }
+    .menu-item:hover svg { color: var(--ink); }
+    .settings-theme { display: flex; align-items: center; width: 44px; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; flex: 0 0 44px; flex-direction: column; justify-content: center; gap: 6px; padding: 8px 2px; border-top: 0; border-radius: 9px; font-size: 10px; text-align: center; }
+    .settings-theme:hover { background: var(--user-bubble); }
+    .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 7px; }
+    .footer-caption, .useful-note { display: none; }
+    .history-search { display: flex; align-items: center; gap: 8px; margin: 0 4px 8px; padding: 8px 4px; border-bottom: 1px solid var(--line-strong); color: var(--muted); }
+    .history-search svg { width: 15px; height: 15px; flex: 0 0 15px; }
+    .history-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 12px; }
+    .history-search input::placeholder { color: var(--muted); opacity: .85; }
+    .theme-toggle-btn svg { width: 17px; height: 17px; flex: 0 0 17px; color: var(--muted); }
+    .theme-toggle-btn:hover { background: var(--user-bubble); }
     .scrim { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 90; }
 
     /* بەشی سەرەکی */
@@ -56,24 +74,33 @@
 
     /* شوێنی چات */
     .chat-container { flex: 1; overflow-y: auto; padding: 20px 16px 140px; display: flex; flex-direction: column; align-items: center; }
-    .welcome-box { margin: auto 0; text-align: center; }
-    .welcome-box h1 { font-size: 28px; font-weight: 700; margin-top: 12px; background: linear-gradient(135deg, #1f1f1f, #5f6368); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    html.dark .welcome-box h1 { background: linear-gradient(135deg, #ffffff, #9aa0a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .welcome-box { margin: auto 0; text-align: center; animation: welcomeRise 1.35s cubic-bezier(.22,.61,.36,1) both; }
+    .welcome-box .brand-logo { width: 48px; height: 48px; background: transparent; border-radius: 0; overflow: visible; animation: welcomeLogo 1.8s cubic-bezier(.22,.61,.36,1) both; box-shadow: none; }
+    .welcome-box h1 { font-size: 28px; font-weight: 700; margin-top: 12px; background: linear-gradient(105deg, #1f1f1f 0%, #1f1f1f 36%, #aeb4bb 50%, #1f1f1f 64%, #1f1f1f 100%); background-size: 280% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: welcomeTextShimmer 4.8s ease-in-out 0.8s infinite; }
+    html.dark .welcome-box h1 { background: linear-gradient(105deg, #ffffff 0%, #ffffff 36%, #c4c9cf 50%, #ffffff 64%, #ffffff 100%); background-size: 280% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    @keyframes welcomeRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes welcomeLogo { 0% { opacity: 0; transform: translateY(8px) scale(.94); filter: blur(2px); } 60% { opacity: .82; filter: blur(.4px); } 100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+    @keyframes welcomeTextShimmer { 0%, 25% { background-position: 120% 0; } 65%, 100% { background-position: -20% 0; } }
     .messages-stream { width: min(800px, 100%); display: flex; flex-direction: column; gap: 32px; }
-    .message-bubble { display: flex; gap: 16px; width: 100%; }
+    .message-bubble { display: flex; align-items: flex-start; gap: 13px; width: 100%; }
     .message-bubble.user, .message-bubble.assistant { justify-content: flex-start; }
-    .assistant-avatar { width: 36px; height: 36px; background: #000; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
-    html.dark .assistant-avatar { background: #fff; }
-    .assistant-avatar svg path { stroke: #fff; }
-    html.dark .assistant-avatar svg path { stroke: #000; }
+    .assistant-avatar { width: 40px; height: 40px; background: transparent; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; margin-top: 1px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.08)); }
+    .assistant-avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .user-avatar-placeholder { width: 36px; height: 36px; flex-shrink: 0; }
     .message-content-wrapper { display: flex; flex-direction: column; max-width: calc(100% - 52px); }
     .user .text-content { background: var(--user-bubble); color: var(--ink); padding: 14px 20px; border-radius: 8px 24px 24px 24px; line-height: 1.7; font-size: 15px; width: fit-content; }
     .assistant .text-content { background: transparent; color: var(--ink); padding: 4px 0 0 0; line-height: 1.85; font-size: 15px; }
-    .thinking-anim { width: 36px; height: 36px; background: #000; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; animation: pulseGlow 1.2s infinite alternate ease-in-out; }
-    html.dark .thinking-anim { background: #fff; animation: pulseGlowDark 1.2s infinite alternate ease-in-out; }
-    .thinking-anim svg path { stroke: #fff; }
-    html.dark .thinking-anim svg path { stroke: #000; }
+    .thinking-anim { width: 40px; height: 40px; background: transparent; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; margin-top: 1px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.08)); }
+    .thinking-anim img { width: 100%; height: 100%; display: block; object-fit: cover; }
+    .assistant-name { display: flex; align-items: center; min-height: 40px; color: var(--ink); font-size: 15px; font-weight: 800; line-height: 1.45; margin-bottom: 3px; letter-spacing: -0.15px; }
+    .assistant .text-content { padding-top: 0; }
+    .thinking-text { width: fit-content; color: var(--muted); font-size: 14px; line-height: 1.7; font-weight: 500; white-space: nowrap; background: linear-gradient(105deg, var(--muted) 0%, var(--muted) 36%, #fff 50%, var(--muted) 64%, var(--muted) 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: textShimmer 1.8s cubic-bezier(.4,0,.2,1) infinite; }
+    .thinking-dots { display: inline-flex; direction: ltr; gap: 1px; margin-inline-start: 5px; vertical-align: middle; -webkit-text-fill-color: var(--muted); }
+    .thinking-dots i { font-style: normal; display: inline-block; font-size: 18px; line-height: 10px; animation: dotBounce 1.05s ease-in-out infinite; }
+    .thinking-dots i:nth-child(2) { animation-delay: 0.14s; }
+    .thinking-dots i:nth-child(3) { animation-delay: 0.28s; }
+    @keyframes textShimmer { 0% { background-position: 150% 0; } 100% { background-position: -50% 0; } }
+    @keyframes dotBounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
     @keyframes pulseGlow { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(0,0,0,0.2); } 100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(0,0,0,0.1); } }
     @keyframes pulseGlowDark { 0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255,255,255,0.2); } 100% { transform: scale(1.1); box-shadow: 0 0 15px 5px rgba(255,255,255,0.1); } }
     .action-bar { display: flex; gap: 4px; margin-top: 12px; opacity: 0; transition: opacity 0.5s ease; }
@@ -143,22 +170,173 @@
       .menu-btn { display: block; } .sidebar { position: fixed; top: 0; right: 0; transform: translateX(100%); } .sidebar.open { transform: translateX(0); } .sidebar.open + .scrim { display: block; }
       .chat-container { padding-top: 10px; } .composer-box { padding: 8px 12px; } .message-content-wrapper { max-width: calc(100% - 46px); }
     }
+    /* مینۆی سادەی AI ـی پێشکەوتوو */
+    .sidebar { width: 280px; padding: 18px 14px 12px; gap: 14px; background: var(--bg); border-left: 1px solid var(--line); }
+    .brand-header { padding: 0 6px 16px; gap: 10px; border-bottom: 1px solid var(--line); }
+    .brand-logo { width: 34px; height: 34px; border-radius: 9px; box-shadow: none; }
+    .brand-title { font-size: 18px; letter-spacing: -.2px; }
+    .menu-section-title { color: var(--muted); font-size: 11px; font-weight: 700; padding: 4px 8px 8px; }
+    .tools-list { display: none; }
+    .history-search { margin: 0 4px 8px; padding: 0 4px; height: 34px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--muted); }
+    .history-search:focus-within { border-bottom-color: var(--line-strong); box-shadow: none; }
+    .history-search input { font-size: 12px; }
+    .new-chat-btn { height: 40px; border-radius: 10px; padding: 0 12px; background: var(--user-bubble); border: 1px solid var(--line); color: var(--ink); box-shadow: none; }
+    .new-chat-btn:hover { background: var(--surface); border-color: var(--line-strong); transform: none; }
+    .sidebar-footer { padding-top: 8px; border-top: 1px solid var(--line); }
+    .footer-caption, .useful-note { display: none; }
+    .settings-theme { display: flex; align-items: center; width: 100%; height: 36px; border: 0; background: transparent; color: var(--ink); font: inherit; cursor: pointer; flex-direction: row; justify-content: flex-start; gap: 10px; padding: 8px; border-radius: 8px; font-size: 12px; text-align: right; }
+    .settings-theme span { display: inline; }
+    .settings-theme:hover { background: var(--user-bubble); }
+    .settings-theme svg { width: 16px; height: 16px; color: var(--muted); }
+    /* unified AI sidebar refinement */
+    .sidebar { width: 288px; padding: 22px 16px 16px; gap: 16px; background: #f8f8f7; border-left: 1px solid #e8e8e6; }
+    html.dark .sidebar { background: #191a1b; border-left-color: #2b2c2d; }
+    .brand-header { padding: 0 6px 4px; border-bottom: 0; }
+    .brand-logo { width: 32px; height: 32px; border-radius: 8px; }
+    .brand-title { font-size: 18px; font-weight: 750; }
+    .new-chat-btn { order: 0; height: 42px; justify-content: flex-start; padding: 0 13px; gap: 10px; border-radius: 9px; background: #202122; border-color: #202122; color: #fff; box-shadow: none; }
+    .new-chat-btn:hover { background: #111; border-color: #111; }
+    html.dark .new-chat-btn { background: #f0f0ee; border-color: #f0f0ee; color: #18191a; }
+    .new-chat-btn span { font-size: 20px; }
+    .menu-section-title { padding: 5px 8px 7px; color: #858789; font-size: 10px; font-weight: 700; letter-spacing: .2px; }
+    html.dark .menu-section-title { color: #999b9e; }
+    .history-search { height: 36px; margin: 0 2px 4px; padding: 0 10px; border: 1px solid #e2e2e0; border-radius: 9px; background: #fff; color: #8c8e91; }
+    html.dark .history-search { border-color: #303133; background: #202122; }
+    .history-search:focus-within { border-color: #b6b7b8; box-shadow: 0 0 0 2px rgba(0,0,0,.035); }
+    .history-list { padding: 0 2px; }
+    .sidebar-footer { gap: 2px; padding-top: 12px; border-top: 1px solid #e5e5e3; }
+    html.dark .sidebar-footer { border-top-color: #2c2d2f; }
+    .settings-theme { height: 38px; padding: 0 9px; border-radius: 8px; color: #55585b; font-size: 12px; }
+    html.dark .settings-theme { color: #c1c3c5; }
+    .settings-theme:hover { background: #ededeb; }
+    html.dark .settings-theme:hover { background: #242526; }
+    /* final product-grade sidebar system */
+    .sidebar { width: 272px; padding: 20px 14px 14px; gap: 12px; background: #fafaf9; border-left: 1px solid #ededeb; }
+    html.dark .sidebar { background: #171819; border-left-color: #292a2b; }
+    .brand-header { height: 42px; padding: 0 8px; gap: 10px; }
+    .brand-logo { width: 30px; height: 30px; border-radius: 8px; }
+    .brand-title { font-size: 17px; font-weight: 750; }
+    .new-chat-btn { height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 650; box-shadow: none; }
+    .new-chat-btn:hover { background: #eeeeec; border: 0; transform: none; }
+    html.dark .new-chat-btn:hover { background: #242526; }
+    .new-chat-btn span { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: 1px solid var(--line-strong); border-radius: 6px; font-size: 17px; }
+    .menu-section-title { padding: 15px 9px 7px; color: #8a8c8e; font-size: 10px; font-weight: 700; }
+    .history-search { height: 34px; margin: 0 4px 6px; padding: 0 9px; border: 0; border-radius: 7px; border-bottom: 1px solid #e5e5e3; background: transparent; }
+    html.dark .history-search { border-bottom-color: #303133; background: transparent; }
+    .history-search:focus-within { border-bottom-color: #9b9d9f; box-shadow: none; }
+    .history-list { padding: 0 2px; }
+    .history-list:empty::after { content: "هێشتا گفتوگۆیەک نییە"; display: block; padding: 18px 8px; color: var(--muted); font-size: 11px; text-align: center; opacity: .7; }
+    .sidebar-footer { gap: 1px; padding: 10px 2px 0; border-top: 1px solid #e8e8e6; }
+    html.dark .sidebar-footer { border-top-color: #2a2b2c; }
+    .settings-theme { height: 36px; padding: 0 9px; border-radius: 7px; color: #626568; font-size: 12px; }
+    html.dark .settings-theme { color: #b5b7b9; }
+    .settings-theme:hover { background: #eeeeec; }
+    html.dark .settings-theme:hover { background: #242526; }
+    .sidebar-footer { display: grid; grid-template-columns: repeat(3, 1fr); align-items: stretch; gap: 4px; }
+    .settings-theme, .profile-btn { width: 100%; height: 48px; padding: 5px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border-radius: 8px; color: #626568; font-size: 10px; text-align: center; }
+    html.dark .settings-theme, html.dark .profile-btn { color: #b5b7b9; }
+    .settings-theme svg, .profile-btn svg { width: 17px; height: 17px; color: currentColor; }
+    .sidebar-footer .settings-theme span, .sidebar-footer .profile-btn span { display: none; }
+    .sidebar-footer .settings-theme, .sidebar-footer .profile-btn { height: 42px; padding: 0; gap: 0; }
+    .sidebar-footer .settings-theme svg, .sidebar-footer .profile-btn svg { width: 18px; height: 18px; }
+    .theme-sun { display: none; }
+    html.dark .theme-moon { display: none; }
+    html.dark .theme-sun { display: block; }
+    .profile-btn { border: 0; background: transparent; font: inherit; cursor: pointer; }
+    .profile-btn:hover { background: #eeeeec; }
+    html.dark .profile-btn:hover { background: #242526; }
+    /* app-wide visual system */
+    .main-content { background: var(--bg); transition: background .25s ease, color .25s ease; }
+    .topbar { height: 56px; padding: 0 20px; }
+    .topbar { position: relative; display: flex; align-items: center; justify-content: flex-start; border-bottom: 0; }
+    .topbar .menu-btn { display: grid; place-items: center; width: 36px; height: 36px; padding: 6px; border-radius: 8px; color: var(--muted); transition: background .2s, color .2s; }
+    .topbar .menu-btn:hover { background: var(--app-control); color: var(--ink); }
+    .topbar::after { content: none; }
+    .plan-switcher { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; }
+    .plan-trigger { height: 31px; display: inline-flex; align-items: center; gap: 7px; padding: 0 5px 0 9px; border: 0; border-radius: 18px; background: transparent; color: var(--app-subtle); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; transition: background .2s, color .2s; }
+    .plan-trigger svg { width: 14px; height: 14px; color: currentColor; }
+    .plan-trigger svg { padding: 2px; box-sizing: content-box; border: 1px solid rgba(128,132,136,.22); border-radius: 50%; }
+    .plan-trigger:hover, .plan-switcher.open .plan-trigger { background: rgba(128,132,136,.08); color: var(--ink); }
+    .plan-menu { position: absolute; top: 42px; right: 0; width: 208px; padding: 6px; display: none; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-panel); box-shadow: 0 14px 30px rgba(0,0,0,.13); z-index: 20; }
+    .plan-switcher.open .plan-menu { display: grid; gap: 3px; }
+    .plan-option { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px; padding: 9px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; text-align: right; cursor: pointer; }
+    .plan-option:hover { background: var(--app-control); }
+    .plan-option svg { width: 18px; height: 18px; color: #a77a20; }
+    .plan-option .plan-logo { width: 22px; height: 22px; object-fit: contain; display: block; }
+    .plan-option strong { display: block; font-size: 12px; }
+    .plan-option small { display: block; margin-top: 2px; color: var(--app-subtle); font-size: 9px; }
+    .plan-option em { color: var(--app-subtle); font-size: 9px; font-style: normal; }
+    .chat-container { padding: 24px 22px 148px; }
+    .welcome-box { max-width: 520px; }
+    .welcome-box .brand-logo { width: 56px; height: 56px; }
+    .welcome-box h1 { margin-top: 16px; font-size: 30px; font-weight: 700; background: none; -webkit-text-fill-color: currentColor; color: var(--ink); animation: none; }
+    .messages-stream { width: min(760px, 100%); gap: 28px; }
+    .message-bubble { gap: 12px; }
+    .user .text-content { background: var(--user-bubble); border: 1px solid var(--line); padding: 12px 17px; border-radius: 16px 5px 16px 16px; }
+    .assistant .text-content { line-height: 1.9; }
+    .assistant-avatar, .thinking-anim { width: 36px; height: 36px; filter: none; }
+    .assistant-name { min-height: 36px; font-size: 14px; }
+    .composer-container { width: min(760px, calc(100% - 36px)); bottom: max(20px, env(safe-area-inset-bottom)); }
+    .composer-box { min-height: 58px; padding: 9px 12px; gap: 9px; border: 1px solid var(--line-strong); background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: 0 8px 28px rgba(0,0,0,.07); }
+    html.dark .composer-box { background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+    .composer-box:focus-within { border-color: var(--line-strong); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent), 0 10px 30px rgba(0,0,0,.08); }
+    .composer-box textarea { font-size: 14px; }
+    .action-btn { width: 34px; height: 34px; }
+    .send-btn { width: 34px; height: 34px; }
+    .action-bar button:hover, .action-btn:hover { background: var(--user-bubble); }
+    /* cohesive light/dark design tokens */
+    :root { --app-canvas: #ffffff; --app-panel: #fbfbfa; --app-control: #f5f5f3; --app-border: #e5e5e2; --app-border-hover: #c7c8c6; --app-subtle: #7c7f82; }
+    html.dark { --app-canvas: #141516; --app-panel: #1a1b1c; --app-control: #222425; --app-border: #303234; --app-border-hover: #4b4d4f; --app-subtle: #a8abad; }
+    html, body { background: var(--app-canvas); transition: background-color .25s ease, color .25s ease; }
+    .app-layout, .main-content { background: var(--app-canvas); }
+    .sidebar { background: var(--app-panel); border-left-color: var(--app-border); }
+    .brand-header { border-bottom: 1px solid var(--app-border); }
+    .new-chat-btn { background: var(--app-control); border: 1px solid var(--app-border); color: var(--ink); transition: background .2s, border-color .2s, box-shadow .2s; }
+    .new-chat-btn:hover { background: var(--surface); border-color: var(--app-border-hover); box-shadow: 0 3px 10px rgba(0,0,0,.06); }
+    html.dark .new-chat-btn { background: var(--app-control); border-color: var(--app-border); color: var(--ink); }
+    html.dark .new-chat-btn:hover { background: #2a2c2e; border-color: var(--app-border-hover); box-shadow: 0 3px 12px rgba(0,0,0,.22); }
+    .menu-section-title { color: var(--app-subtle); }
+    .history-search { background: var(--app-control); border: 1px solid var(--app-border); color: var(--app-subtle); }
+    .history-search:focus-within { border-color: var(--app-border-hover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 7%, transparent); }
+    .sidebar-footer { border-top-color: var(--app-border); }
+    .profile-btn:hover, .settings-theme:hover { background: var(--app-control); }
+    .chat-container { background: var(--app-canvas); }
+    .welcome-box h1 { color: var(--ink); }
+    .user .text-content { background: var(--app-control); border-color: var(--app-border); }
+    .assistant .text-content { color: var(--ink); }
+    .composer-box { background: var(--app-panel); border-color: var(--app-border); box-shadow: 0 8px 28px rgba(0,0,0,.055); }
+    html.dark .composer-box { background: var(--app-panel); border-color: var(--app-border); box-shadow: 0 8px 28px rgba(0,0,0,.30); }
+    .composer-box:focus-within { border-color: var(--app-border-hover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 7%, transparent), 0 10px 30px rgba(0,0,0,.08); }
+    .action-btn:hover, .action-bar button:hover { background: var(--app-control); }
+    .action-bar button.active { color: var(--ink); background: var(--app-control); }
+    .action-bar button.copied { color: #2f7d52; }
+    .send-btn { background: var(--ink); color: var(--app-canvas); }
+    .send-btn:hover { background: var(--app-subtle); color: var(--app-canvas); }
+    .user .text-content { padding: 11px 17px; border-radius: 18px; line-height: 1.75; font-size: 14px; max-width: min(620px, 100%); }
+    /* logo contrast in dark mode: keep the header mark unchanged, invert only transparent marks */
+    html.dark .welcome-box .brand-logo img,
+    html.dark .assistant-avatar img,
+    html.dark .thinking-anim img { filter: invert(1); }
   </style>
 </head>
 <body>
   <div class="app-layout">
     <aside class="sidebar" id="sidebar">
-      <div class="brand-header"><div class="brand-logo"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 2 7l11 25-13-22c-5-9-15-5-14 3 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="brand-title">ژیر</span></div>
-      <button class="new-chat-btn" id="newChatBtn">＋ گفتوگۆی نوێ</button><div class="history-list" id="historyList"></div><button class="theme-toggle-btn" id="themeBtn">دۆخی تاریک / ڕووناک</button>
+      <div class="brand-header"><div class="brand-logo"><img src="zhir_logo_final_1.png" alt="لۆگۆی ژیر"></div><span class="brand-title">ژیر</span></div>
+      <button class="new-chat-btn" id="newChatBtn"><span>＋</span> گفتوگۆی نوێ</button>
+      <div class="menu-section-title">گفتوگۆکان</div>
+      <label class="history-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></svg><input type="search" placeholder="گەڕان لە گفتوگۆ کۆنەکان..." aria-label="گەڕان لە گفتوگۆ کۆنەکان"></label>
+      <div class="history-list" id="historyList"></div>
+      <div class="sidebar-footer"><button class="profile-btn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0113 0"/></svg><span>پڕۆفایل</span></button><button class="theme-toggle-btn settings-theme" type="button"><svg class="settings-tune-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.35 2.35L17.7 5.1l-.75 3.2 2.85 1.7-2.85 1.7.75 3.2-3.35-.75L12 16.5l-2.35-2.35-3.35.75.75-3.2-2.85-1.7 2.85-1.7-.75-3.2 3.35.75L12 3.5z"/><path d="M12 7.4l1.15 1.15 1.65-.35-.35 1.65L15.6 11l-1.15 1.15.35 1.65-1.65-.35L12 14.6l-1.15-1.15-1.65.35.35-1.65L8.4 11l1.15-1.15-.35-1.65 1.65.35L12 7.4z" fill="var(--bg)"/><circle cx="12" cy="11" r="1.25" fill="currentColor" stroke="none"/><path d="M7.5 18.2h9M9.5 20.5h5" opacity=".8"/></svg><span>ڕێکخستنەکان</span></button><button class="theme-toggle-btn settings-theme" id="themeBtn"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.5 15.3A8.5 8.5 0 018.7 3.5 8.5 8.5 0 1020.5 15.3z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><span>ڕووناک / تاریک</span></button></div>
     </aside>
     <div class="scrim" id="scrim"></div>
 
     <main class="main-content">
-      <header class="topbar"><button class="menu-btn" id="menuBtn" aria-label="مێنۆ"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></header>
+      <header class="topbar"><button class="menu-btn" id="menuBtn" aria-label="مێنۆ"><svg class="zhir-menu-mark" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 7.2c1.7-2 4.1-3.1 6.7-3.1 3.9 0 7.2 2.3 8.35 5.55"/><path d="M17.8 16.8c-1.7 2-4.1 3.1-6.7 3.1-3.9 0-7.2-2.3-8.35-5.55"/><path d="M5.1 9.45 3.2 13.9l4.75.15M18.9 14.55l1.9-4.45-4.75-.15"/><circle cx="12" cy="12" r="2.15" fill="currentColor" stroke="none"/><path d="M12 8.2v1.05M12 14.75v1.05"/></svg></button><div class="plan-switcher" id="planSwitcher"><button class="plan-trigger" id="planTrigger" type="button" aria-label="بەرزکردنەوەی ژیر" title="بەرزکردنەوەی ژیر" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5h9.5L13 10.2l-3.7 3.7"/><path d="M9.3 14.1 7 16.4l2.3 2.3"/><path d="M13.2 10.2 17 14l-3.8 3.8"/></svg><span>پڕۆ</span></button><div class="plan-menu"><button class="plan-option" type="button"><img class="plan-logo" src="zhir_logo_clean_transparent.png" alt="لۆگۆی ژیر"><span><strong>ژیر پڕۆ</strong><small>بۆ بەکارهێنانی پێشکەوتوو</small></span><em>PRO</em></button><button class="plan-option" type="button"><img class="plan-logo" src="zhir_logo_clean_transparent.png" alt="لۆگۆی ژیر"><span><strong>ژیر پڕۆ ماکس</strong><small>بۆ توانای زۆرترین</small></span><em>MAX</em></button></div></div></header>
       <div class="chat-container" id="chatContainer">
         <div class="welcome-box" id="welcomeBox">
-          <div class="brand-logo" style="width: 48px; height: 48px; margin: 0 auto; border-radius: 12px;"><svg width="28" height="28" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h1>سڵاو، چۆن دەتوانم یارمەتیت بدەم؟</h1>
+          <div class="brand-logo" style="margin: 0 auto;"><img src="zhir_logo_clean_transparent.png" alt="لۆگۆی ژیر"></div>
+          <h1>بەخێر بێیت بۆ ژیر</h1>
         </div>
         <div class="messages-stream" id="messagesStream"></div>
       </div>
@@ -200,6 +378,10 @@
     const welcomeBox = document.getElementById('welcomeBox');
     const chatContainer = document.getElementById('chatContainer');
     const newChatBtn = document.getElementById('newChatBtn');
+    const planSwitcher = document.getElementById('planSwitcher');
+    const planTrigger = document.getElementById('planTrigger');
+    planTrigger.addEventListener('click', () => { const open = planSwitcher.classList.toggle('open'); planTrigger.setAttribute('aria-expanded', String(open)); });
+    document.addEventListener('click', (e) => { if (!planSwitcher.contains(e.target)) { planSwitcher.classList.remove('open'); planTrigger.setAttribute('aria-expanded', 'false'); } });
 
     if (localStorage.getItem('zhir-theme') === 'dark') root.classList.add('dark');
     themeBtn.addEventListener('click', () => {
@@ -240,12 +422,47 @@
     function streamAssistantMessage(text) {
       const bubble = document.createElement('div');
       bubble.className = `message-bubble assistant`;
-      const actionButtons = `<div class="action-bar" id="actionBar-${Date.now()}"><button aria-label="کۆپیکردن"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button></div>`;
-      bubble.innerHTML = `<div class="assistant-avatar"><svg width="18" height="18" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="message-content-wrapper"><div class="text-content" id="textContent-${Date.now()}"></div>${actionButtons}</div>`;
+      const actionButtons = `<div class="action-bar" id="actionBar-${Date.now()}"><button class="copy-action" aria-label="کۆپیکردن" title="کۆپیکردن"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg></button><button class="like-action" aria-label="لایک" title="لایک"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10v10H4V10h3zM7 20h9.2a2 2 0 001.9-1.4l1.8-5.4A2 2 0 0018 10h-4l.7-3.2A2.3 2.3 0 0012.5 4L7 10v10z"/></svg></button><button class="dislike-action" aria-label="دیس لایک" title="دیس لایک"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 14V4h3v10h-3zM17 4H7.8a2 2 0 00-1.9 1.4l-1.8 5.4A2 2 0 006 13h4l-.7 3.2A2.3 2.3 0 0011.5 19L17 14V4z"/></svg></button></div>`;
+      bubble.innerHTML = `<div class="assistant-avatar"><img src="zhir_logo_black_transparent_cropped.png" alt="لۆگۆی ژیر"></div><div class="message-content-wrapper"><div class="assistant-name">ژیر</div><div class="text-content" id="textContent-${Date.now()}"></div>${actionButtons}</div>`;
       messagesStream.appendChild(bubble);
       
       const textElement = bubble.querySelector('.text-content');
       const actionBar = bubble.querySelector('.action-bar');
+      actionBar.querySelector('.copy-action').addEventListener('click', async () => {
+        let copied = false;
+        try { await navigator.clipboard.writeText(text); copied = true; } catch (_) {}
+        if (!copied) {
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.setAttribute('readonly', '');
+          helper.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+          document.body.appendChild(helper);
+          helper.select();
+          try { copied = document.execCommand('copy'); } catch (_) {}
+          helper.remove();
+        }
+        const btn = actionBar.querySelector('.copy-action');
+        if (copied) {
+          btn.classList.add('copied');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>';
+          btn.setAttribute('aria-label', 'کۆپی کرا');
+          setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/></svg>'; btn.setAttribute('aria-label', 'کۆپیکردن'); }, 1200);
+        }
+      });
+      actionBar.querySelector('.like-action').addEventListener('click', (e) => {
+        const active = e.currentTarget.classList.toggle('active');
+        e.currentTarget.innerHTML = active ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2"><path d="M7 10v10H4V10h3zM7 20h9.2a2 2 0 001.9-1.4l1.8-5.4A2 2 0 0018 10h-4l.7-3.2A2.3 2.3 0 0012.5 4L7 10v10z"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10v10H4V10h3zM7 20h9.2a2 2 0 001.9-1.4l1.8-5.4A2 2 0 0018 10h-4l.7-3.2A2.3 2.3 0 0012.5 4L7 10v10z"/></svg>';
+        const dislike = actionBar.querySelector('.dislike-action');
+        dislike.classList.remove('active');
+        dislike.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 14V4h3v10h-3zM17 4H7.8a2 2 0 00-1.9 1.4l-1.8 5.4A2 2 0 006 13h4l-.7 3.2A2.3 2.3 0 0011.5 19L17 14V4z"/></svg>';
+      });
+      actionBar.querySelector('.dislike-action').addEventListener('click', (e) => {
+        const active = e.currentTarget.classList.toggle('active');
+        e.currentTarget.innerHTML = active ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2"><path d="M17 14V4h3v10h-3zM17 4H7.8a2 2 0 00-1.9 1.4l-1.8 5.4A2 2 0 006 13h4l-.7 3.2A2.3 2.3 0 0011.5 19L17 14V4z"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 14V4h3v10h-3zM17 4H7.8a2 2 0 00-1.9 1.4l-1.8 5.4A2 2 0 006 13h4l-.7 3.2A2.3 2.3 0 0011.5 19L17 14V4z"/></svg>';
+        const like = actionBar.querySelector('.like-action');
+        like.classList.remove('active');
+        like.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10v10H4V10h3zM7 20h9.2a2 2 0 001.9-1.4l1.8-5.4A2 2 0 0018 10h-4l.7-3.2A2.3 2.3 0 0012.5 4L7 10v10z"/></svg>';
+      });
       let i = 0;
       const interval = setInterval(() => {
         textElement.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
@@ -271,7 +488,7 @@
 
       const thinkingBubble = document.createElement('div');
       thinkingBubble.className = `message-bubble assistant`;
-      thinkingBubble.innerHTML = `<div class="thinking-anim"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M34 35c-3-11-14-12-18-5-3 6 1 13 7 24l8 14c-5-7-14-7-18-1-4 6 1 14 8 21 11 11 28 13 42 6 15-8 21-23 17-37l-8-25c-4-13-17-11-20-3-1 3 0 7 1 12l3 14-13-26c-5-10-17-7-17 2 0 2 1 4 3 7l14 24" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+      thinkingBubble.innerHTML = `<div class="thinking-anim"><img src="zhir_logo_black_transparent_cropped.png" alt="لۆگۆی ژیر"></div><div class="message-content-wrapper"><div class="assistant-name">ژیر</div><div class="thinking-text">بیر دەکەمەوە<span class="thinking-dots"><i>·</i><i>·</i><i>·</i></span></div></div>`;
       messagesStream.appendChild(thinkingBubble);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
