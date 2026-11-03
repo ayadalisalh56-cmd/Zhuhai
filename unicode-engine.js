@@ -1,69 +1,43 @@
-/* Meko — silent Kurdish Unicode engine. No UI; works through document-level delegation. */
-(function () {
+(function(){
   'use strict';
-  var MAP = { 'ك': 'ک', 'ي': 'ی', 'ى': 'ی', 'ة': 'ە', 'ؤ': 'ۆ', 'إ': 'ئ', 'أ': 'ئ' };
-  var PERSIAN = '۰۱۲۳۴۵۶۷۸۹', ARABIC = '٠١٢٣٤٥٦٧٨٩';
-  var PRES = /[\uFB50-\uFDFF\uFE70-\uFEFE]/g;
-  var JUNK = /[\uFEFF\u200E\u200F\u202A-\u202E\u0000-\u0008\u000B\u000C\u000E-\u001F]/g;
-
-  /* Legacy (Ali-style) fonts store glyph shapes as Arabic Presentation Forms;
-     NFKC folds every shape back to its real base letter. */
-  function legacy(s) {
-    return s.replace(PRES, function (c) { return c.normalize('NFKC'); });
+  const substitutions = [
+    [/ك/g, 'ک'], [/ي/g, 'ی'], [/ى/g, 'ی'], [/ة/g, 'ە'], [/ۀ/g, 'ە'], [/ہ/g, 'ە'], [/ھ/g, 'ه'],
+    [/ؤ/g, 'ۆ'], [/ئ/g, 'ئ'], [/ـ/g, ''], [/ٱ/g, 'ا'], [/ٲ/g, 'ئ'], [/ٳ/g, 'ئ'], [/ٵ/g, 'ئ'],
+    [/ﻙ|ﻚ/g, 'ک'], [/ﻱ|ﻲ|ﻳ|ﻴ/g, 'ی'], [/ﻪ|ﻫ|ﻬ|ﻩ/g, 'ه'], [/ﯙ|ﯚ|ﯛ|ﯜ/g, 'ۆ'],
+    [/\u200c/g, '\u200c'], [/\u0640/g, '']
+  ];
+  function normalize(value){
+    let normalized = String(value || '').normalize('NFC');
+    substitutions.forEach(([pattern,replacement]) => { normalized = normalized.replace(pattern,replacement); });
+    return normalized;
   }
-
-  function clean(s) {
-    var t = legacy(String(s == null ? '' : s)).replace(JUNK, '');
-    t = t.replace(/[كيىةؤإأ]/g, function (c) { return MAP[c]; });
-    t = t.replace(/[۰-۹]/g, function (c) { return ARABIC[PERSIAN.indexOf(c)]; });
-    return t.normalize('NFC');
+  function normalizeTarget(target){
+    if(!target || target.tagName !== 'TEXTAREA') return;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    const next = normalize(target.value);
+    if(next !== target.value){
+      target.value = next;
+      try{ target.setSelectionRange(start,end); }catch(e){}
+    }
   }
-
-  function isText(el) {
-    if (!el || !el.matches) return false;
-    return el.matches('textarea, input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=range])');
-  }
-
-  document.addEventListener('input', function (e) {
-    var el = e.target;
-    if (!isText(el) || e.isComposing) return;
-    var v = el.value, c = clean(v);
-    if (v === c) return;
-    var fromEnd = v.length - (el.selectionEnd == null ? v.length : el.selectionEnd);
-    el.value = c;
-    try { var p = Math.max(0, c.length - fromEnd); el.setSelectionRange(p, p); } catch (err) {}
+  document.addEventListener('input', event => normalizeTarget(event.target), true);
+  document.addEventListener('paste', event => {
+    if(!event.target || event.target.tagName !== 'TEXTAREA') return;
+    const clipboard = event.clipboardData;
+    if(!clipboard) return;
+    const text = clipboard.getData('text');
+    if(normalize(text) !== text){
+      event.preventDefault();
+      const target = event.target;
+      const before = target.value.slice(0,target.selectionStart);
+      const after = target.value.slice(target.selectionEnd);
+      const inserted = normalize(text);
+      target.value = before + inserted + after;
+      const caret = before.length + inserted.length;
+      target.setSelectionRange(caret,caret);
+      target.dispatchEvent(new Event('input',{bubbles:true}));
+    }
   }, true);
-
-  document.addEventListener('paste', function (e) {
-    var el = e.target;
-    if (!isText(el)) return;
-    e.preventDefault();
-    var raw = (e.clipboardData || window.clipboardData).getData('text/plain');
-    var txt = clean(raw);
-    var s = el.selectionStart, n = el.selectionEnd;
-    if (s == null) { el.value += txt; } else { el.setRangeText(txt, s, n, 'end'); }
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-  }, true);
-
-  document.addEventListener('drop', function (e) {
-    var el = e.target;
-    if (!isText(el) || !e.dataTransfer) return;
-    var raw = e.dataTransfer.getData('text/plain');
-    if (!raw) return;
-    e.preventDefault();
-    el.setRangeText(clean(raw), el.selectionStart || 0, el.selectionEnd || 0, 'end');
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-  }, true);
-
-  /* Read an uploaded .txt as UTF-8 and return cleaned plain text. */
-  function readTxt(file) {
-    return new Promise(function (res, rej) {
-      var r = new FileReader();
-      r.onload = function () { res(clean(r.result)); };
-      r.onerror = function () { rej(r.error); };
-      r.readAsText(file, 'utf-8');
-    });
-  }
-
-  window.UnicodeEngine = { clean: clean, readTxt: readTxt };
+  window.MekoUnicode = { normalize };
 })();
