@@ -1,26 +1,89 @@
 <!doctype html>
-<html lang="ku" dir="rtl" data-theme="light">
+<html lang="ku" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مەکۆ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<script>try{document.documentElement.dataset.theme=JSON.parse(localStorage.getItem('meko.v2')).dark?'dark':'light'}catch(e){}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="مەکۆ — پلاتفۆرمی ئەدەبی و ئەرشیفی کراوەی کوردی" />
+  <title>مەکۆ | Meko</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-<main id="app"></main>
-<nav id="nav" class="nav" aria-label="سەرەکی">
-  <button data-a="go" data-v="feed" id="n-feed" aria-label="گۆڕەپان"><i data-lucide="home"></i></button>
-  <button data-a="new" class="plus" aria-label="پۆستی نوێ"><i data-lucide="plus"></i></button>
-  <button data-a="go" data-v="dm" id="n-dm" aria-label="نامەدان"><i data-lucide="message-circle"></i><span class="dot" id="n-dot"></span></button>
-  <button data-a="go" data-v="menu" id="n-menu" class="avbtn" aria-label="مینیو"><span class="av" id="n-av"></span><span class="mb"><i data-lucide="menu"></i></span></button>
-</nav>
-<div id="toast" class="toast"></div>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="unicode-engine.js"></script>
-<script src="app.js"></script>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-mark" aria-label="مەکۆ">
+        <span class="brand-glyph">م</span><span class="brand-word">مەکۆ</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-button" data-action="open-library" aria-label="کتێبخانە"><i data-lucide="library"></i></button>
+        <button class="icon-button" data-action="open-search" aria-label="گەڕان"><i data-lucide="search"></i></button>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content">
+      <section id="view-timeline" class="view active" aria-labelledby="timeline-title">
+        <div class="view-heading">
+          <div>
+            <p class="eyebrow">ئەرشیفی ژیانی ڕۆژانە</p>
+            <h1 id="timeline-title">دۆزینەوە</h1>
+          </div>
+          <button class="round-button accent" data-action="open-create" aria-label="پۆستی نوێ"><i data-lucide="plus"></i></button>
+        </div>
+        <div id="timeline-feed" class="timeline-feed"></div>
+      </section>
+
+      <section id="view-chat" class="view" aria-labelledby="chat-title">
+        <div class="view-heading">
+          <div><p class="eyebrow">پەیوەندییەکانت</p><h1 id="chat-title">نامەکان</h1></div>
+          <button class="round-button" data-action="new-group" aria-label="گرووپی نوێ"><i data-lucide="users-round"></i></button>
+        </div>
+        <div class="segmented-tabs" role="tablist"><button class="tab active" data-chat-tab="chats">گفتوگۆکان</button><button class="tab" data-chat-tab="groups">گرووپەکان</button></div>
+        <div id="chat-list" class="chat-list"></div>
+        <div id="chat-room" class="chat-room hidden"></div>
+      </section>
+
+      <section id="view-library" class="view" aria-labelledby="library-title">
+        <div class="view-heading"><div><p class="eyebrow">خوێندنەوەی کراوە</p><h1 id="library-title">ئەرشیفی مەکۆ</h1></div><span class="library-count" id="library-count"></span></div>
+        <div id="library-filters" class="filter-scroll" role="tablist"></div>
+        <div id="library-list" class="library-list"></div>
+      </section>
+
+      <section id="view-profile" class="view" aria-labelledby="profile-title">
+        <div id="profile-head"></div>
+        <div class="profile-divider"></div>
+        <div class="profile-section-heading"><h2>لە نووسینەکان</h2><span id="profile-post-count"></span></div>
+        <div id="profile-posts" class="profile-posts"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="ناوبەری سەرەکی">
+      <button class="nav-item active" data-nav="timeline" aria-label="سەرەکی"><i data-lucide="house"></i><span class="nav-dot"></span></button>
+      <button class="nav-item create-nav" data-action="open-create" aria-label="پۆستی نوێ"><i data-lucide="plus"></i></button>
+      <button class="nav-item" data-nav="chat" aria-label="نامەکان"><i data-lucide="message-circle"></i><span class="nav-dot"></span></button>
+      <button class="nav-item avatar-nav" data-action="open-menu" aria-label="مێنیو"><img id="nav-avatar" alt="وێنەی بەکارهێنەر"><span class="menu-badge"><i data-lucide="menu"></i></span></button>
+    </nav>
+  </div>
+
+  <div id="sheet-layer" class="sheet-layer hidden" aria-hidden="true">
+    <div class="sheet-backdrop" data-action="close-sheet"></div>
+    <section id="menu-sheet" class="bottom-sheet hidden" aria-label="مێنیوی بەکارهێنەر">
+      <div class="sheet-handle"></div><div id="sheet-profile-mini"></div>
+      <div class="sheet-actions"><button data-action="open-profile"><i data-lucide="user-round"></i><span>پڕۆفایل</span><i data-lucide="chevron-left"></i></button><button data-action="toggle-theme"><i data-lucide="moon"></i><span>ڕووناکی / تاریکی</span><span class="theme-status" id="theme-status"></span></button><button data-action="open-library"><i data-lucide="book-open"></i><span>ئەرشیف</span><i data-lucide="chevron-left"></i></button></div>
+    </section>
+    <section id="create-sheet" class="full-sheet hidden" aria-label="پۆستی نوێ">
+      <div class="create-header"><button class="text-button" data-action="close-sheet">داخستن</button><h2>نووسینی نوێ</h2><button class="publish-button" data-action="publish-post">بڵاوکردنەوە</button></div>
+      <div class="composer-author"><img id="composer-avatar" alt="وێنەی بەکارهێنەر"><strong id="composer-name"></strong></div>
+      <textarea id="post-input" class="post-input" placeholder="چی لە دڵتە؟" rows="4"></textarea>
+      <div class="composer-footer"><button id="poetry-toggle" class="toolbar-chip" data-action="toggle-poetry"><i data-lucide="feather"></i><span>شیعر</span><span class="toggle-knob"></span></button><span class="composer-note">نووسینەکانت دەبن بە بەشێک لە ئەرشیفی کراوەی کوردی</span></div>
+    </section>
+    <section id="edit-sheet" class="modal-sheet hidden" aria-label="دەستکاریکردنی پڕۆفایل"><div class="sheet-handle"></div><div class="modal-title"><h2>دەستکاریکردنی پڕۆفایل</h2><button class="icon-button" data-action="close-sheet"><i data-lucide="x"></i></button></div><form id="profile-form" class="profile-form"><label>ناو<input name="name" required></label><label>دەربارەی تۆ<textarea name="bio" rows="3"></textarea></label><label>بەستەری وێنەی پڕۆفایل<input name="avatar" type="url"></label><div class="form-row"><label>وڵات<select name="country" id="country-select"></select></label><label>شار<select name="city" id="city-select"></select></label></div><button class="primary-button" type="submit">پاشەکەوتکردن</button></form></section>
+    <section id="reader-sheet" class="full-sheet reader-sheet hidden" aria-label="خوێندنەوەی دەق"><div class="reader-header"><button class="icon-button" data-action="close-sheet" aria-label="داخستن"><i data-lucide="arrow-right"></i></button><div class="reader-actions"><button class="text-button" data-action="copy-text"><i data-lucide="copy"></i> کۆپی</button><a id="download-text" class="download-button" download><i data-lucide="download"></i> داگرتن</a></div></div><article id="reader-content" class="reader-content"></article></section>
+    <section id="search-sheet" class="modal-sheet hidden" aria-label="گەڕان"><div class="sheet-handle"></div><div class="modal-title"><h2>گەڕان لە مەکۆ</h2><button class="icon-button" data-action="close-sheet"><i data-lucide="x"></i></button></div><input id="search-input" class="search-input" placeholder="ناوی نووسەر، کتێب، یان وشەیەک..."/><div id="search-results" class="search-results"></div></section>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="unicode-engine.js"></script><script src="app.js"></script>
 </body>
 </html>
