@@ -1,43 +1,17 @@
-(function(){
-  'use strict';
-  const substitutions = [
-    [/ك/g, 'ک'], [/ي/g, 'ی'], [/ى/g, 'ی'], [/ة/g, 'ە'], [/ۀ/g, 'ە'], [/ہ/g, 'ە'], [/ھ/g, 'ه'],
-    [/ؤ/g, 'ۆ'], [/ئ/g, 'ئ'], [/ـ/g, ''], [/ٱ/g, 'ا'], [/ٲ/g, 'ئ'], [/ٳ/g, 'ئ'], [/ٵ/g, 'ئ'],
-    [/ﻙ|ﻚ/g, 'ک'], [/ﻱ|ﻲ|ﻳ|ﻴ/g, 'ی'], [/ﻪ|ﻫ|ﻬ|ﻩ/g, 'ه'], [/ﯙ|ﯚ|ﯛ|ﯜ/g, 'ۆ'],
-    [/\u200c/g, '\u200c'], [/\u0640/g, '']
-  ];
-  function normalize(value){
-    let normalized = String(value || '').normalize('NFC');
-    substitutions.forEach(([pattern,replacement]) => { normalized = normalized.replace(pattern,replacement); });
-    return normalized;
-  }
-  function normalizeTarget(target){
-    if(!target || target.tagName !== 'TEXTAREA') return;
-    const start = target.selectionStart;
-    const end = target.selectionEnd;
-    const next = normalize(target.value);
-    if(next !== target.value){
-      target.value = next;
-      try{ target.setSelectionRange(start,end); }catch(e){}
-    }
-  }
-  document.addEventListener('input', event => normalizeTarget(event.target), true);
-  document.addEventListener('paste', event => {
-    if(!event.target || event.target.tagName !== 'TEXTAREA') return;
-    const clipboard = event.clipboardData;
-    if(!clipboard) return;
-    const text = clipboard.getData('text');
-    if(normalize(text) !== text){
-      event.preventDefault();
-      const target = event.target;
-      const before = target.value.slice(0,target.selectionStart);
-      const after = target.value.slice(target.selectionEnd);
-      const inserted = normalize(text);
-      target.value = before + inserted + after;
-      const caret = before.length + inserted.length;
-      target.setSelectionRange(caret,caret);
-      target.dispatchEvent(new Event('input',{bubbles:true}));
-    }
-  }, true);
-  window.MekoUnicode = { normalize };
+(()=>{
+const M={'\u0643':'\u06A9','\u064A':'\u06CC','\u0649':'\u06CC','\u0629':'\u06D5','\u0624':'\u06C6','\u0625':'\u0626\u06CC','\u0623':'\u0626\u06D5','\u0640':'','\u200B':'','\u200D':'','\uFEFF':''};
+const R=/[\u0643\u064A\u0649\u0629\u0624\u0625\u0623\u0640\u200B\u200D\uFEFF]/g;
+const norm=s=>s.replace(R,c=>M[c]);
+const ok=e=>e&&(e.tagName==='TEXTAREA'||(e.tagName==='INPUT'&&(e.type==='text'||e.type==='search')));
+const fix=e=>{
+ if(!ok(e)||e.isComposing)return;
+ const v=e.value,nv=norm(v);
+ if(nv===v)return;
+ const s=e.selectionStart,t=e.selectionEnd;
+ e.value=nv;
+ if(s!==null)e.setSelectionRange(norm(v.slice(0,s)).length,norm(v.slice(0,t)).length);
+};
+window.MekoUnicode={normalize:norm};
+document.addEventListener('input',e=>fix(e.target),true);
+document.addEventListener('paste',e=>{const t=e.target;setTimeout(()=>{fix(t);if(ok(t))t.dispatchEvent(new Event('input',{bubbles:true}))},0)},true);
 })();
