@@ -1,183 +1,73 @@
 (() => {
-'use strict';
-const $ = (s, r = document) => r.querySelector(s);
-const KEY = 'meko.v2', KD = '٠١٢٣٤٥٦٧٨٩', H = 3600000;
-const num = n => String(n).replace(/\d/g, d => KD[d]);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const icons = () => { if (window.lucide) lucide.createIcons({ attrs: { 'stroke-width': 1.75 } }); };
-const I = n => `<i data-lucide="${n}"></i>`;
-
-const CITIES = ['ئامەد','ئیلام','بۆکان','پاوە','پیرانشار','جزیری بۆتان','جۆلەمێرگ','خانەقین','دهۆک','دێرسم','ڕحا','زاخۆ','سنە','سلێمانی','سەقز','شنگال','عاموودێ','عەفرین','قامیشلۆ','قارس','کرماشان','کەرکووک','کۆبانێ','مەریوان','مەهاباد','مێردین','ورمێ','وان','هەولێر','هەڵەبجە'];
-const WORLD = { 'ئەڵمانیا': ['بەرلین','هامبورگ','کۆلن','میونشن'], 'بەریتانیا': ['بیرمنگهام','لەندەن','مانچێستەر'], 'سوید': ['ئۆپسالا','ستۆکهۆلم','گۆتەبۆری'], 'فەڕەنسا': ['پاریس','لیۆن','مارسێل'], 'ئەمریکا': ['لۆس ئەنجلس','نیویۆرک','نەشڤێل'], 'کەنەدا': ['تۆرۆنتۆ','مۆنتریاڵ','ڤانکۆڤەر'], 'هۆڵەندا': ['ئەمستردام','ئوتریخت','ڕۆتردام'], 'نەرویج': ['بێرگن','ئۆسلۆ','ترۆنهایم'] };
-const citiesOf = c => c === 'کوردستان' ? CITIES : (WORLD[c] || []);
-
-const now = Date.now();
-const seed = () => ({
-  dark: false,
-  me: { name: 'ئاراس ڕەحمان', handle: 'aras.rahman', bio: 'وشە ماڵی منە،\nو هەر شیعرێک دەرگایەکە بۆ ئاسۆ.', country: 'کوردستان', city: 'کەرکووک', followers: 1284, following: 312 },
-  posts: [
-    { id: 1, author: 'ڕێبین کەریم', text: 'زمان تەنها ئامرازی قسەکردن نییە؛ ماڵی بیرەوەرییەکانمانە.', poetry: false, ts: now - 2 * H, likes: 45, liked: false, comments: [{ a: 'دانا سەعید', t: 'ڕاستە، با بیپارێزین.' }] },
-    { id: 2, author: 'هێڤی ئامەدی', text: 'هەر وشەیەک کە دەیڵێم\nپردێکە بۆ دایکم،\nلە دوورەوە دەمگەڕێنێتەوە\nبۆ ماڵی ڕۆژانی منداڵی.', poetry: true, ts: now - 5 * H, likes: 118, liked: false, comments: [] },
-    { id: 3, author: 'ئاراس ڕەحمان', me: true, text: 'ئەمڕۆ دەستم کرد بە ڕێکخستنی ئەرشیفی دەقە کوردییەکان. زۆربەی ئەو کتێبانەی کە دەیان ساڵ لەمەوبەر چاپکراون، تەنها وەک وێنە ماونەتەوە و گەڕان تێیاندا مومکین نییە. ئەگەر دەقەکان بە یونیکۆدی پاک بپارێزرێن، هەموو نەوەیەک دەتوانێت بیانخوێنێتەوە، لێیان بگەڕێت و کۆپییان بکات. ئەمە هەنگاوی یەکەمە بۆ کتێبخانەیەکی گەورەتر.', poetry: false, ts: now - 26 * H, likes: 73, liked: true, comments: [{ a: 'شادی ئەحمەد', t: 'کارێکی زۆر بەنرخە.' }, { a: 'ڕێبین کەریم', t: 'بەردەوام بە.' }] }
-  ],
-  contacts: [
-    { id: 1, name: 'ڕێبین کەریم', online: true, unread: true, msgs: [{ me: false, t: 'فایلی دیوانەکەت گەیشت، سوپاس.', ts: now - 2 * H }] },
-    { id: 2, name: 'هێڤی ئامەدی', online: false, unread: false, msgs: [{ me: true, t: 'شیعرەکەت زۆر جوان بوو.', ts: now - 30 * H }] },
-    { id: 3, name: 'دانا سەعید', online: true, unread: false, msgs: [{ me: false, t: 'سبەی دەتوانین کۆببینەوە؟', ts: now - 3 * 24 * H }] },
-    { id: 4, name: 'شادی ئەحمەد', online: false, unread: false, msgs: [{ me: false, t: 'ڕێنووسەکە ناردم بۆت.', ts: now - 6 * 24 * H }] }
-  ],
-  books: [
-    { id: 1, title: 'فەرهەنگی زاراوە زمانناسییەکان', author: 'ئەرشیفی مەکۆ', pdf: true, cat: 'lang', desc: 'کۆمەڵێک زاراوەی زمانناسی بە شیکردنەوەی کورت و نموونە.', text: 'ڕستە\nیەکەیەکی زمانییە کە واتایەکی تەواو دەگەیەنێت.\n\nڕەگ\nبنەڕەتی وشەیە پێش زیادکردنی پاشگر و پێشگر.\n\nپاشگر\nپارچەیەکە کە دوای ڕەگ دێت و واتای وشە دەگۆڕێت.' },
-    { id: 2, title: 'هەڵبژاردەی شیعری کوردی', author: 'چەند نووسەرێک', pdf: false, cat: 'poetry', mine: true, desc: 'دەقی خاوی کۆمەڵێک شیعر بە یونیکۆدی پاک.', text: 'شەوێک لە شاخ\n\nمانگ لەسەر سەرم دەگەڕا\nو بای شەمال دەیگوت:\nهەر ڕێگایەک بەرەو ماڵ دەچێت.' },
-    { id: 3, title: 'ڕێنووسی کوردی: ڕێبەرێکی کورت', author: 'ئەرشیفی مەکۆ', pdf: true, cat: 'lang', desc: 'یاساکانی نووسینی پیتەکان و جیاکردنەوەی ئەو نووسینانەی کە زۆر تێکەڵ دەکرێن.', text: 'ک و ی و ە و ۆ پیتی کوردین و لەگەڵ ك و ي و ة و ؤی عەرەبی تێکەڵ نەکرێن.' },
-    { id: 4, title: 'نامەکانی دوور', author: 'ئاراس ڕەحمان', pdf: false, cat: 'poetry', desc: 'نامەی ئەدەبی کورت، وەک دەقی خاو پارێزراوە.', text: 'بۆ ئەو کەسەی لە دوورە،\n\nئەم وشانە بەبێ ڕازاندنەوە دەنێرم؛\nبەڵکو لە شوێنی خۆیان بمێننەوە.' }
-  ],
-  saved: { posts: [], books: [] }
-});
-
-let S;
-try { S = Object.assign(seed(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { S = seed(); }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
-
-let cur = 'feed', chatId = null, ptab = 'posts', flt = 'all', fq = null, bq = '', dq = '';
-const C = new Set(), X = new Set();
-
-const ago = ts => { const m = Math.max(0, (Date.now() - ts) / 60000); return m < 1 ? 'ئێستا' : m < 60 ? num(Math.floor(m)) + ' خولەک لەمەوبەر' : m < 1440 ? num(Math.floor(m / 60)) + ' کاتژمێر لەمەوبەر' : num(Math.floor(m / 1440)) + ' ڕۆژ لەمەوبەر'; };
-const short = ts => { const m = (Date.now() - ts) / 60000; return m < 60 ? num(Math.max(1, Math.floor(m))) + 'خ' : m < 1440 ? num(Math.floor(m / 60)) + 'ک' : num(Math.floor(m / 1440)) + 'ڕ'; };
-const cc = n => 'c' + (([...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 5) + 1);
-const av = (n, s = '', on) => `<span class="av ${cc(n)} ${s}">${esc([...n][0] || '؟')}${on ? '<i class="on-dot"></i>' : ''}</span>`;
-const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 1800); };
-const loc = m => `${m.country}، ${m.city}`;
-const myPosts = () => S.posts.filter(p => p.me);
-
-/* ---------- components ---------- */
-const post = p => {
-  const poem = p.poetry, sh = p.text.length < 120 && !poem, lg = p.text.length > 200 && !poem, ex = X.has(p.id);
-  const cm = C.has(p.id) ? `<div class="cm">${p.comments.map(c => `<div class="c">${av(c.a, 'sm')}<div class="t"><b>${esc(c.a)}</b>${esc(c.t)}</div></div>`).join('')}<form data-f="cm" data-id="${p.id}"><input class="field" name="t" placeholder="لێدوانێک بنووسە..." autocomplete="off"><button class="send" aria-label="ناردن">${I('send')}</button></form></div>` : '';
-  return `<article class="post" data-id="${p.id}"><div class="ph">${av(p.author)}<div class="pm"><b>${esc(p.author)}</b><span>${ago(p.ts)}</span></div><button class="ib" data-a="more" data-id="${p.id}" aria-label="زیاتر">${I('more-horizontal')}</button></div>
-<div class="pb ${poem ? 'poem' : sh ? 'short' : ''}${lg && !ex ? ' clamp' : ''}">${esc(p.text)}</div>${lg ? `<button class="more" data-a="exp" data-id="${p.id}">${ex ? 'کەمتر' : 'زیاتر ببینە...'}</button>` : ''}
-<div class="sum"><span>${num(p.likes)} پەسەندکردن</span><span>${num(p.comments.length)} لێدوان</span></div>
-<div class="acts"><button class="${p.liked ? 'on' : ''}" data-a="like" data-id="${p.id}">${I('thumbs-up')}پەسەندکردن</button><button data-a="cmt" data-id="${p.id}">${I('message-square')}لێدوان</button><button data-a="share" data-id="${p.id}">${I('share-2')}هاوبەشیکردن</button></div>${cm}</article><div class="gap"></div>`;
-};
-const postList = (arr, q = '') => { const l = arr.filter(p => !q || p.text.includes(q) || p.author.includes(q)); return l.length ? l.map(post).join('') : '<div class="empty">هیچ پۆستێک نەدۆزرایەوە.</div>'; };
-const bookCard = (b, i) => `<button class="bk k${i % 5}" data-a="book" data-id="${b.id}"><div class="cv"><h3>${esc(b.title)}</h3><small>${esc(b.author)}</small></div><h4>${esc(b.title)}</h4><p>${esc(b.author)}</p><div class="pills">${b.pdf ? '<span class="pill">PDF</span>' : ''}<span class="pill">TXT</span></div></button>`;
-const bookGrid = arr => arr.length ? `<div class="grid">${arr.map(bookCard).join('')}</div>` : '<div class="empty">هیچ پەڕتووکێک نییە.</div>';
-const FIL = [['all', 'هەموو'], ['pdf', 'پەڕتووکی PDF'], ['txt', 'دەقی خاو (TXT)'], ['lang', 'زمان و فەرهەنگ'], ['poetry', 'دیوانی شیعر']];
-const books = () => S.books.filter(b => (flt === 'all' || (flt === 'pdf' && b.pdf) || (flt === 'txt' && !b.pdf) || b.cat === flt) && (!bq || b.title.includes(bq) || b.author.includes(bq)));
-const back = (v, t, extra = '') => `<header class="hd"><button class="ib" data-a="go" data-v="${v}" aria-label="گەڕانەوە">${I('arrow-right')}</button><h2>${t}</h2>${extra}</header>`;
-
-/* ---------- views ---------- */
-const views = {
-  feed: () => `<header class="hd">${fq === null ? `<h1>مەکۆ</h1><button class="ib" data-a="search" aria-label="گەڕان">${I('search')}</button>` : `<label class="srch">${I('search')}<input id="fq" value="${esc(fq)}" placeholder="گەڕان لە پۆستەکان..." autofocus></label><button class="ib" data-a="search" aria-label="داخستن">${I('x')}</button>`}</header><div id="list">${postList(S.posts, fq || '')}</div>`,
-  menu: () => `<header class="hd"><h1>مینیو</h1></header>
-<button class="card" data-a="go" data-v="profile">${av(S.me.name, 'md')}<div><b>${esc(S.me.name)}</b><span>${esc(loc(S.me))}</span></div></button>
-<div class="sc"><button data-a="go" data-v="library">${I('library')}کتێبخانە و ئەرشیف</button><button data-a="go" data-v="saved">${I('bookmark')}پاشەکەوتکراوەکان</button></div>
-<div class="set"><div class="row"><span>گۆڕینی ڕووکار (تاریک / ڕووناک)</span><button class="tog ${S.dark ? 'on' : ''}" data-a="theme" role="switch" aria-checked="${S.dark}" aria-label="ڕووکاری تاریک"></button></div></div>`,
-  profile: () => { const m = S.me, mine = myPosts(), bk = S.books.filter(b => b.mine || S.saved.books.includes(b.id));
-    return `<div class="pt"><b>${esc(m.handle)}</b><button class="ib" data-a="go" data-v="menu" aria-label="مینیو">${I('menu')}</button></div>
-<div class="pr">${av(m.name, 'lg')}<div class="st"><div><b>${num(mine.length)}</b><span>پۆست</span></div><div><b>${num(m.followers)}</b><span>شوێنکەوتووان</span></div><div><b>${num(m.following)}</b><span>شوێنکەوتوو</span></div></div></div>
-<div class="bio"><b>${esc(m.name)}</b><p>${esc(m.bio)}</p><div class="loc">${I('map-pin')}${esc(loc(m))}</div></div>
-<div class="btns"><button class="btn" data-a="edit">دەستکاریکردنی پڕۆفایل</button><button class="btn" data-a="shareP">هاوبەشیکردنی پڕۆفایل</button></div>
-<div class="tabs"><button class="${ptab === 'posts' ? 'on' : ''}" data-a="ptab" data-v="posts">نووسراوەکان</button><button class="${ptab === 'books' ? 'on' : ''}" data-a="ptab" data-v="books">پەڕتووکەکان</button></div>
-${ptab === 'posts' ? postList(mine) : bookGrid(bk)}`; },
-  dm: () => `<header class="hd"><h1>نامەدان</h1><button class="ib" data-a="newdm" aria-label="نامەی نوێ">${I('square-pen')}</button></header>
-<div style="padding:10px 16px"><label class="srch" style="height:42px">${I('search')}<input id="dq" value="${esc(dq)}" placeholder="گەڕان لە نامەکان..."></label></div><div id="list">${dmList()}</div>`,
-  chat: () => { const c = S.contacts.find(x => x.id === chatId);
-    return `<header class="hd"><button class="ib" data-a="go" data-v="dm" aria-label="گەڕانەوە">${I('arrow-right')}</button>${av(c.name, 'sm', c.online)}<h2>${esc(c.name)}</h2></header><div class="msgs" id="msgs">${c.msgs.map(m => `<div class="bub ${m.me ? 'me' : ''}">${esc(m.t)}</div>`).join('')}</div><form class="cb" data-f="dm"><input class="field" name="t" placeholder="نامەیەک بنووسە..." autocomplete="off"><button class="send" aria-label="ناردن">${I('send')}</button></form>`; },
-  library: () => `<div style="position:sticky;top:0;z-index:20;background:var(--bg)">${back('menu', 'کتێبخانە و ئەرشیف')}<div style="display:flex;gap:8px;padding:10px 16px"><label class="srch">${I('search')}<input id="bq" value="${esc(bq)}" placeholder="گەڕان لە پەڕتووکەکان..."></label><button class="ib" style="background:var(--tx);color:var(--bg)" data-a="addbook" aria-label="زیادکردنی پەڕتووک">${I('plus')}</button></div><div class="fl">${FIL.map(f => `<button class="${flt === f[0] ? 'on' : ''}" data-a="flt" data-v="${f[0]}">${f[1]}</button>`).join('')}</div></div><div id="list">${bookGrid(books())}</div>`,
-  saved: () => { const sp = S.posts.filter(p => S.saved.posts.includes(p.id)), sb = S.books.filter(b => S.saved.books.includes(b.id));
-    return back('menu', 'پاشەکەوتکراوەکان') + (sp.length || sb.length ? sp.map(post).join('') + bookGrid(sb) : '<div class="empty">هێشتا هیچت پاشەکەوت نەکردووە. لە پۆستێک یان پەڕتووکێک دوگمەی پاشەکەوتکردن بگرە.</div>'); }
-};
-function dmList() {
-  const l = S.contacts.filter(c => !dq || c.name.includes(dq));
-  return l.length ? l.map(c => { const m = c.msgs[c.msgs.length - 1]; return `<button class="dm" data-a="chat" data-id="${c.id}">${av(c.name, 'md', c.online)}<div class="m"><b>${esc(c.name)}</b><span>${m.me ? 'تۆ: ' : ''}${esc(m.t)} · ${short(m.ts)}</span></div>${c.unread ? '<i class="ud"></i>' : ''}</button>`; }).join('') : '<div class="empty">هیچ گفتوگۆیەک نەدۆزرایەوە.</div>';
-}
-
-/* ---------- render ---------- */
-function render() {
-  const app = $('#app');
-  app.className = cur === 'chat' ? 'chatting' : '';
-  app.innerHTML = views[cur]();
-  $('#nav').style.display = cur === 'chat' ? 'none' : '';
-  const grp = { feed: 'feed', dm: 'dm', chat: 'dm' }[cur] || 'menu';
-  ['feed', 'dm', 'menu'].forEach(g => $('#n-' + g).classList.toggle('on', g === grp));
-  $('#n-av').className = 'av ' + cc(S.me.name); $('#n-av').textContent = [...S.me.name][0];
-  $('#n-dot').style.display = S.contacts.some(c => c.unread) ? 'block' : 'none';
-  document.documentElement.dataset.theme = S.dark ? 'dark' : 'light';
-  icons();
-  const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight;
-}
-const go = v => { cur = v; render(); scrollTo(0, 0); };
-const rp = id => { const p = S.posts.find(x => x.id === id), el = $(`.post[data-id="${id}"]`); if (el && p) { el.outerHTML = post(p); icons(); } };
-const refill = (sel, html) => { $(sel).innerHTML = html; icons(); };
-
-/* ---------- modals ---------- */
-function modal(html, full) {
-  const m = document.createElement('div'); m.className = 'mask';
-  m.innerHTML = `<div class="sheet${full ? ' full' : ''}" role="dialog"><div class="grab"></div>${html}</div>`;
-  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
-  document.body.appendChild(m); icons(); return m;
-}
-const mh = t => `<div class="sh"><h3>${t}</h3><button class="ib" data-a="close" aria-label="داخستن">${I('x')}</button></div>`;
-const opts = (l, s) => l.map(x => `<option ${x === s ? 'selected' : ''}>${esc(x)}</option>`).join('');
-const newPost = () => { modal(`${mh('پۆستی نوێ')}<textarea class="in" id="np" placeholder="چی لە دڵتدایە؟" autofocus></textarea><button class="chip" id="poem" data-a="poem">${I('feather')}شیعر</button><div class="col"><button class="btn p" style="height:46px;font-size:16px" data-a="publish">بڵاوکردنەوە</button></div>`); };
-const editProfile = () => { const m = S.me; modal(`${mh('دەستکاریکردنی پڕۆفایل')}<label class="lbl">ناو</label><input class="in" id="ep-n" value="${esc(m.name)}"><label class="lbl">ژیاننامە</label><textarea class="in" id="ep-b" style="min-height:90px">${esc(m.bio)}</textarea><label class="lbl">وڵات</label><select class="in" id="ep-c">${opts(['کوردستان', ...Object.keys(WORLD)], m.country)}</select><label class="lbl">شار</label><select class="in" id="ep-ci">${opts(citiesOf(m.country), m.city)}</select><div class="col"><button class="btn p" style="height:46px" data-a="saveP">پاشەکەوتکردن</button></div>`); };
-const bookDetail = id => { const b = S.books.find(x => x.id === id), sv = S.saved.books.includes(id);
-  modal(`${mh('')}<h3 style="font-family:Amiri,serif;font-size:26px;line-height:1.6">${esc(b.title)}</h3><p style="color:var(--mut)">${esc(b.author)}</p><div class="pills">${b.pdf ? '<span class="pill">PDF</span>' : ''}<span class="pill">TXT</span></div><p style="margin-top:14px">${esc(b.desc)}</p><div class="col"><button class="btn p" style="height:46px" data-a="readtxt" data-id="${id}">خوێندنەوەی دەقی خاو (TXT)</button><button class="btn" style="height:46px" data-a="openpdf" data-id="${id}">کردنەوەی پەڕتووکی PDF</button><button class="btn" style="height:46px" data-a="bsave" data-id="${id}">${sv ? 'لابردن لە پاشەکەوتکراوەکان' : 'پاشەکەوتکردن'}</button></div>`); };
-const reader = id => { const b = S.books.find(x => x.id === id), w = b.text.trim().split(/\s+/).filter(Boolean).length;
-  modal(`${mh(esc(b.title))}<div class="meta"><span>${num(w)} وشە</span><span>${num(b.text.length)} پیت</span></div><div class="btns" style="padding:12px 0 0"><button class="btn" data-a="copytxt" data-id="${id}">کۆپیکردنی دەق</button><button class="btn p" data-a="dltxt" data-id="${id}">داگرتنی فایلی .TXT</button></div><div class="rd" dir="rtl">${esc(b.text)}</div>`, true); };
-const addBook = () => { modal(`${mh('زیادکردنی پەڕتووک / دەقی خاو')}<label class="lbl">ناونیشان</label><input class="in" id="ab-t"><label class="lbl">نووسەر</label><input class="in" id="ab-a"><label class="lbl">پۆل</label><select class="in" id="ab-c"><option value="lang">زمان و فەرهەنگ</option><option value="poetry">دیوانی شیعر</option></select><label class="lbl">دەقی خاو یان فایلی TXT</label><textarea class="in" id="ab-x" placeholder="دەق لێرە دابنێ..."></textarea><input type="file" id="ab-f" accept=".txt,text/plain" style="margin-top:8px"><div class="col"><button class="btn p" style="height:46px" data-a="saveBook">زیادکردن</button></div>`); };
-const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); a.download = name.replace(/[\\/:*?"<>|]/g, '') + '.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
-const copy = t => (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); });
-
-/* ---------- events ---------- */
-const A = {
-  go: d => { if (d.v === 'profile') ptab = 'posts'; go(d.v); },
-  new: () => newPost(), close: (d, el) => el.closest('.mask').remove(),
-  like: d => { const p = S.posts.find(x => x.id === +d.id); p.liked = !p.liked; p.likes += p.liked ? 1 : -1; save(); rp(p.id); },
-  cmt: d => { const id = +d.id; C.has(id) ? C.delete(id) : C.add(id); rp(id); },
-  exp: d => { const id = +d.id; X.has(id) ? X.delete(id) : X.add(id); rp(id); },
-  more: d => { const id = +d.id, l = S.saved.posts, i = l.indexOf(id); i < 0 ? l.push(id) : l.splice(i, 1); save(); toast(i < 0 ? 'پۆستەکە پاشەکەوت کرا' : 'لە پاشەکەوتکراوەکان لابرا'); },
-  share: d => { copy(location.href.split('#')[0] + '#post-' + d.id).then(() => toast('بەستەرەکە کۆپی کرا')); },
-  search: () => { fq = fq === null ? '' : null; render(); const e = $('#fq'); if (e) e.focus(); },
-  theme: () => { S.dark = !S.dark; save(); render(); },
-  edit: () => editProfile(),
-  shareP: () => copy(location.href.split('#')[0] + '#' + S.me.handle).then(() => toast('بەستەری پڕۆفایل کۆپی کرا')),
-  ptab: d => { ptab = d.v; render(); },
-  flt: d => { flt = d.v; render(); },
-  book: d => bookDetail(+d.id),
-  bsave: (d, el) => { const id = +d.id, l = S.saved.books, i = l.indexOf(id); i < 0 ? l.push(id) : l.splice(i, 1); save(); el.textContent = i < 0 ? 'لابردن لە پاشەکەوتکراوەکان' : 'پاشەکەوتکردن'; toast(i < 0 ? 'پاشەکەوت کرا' : 'لابرا'); },
-  readtxt: (d, el) => { el.closest('.mask').remove(); reader(+d.id); },
-  openpdf: d => toast('پەڕتووکی PDF دەکرێتەوە...'),
-  copytxt: d => copy(S.books.find(b => b.id === +d.id).text).then(() => toast('دەقەکە کۆپی کرا')),
-  dltxt: d => { const b = S.books.find(x => x.id === +d.id); download(b.title, b.text); toast('فایلی TXT داگیرا'); },
-  addbook: () => addBook(),
-  newdm: () => modal(`${mh('نامەی نوێ')}${S.contacts.map(c => `<button class="dm" style="padding-inline:0" data-a="pick" data-id="${c.id}">${av(c.name, 'md', c.online)}<div class="m"><b>${esc(c.name)}</b></div></button>`).join('')}`),
-  pick: (d, el) => { el.closest('.mask').remove(); A.chat(d); },
-  chat: d => { chatId = +d.id; S.contacts.find(c => c.id === chatId).unread = false; save(); go('chat'); },
-  poem: (d, el) => el.classList.toggle('on'),
-  publish: (d, el) => { const t = $('#np').value.trim(); if (!t) return toast('سەرەتا شتێک بنووسە'); S.posts.unshift({ id: Date.now(), author: S.me.name, me: true, text: t, poetry: $('#poem').classList.contains('on'), ts: Date.now(), likes: 0, liked: false, comments: [] }); save(); el.closest('.mask').remove(); go('feed'); toast('بڵاوکرایەوە'); },
-  saveP: (d, el) => { const n = $('#ep-n').value.trim(); if (!n) return toast('ناو بەتاڵە'); Object.assign(S.me, { name: n, bio: $('#ep-b').value.trim(), country: $('#ep-c').value, city: $('#ep-ci').value }); S.posts.forEach(p => { if (p.me) p.author = n; }); save(); el.closest('.mask').remove(); render(); toast('پاشەکەوت کرا'); },
-  saveBook: (d, el) => { const t = $('#ab-t').value.trim(), x = $('#ab-x').value.trim(); if (!t || !x) return toast('ناونیشان و دەق پێویستن'); S.books.unshift({ id: Date.now(), title: t, author: $('#ab-a').value.trim() || 'نەزانراو', pdf: false, cat: $('#ab-c').value, mine: true, desc: 'دەقی خاوی زیادکراو بە یونیکۆدی پاک.', text: x }); save(); el.closest('.mask').remove(); if (cur === 'library') render(); toast('پەڕتووکەکە زیادکرا'); }
-};
-document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset, el); });
-document.addEventListener('submit', e => {
-  const f = e.target.closest('[data-f]'); if (!f) return; e.preventDefault();
-  const v = f.elements.t.value.trim(); if (!v) return;
-  if (f.dataset.f === 'cm') { const p = S.posts.find(x => x.id === +f.dataset.id); p.comments.push({ a: S.me.name, t: v }); save(); rp(p.id); const i = $(`.post[data-id="${p.id}"] input`); if (i) i.focus(); }
-  else { const c = S.contacts.find(x => x.id === chatId); c.msgs.push({ me: true, t: v, ts: Date.now() }); save(); render(); $('.cb input').focus(); }
-});
-document.addEventListener('input', e => {
-  const i = e.target.id;
-  if (i === 'fq') { fq = e.target.value; refill('#list', postList(S.posts, fq)); }
-  if (i === 'dq') { dq = e.target.value; refill('#list', dmList()); }
-  if (i === 'bq') { bq = e.target.value; refill('#list', bookGrid(books())); }
-});
-document.addEventListener('change', e => {
-  if (e.target.id === 'ep-c') $('#ep-ci').innerHTML = opts(citiesOf(e.target.value));
-  if (e.target.id === 'ab-f' && e.target.files[0]) { const f = e.target.files[0]; UnicodeEngine.readTxt(f).then(t => { $('#ab-x').value = t; if (!$('#ab-t').value) $('#ab-t').value = UnicodeEngine.clean(f.name.replace(/\.txt$/i, '')); }); }
-});
-document.addEventListener('click', e => { const el = e.target.closest('#nav [data-a]'); if (el && el.dataset.a === 'go' && el.dataset.v === 'feed') { fq = null; } }, true);
-
-render();
+  'use strict';
+  const STORAGE_KEY = 'meko-state-v1';
+  const defaultAvatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=180&q=80';
+  const altAvatar = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=180&q=80';
+  const kurdistanCities = ['ئامەد','ئەرەبیل','بادینان','دهۆک','رانیە','سلێمانی','سنە','قامیشلۆ','کەرکووک','کرماشان','مەهاباد','هەولێر','وان'];
+  const countries = ['کوردستان','ئێران','عێراق','تورکیا','سوریا','ئەڵمانیا','بەریتانیا','کەنەدا'];
+  const seedPosts = [
+    {id:'p1',author:'ئاوات عەبدولڕەحمان',avatar:defaultAvatar,time:'ئەمڕۆ، ١٠:٢٤',text:'هەر وشەیەک کە بە زمانی دایک دەنووسرێت، دەرگایەکە بۆ یادەوەرییەکی کۆن. زمانی کوردی تەنها زمان نییە؛ شوێنی مانەوەی بیرە.',poetry:false,likes:24,liked:false,comments:[{id:'c1',author:'ژین',avatar:altAvatar,text:'وشەی جوان و بیرخستنەوەیەکی گرنگە.'}]},
+    {id:'p2',author:'شێرکۆ بێکەس',avatar:altAvatar,time:'دوێنێ، ٢١:٠٥',text:'لە شەودا\nچرایەکی بچووکم\nلە دڵم هەڵکرد\nبۆ ئەوەی ڕێگاکە ون نەبێت',poetry:true,likes:51,liked:false,comments:[]},
+    {id:'p3',author:'نەرمین سەعید',avatar:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=180&q=80',time:'٢ ڕۆژ لەمەوبەر',text:'ئەم ئەرشیفە بە هەموومان دروست دەبێت. هەر دەقێک، هەر بیرەوەرییەک، بەشێکە لە نەخشەی زیندووی کوردستان.',poetry:false,likes:18,liked:false,comments:[]}
+  ];
+  const seedLibrary = [
+    {id:'b1',type:'TXT',category:'raw',title:'نامەکانی نالی',author:'کۆکراوەی ئەدەبی کوردی',text:'ئەی بەهاری دڵ، بۆچی هێشتا لە سەرەتای ڕێگادایت؟\n\nوشەکان لە کاغەزدا دەژین، بەڵام لە دەنگی خوێنەرەوە دووبارە لەدایک دەبن. ئەم دەقانە بەشێکن لە میراثی نووسراوی کوردی و بۆ هەموو خوێنەران کراوەن.'},
+    {id:'b2',type:'PDF',category:'poetry',title:'دیوانی شیعری کوردی',author:'کۆمەڵێک شاعیر',text:'لە خاکی کوردستانەوە\nدەنگی هەزار ساڵ دێت\nلە گەڵای دارەوە\nتا لە دڵی مرۆڤدا جێگیر دەبێت.'},
+    {id:'b3',type:'TXT',category:'raw',title:'فەرهەنگی وشە کۆنەکان',author:'بنکەی زمانی مەکۆ',text:'ئەم پەڕگەیە کۆمەڵێک وشە و دەربڕینی کۆنی کوردی لە شار و گوندە جیاوازەکان کۆدەکاتەوە. ئامانج، پاراستن و بەردەستکردنی سامانی زمانییە بۆ توێژەر و نووسەر.'},
+    {id:'b4',type:'DOC',category:'essay',title:'بیرکردنەوە لە زمان',author:'د. هێمن عومەر',text:'زمان وەک ماڵێکە. ئەگەر بەردەوام بیپارێزین، شوێنی گەڕانەوەی نەوەکان دەبێت. ئەرشیفی کراوە یارمەتیدەرە بۆ ئەوەی هیچ دەنگێک لە بیر نەچێت.'}
+  ];
+  const seedChats = [
+    {id:'a1',name:'ئاوات عەبدولڕەحمان',avatar:defaultAvatar,preview:'دەقەکەت زۆر بەدڵم بوو.',time:'١٠:٣٥',messages:[{id:'m1',self:false,text:'دەقەکەت زۆر بەدڵم بوو.',time:'١٠:٣٥'},{id:'m2',self:true,text:'سوپاس، ئەمە بەشێکە لە نووسینێکی درێژتر.',time:'١٠:٣٦'}]},
+    {id:'a2',name:'نەرمین سەعید',avatar:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=180&q=80',preview:'سبەی لە ئەرشیف دەبینمت.',time:'دوێنێ',messages:[{id:'m3',self:false,text:'سبەی لە ئەرشیف دەبینمت.',time:'دوێنێ'}]}
+  ];
+  const seedGroups = [{id:'g1',name:'خوێنەرانی مەکۆ',avatar:'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=180&q=80',preview:'٤ ئەندام',time:'ئەمڕۆ',messages:[{id:'g-m1',self:false,text:'بەخێربێن بۆ کۆمەڵی خوێنەرانی مەکۆ.',time:'ئەمڕۆ'}]}];
+  const initial = {theme:'light',profile:{name:'ژین عەلی',bio:'نووسەر و کۆکەرەوەی دەقە بچووکەکان. باوەڕم وایە هەر وشەیەک شوێنێکی لە ئەرشیفدا هەیە.',avatar:defaultAvatar,country:'کوردستان',city:'هەولێر',followers:128,following:76},posts:seedPosts,chats:seedChats,groups:seedGroups};
+  let state = loadState();
+  let currentChatTab = 'chats';
+  let activeChatId = null;
+  let activeLibraryFilter = 'all';
+  let poetryDraft = false;
+  let toastTimer;
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => Array.from(document.querySelectorAll(selector));
+  const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));
+  function loadState(){try{const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY));return parsed?{...initial,...parsed,profile:{...initial.profile,...parsed.profile}}:structuredClone(initial)}catch(e){return structuredClone(initial)}}
+  function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+  function icon(name){return `<i data-lucide="${name}"></i>`}
+  function renderIcons(){if(window.lucide) window.lucide.createIcons({attrs:{'stroke-width':1.75}})}
+  function showToast(message){const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200)}
+  function formatNow(){return 'ئێستا'}
+  function applyTheme(){document.documentElement.classList.toggle('dark',state.theme==='dark');$('#theme-status').textContent=state.theme==='dark'?'تاریک':'ڕوون';}
+  function updateGlobalProfile(){const p=state.profile;$('#nav-avatar').src=p.avatar;$('#composer-avatar').src=p.avatar;$('#composer-name').textContent=p.name;$('#nav-avatar').onerror=()=>$('#nav-avatar').src=defaultAvatar;$('#composer-avatar').onerror=()=>$('#composer-avatar').src=defaultAvatar;}
+  function postTemplate(post,options={}){const comments=post.comments||[];return `<article class="post ${post.poetry?'poetry':''}" data-post-id="${post.id}"><header class="post-head"><img class="avatar" src="${escapeHtml(post.avatar)}" alt="وێنەی ${escapeHtml(post.author)}" onerror="this.src='${defaultAvatar}'"><div class="post-ident"><strong>${escapeHtml(post.author)}</strong><span><time datetime="2026-11-03">${escapeHtml(post.time)}</time>${post.poetry?' · شیعر':''}</span></div>${options.profile?'' : icon('more-horizontal')}</header><div class="post-body">${escapeHtml(post.text)}</div><div class="post-tools"><button data-action="like-post" class="${post.liked?'liked':''}">${icon(post.liked?'heart':'heart')}<span>${post.likes||0}</span></button><button data-action="toggle-comments">${icon('message-circle')}<span>${comments.length||''} لێدوان</span></button><button data-action="share-post" class="share">${icon('send')} هاوبەشکردن</button></div><div class="comments hidden">${comments.map(c=>`<div class="comment"><img src="${escapeHtml(c.avatar||altAvatar)}" alt=""><div><strong>${escapeHtml(c.author)}</strong>${escapeHtml(c.text)}</div></div>`).join('')}<form class="comment-form"><input name="comment" placeholder="لێدوانێک بنووسە..." autocomplete="off"><button type="submit">ناردن</button></form></div></article>`}
+  function renderTimeline(){const feed=$('#timeline-feed');feed.innerHTML=state.posts.map(p=>postTemplate(p)).join('')||`<div class="empty-state">${icon('feather')}هێشتا هیچ نووسینێک نییە.</div>`;renderIcons();}
+  function renderProfile(){const p=state.profile;const ownPosts=state.posts.filter(post=>post.author===p.name);$('#profile-head').innerHTML=`<div class="profile-head"><img class="avatar" src="${escapeHtml(p.avatar)}" alt="وێنەی ${escapeHtml(p.name)}" onerror="this.src='${defaultAvatar}'"><div class="profile-main"><h1>${escapeHtml(p.name)}</h1><p>${escapeHtml(p.bio)}</p><div class="profile-stats"><div class="profile-stat"><strong>${ownPosts.length}</strong><span>نووسین</span></div><div class="profile-stat"><strong>${p.followers}</strong><span>شوێنکەوتوو</span></div><div class="profile-stat"><strong>${p.following}</strong><span>شوێنکەوتن</span></div></div></div><button class="profile-edit" data-action="edit-profile">دەستکاریکردنی پڕۆفایل</button></div>`;$('#profile-post-count').textContent=`${ownPosts.length} نووسین`;$('#profile-posts').innerHTML=ownPosts.map(p=>postTemplate(p,{profile:true})).join('')||`<div class="empty-state">${icon('pen-line')}هێشتا لەم پڕۆفایلەدا نووسینێک نییە.</div>`;renderIcons();}
+  function chatData(){return currentChatTab==='chats'?state.chats:state.groups}
+  function renderChatList(){const list=$('#chat-list');list.classList.remove('hidden');$('#chat-room').classList.add('hidden');const data=chatData();list.innerHTML=data.map(c=>`<div class="chat-row" data-chat-id="${c.id}"><img class="avatar" src="${escapeHtml(c.avatar)}" alt=""><div class="chat-copy"><strong>${escapeHtml(c.name)}</strong><p>${escapeHtml(c.preview||'گفتوگۆیەکی نوێ')}</p></div><time class="chat-time">${escapeHtml(c.time||'')}</time></div>`).join('')||`<div class="empty-state">${icon('message-circle')}هێشتا هیچ گفتوگۆیەک نییە.</div>`;renderIcons();}
+  function renderChatRoom(){const data=chatData();const chat=data.find(c=>c.id===activeChatId);if(!chat)return;$('#chat-list').classList.add('hidden');const room=$('#chat-room');room.classList.remove('hidden');room.innerHTML=`<header class="chat-room-head"><button class="icon-button" data-action="close-chat"><i data-lucide="arrow-right"></i></button><img class="avatar" src="${escapeHtml(chat.avatar)}" alt=""><strong>${escapeHtml(chat.name)}</strong>${currentChatTab==='groups'?icon('users-round'):icon('more-horizontal')}</header><div class="chat-messages" id="chat-messages">${(chat.messages||[]).map(m=>`<div class="bubble-line ${m.self?'self':'other'}"><div class="bubble">${escapeHtml(m.text)}</div><time class="bubble-time">${escapeHtml(m.time||'')}</time></div>`).join('')}</div><form class="chat-compose" id="chat-form"><textarea id="chat-input" rows="1" maxlength="800" placeholder="نامەیەک بنووسە..."></textarea><button class="send-button hidden" id="send-button" type="submit" aria-label="ناردن">${icon('arrow-up')}</button></form>`;renderIcons();const messages=$('#chat-messages');messages.scrollTop=messages.scrollHeight;}
+  function renderLibrary(){const filtered=state.library||seedLibrary;const list=filtered.filter(b=>activeLibraryFilter==='all'||b.category===activeLibraryFilter);$('#library-count').textContent=`${list.length} بەڵگە`;$('#library-filters').innerHTML=[['all','هەموو'],['raw','دەقی خاو'],['poetry','دیوانی شیعر'],['essay','وتار']].map(([key,label])=>`<button class="filter-chip ${activeLibraryFilter===key?'active':''}" data-filter="${key}">${label}</button>`).join('');$('#library-list').innerHTML=list.map(b=>`<article class="library-row" data-book-id="${b.id}" data-action="open-reader"><div class="file-icon">${icon(b.type==='PDF'?'file-text':'file-type-2')}</div><div class="library-copy"><h3>${escapeHtml(b.title)}</h3><p>${escapeHtml(b.author)} · ${b.type}</p></div><div class="raw-archive-text" aria-label="دەقی خاو">${escapeHtml(b.text)}</div><div class="library-actions"><button data-action="open-reader" aria-label="خوێندنەوە">${icon('book-open')}</button><a data-action="download-book" href="${makeDownload(b)}" download="${safeFileName(b.title)}.txt" aria-label="داگرتن">${icon('download')}</a></div></article>`).join('');renderIcons();}
+  function makeDownload(book){return `data:text/plain;charset=utf-8,${encodeURIComponent(book.text)}`}
+  function safeFileName(title){return title.replace(/[^\u0600-\u06FF\w\s-]/g,'').trim().replace(/\s+/g,'-')||'meko-text'}
+  function openSheet(id){$('#sheet-layer').classList.remove('hidden');$('#sheet-layer').setAttribute('aria-hidden','false');['menu-sheet','create-sheet','edit-sheet','reader-sheet','search-sheet'].forEach(key=>$('#'+key).classList.toggle('hidden',key!==id));}
+  function closeSheet(){ $('#sheet-layer').classList.add('hidden');$('#sheet-layer').setAttribute('aria-hidden','true');}
+  function showView(view){$$('.view').forEach(v=>v.classList.remove('active'));const target=$('#view-'+view);if(target)target.classList.add('active');$$('.nav-item[data-nav]').forEach(n=>n.classList.toggle('active',n.dataset.nav===view));if(view==='timeline')renderTimeline();if(view==='chat')renderChatList();if(view==='library')renderLibrary();if(view==='profile')renderProfile();window.scrollTo({top:0,behavior:'smooth'});}
+  function populateCountries(){const select=$('#country-select');select.innerHTML=countries.map(c=>`<option value="${c}">${c}</option>`).join('');select.value=state.profile.country;populateCities(state.profile.city);}
+  function populateCities(selected=''){const country=$('#country-select').value;const select=$('#city-select');const cities=country==='کوردستان'?kurdistanCities.slice().sort((a,b)=>a.localeCompare(b,'ku')):['تەهران','بەغدا','ئەنقەرە','دیمەشق','بەرلین','لۆندەن'];select.innerHTML=cities.map(c=>`<option value="${c}">${c}</option>`).join('');select.value=cities.includes(selected)?selected:cities[0];}
+  function openEditProfile(){populateCountries();const f=$('#profile-form');f.name.value=state.profile.name;f.bio.value=state.profile.bio;f.avatar.value=state.profile.avatar;openSheet('edit-sheet');}
+  function openReader(book){$('#reader-content').innerHTML=`<p class="reader-kicker">${escapeHtml(book.type)} · ئەرشیفی مەکۆ</p><h1>${escapeHtml(book.title)}</h1><p class="reader-author">${escapeHtml(book.author)}</p><div class="reader-raw-text">${escapeHtml(book.text)}</div>`;const link=$('#download-text');link.href=makeDownload(book);link.download=safeFileName(book.title)+'.txt';link.dataset.bookId=book.id;openSheet('reader-sheet');renderIcons();}
+  function addPost(){const input=$('#post-input');const text=window.MekoUnicode?window.MekoUnicode.normalize(input.value):input.value;if(!text.trim()){showToast('تکایە دەقێک بنووسە');return}state.posts.unshift({id:'p-'+Date.now(),author:state.profile.name,avatar:state.profile.avatar,time:formatNow(),text:text.trim(),poetry:poetryDraft,likes:0,liked:false,comments:[]});saveState();input.value='';poetryDraft=false;$('#poetry-toggle').classList.remove('is-on');closeSheet();showView('timeline');showToast('نووسینەکەت بڵاوکرایەوە');}
+  function sendMessage(){const input=$('#chat-input');const text=window.MekoUnicode?window.MekoUnicode.normalize(input.value):input.value;const clean=text.trim();if(!clean||!activeChatId)return;const data=chatData();const chat=data.find(c=>c.id===activeChatId);chat.messages=chat.messages||[];chat.messages.push({id:'m-'+Date.now(),self:true,text:clean,time:formatNow()});chat.preview=clean;chat.time=formatNow();saveState();renderChatRoom();}
+  function createGroup(){const name=window.prompt('ناوی گرووپەکە بنووسە');if(!name||!name.trim())return;const group={id:'g-'+Date.now(),name:name.trim(),avatar:altAvatar,preview:'گرووپێکی نوێ',time:formatNow(),messages:[]};state.groups.unshift(group);saveState();currentChatTab='groups';$$('[data-chat-tab]').forEach(t=>t.classList.toggle('active',t.dataset.chatTab==='groups'));showView('chat');showToast('گرووپەکە دروستکرا');}
+  function openSearch(){openSheet('search-sheet');$('#search-input').focus();renderSearch('');}
+  function renderSearch(query){const term=query.trim().toLowerCase();const posts=state.posts.filter(p=>!term||p.text.toLowerCase().includes(term)||p.author.toLowerCase().includes(term));const books=(state.library||seedLibrary).filter(b=>!term||b.title.toLowerCase().includes(term)||b.author.toLowerCase().includes(term)||b.text.toLowerCase().includes(term));$('#search-results').innerHTML=`${books.map(b=>`<div class="search-result" data-book-id="${b.id}">${icon('book-open')}<div><strong>${escapeHtml(b.title)}</strong><p>${escapeHtml(b.author)}</p></div></div>`).join('')}${posts.map(p=>`<div class="search-result" data-post-id="${p.id}">${icon('file-text')}<div><strong>${escapeHtml(p.author)}</strong><p>${escapeHtml(p.text.slice(0,80))}</p></div></div>`).join('')||(!books.length?' <div class="empty-state">هیچ ئەنجامێک نەدۆزرایەوە.</div>':'')}`;renderIcons();}
+  function updateJsonLd(){let node=$('#meko-jsonld');if(!node){node=document.createElement('script');node.id='meko-jsonld';node.type='application/ld+json';document.head.appendChild(node)}const p=state.profile;node.textContent=JSON.stringify({'@context':'https://schema.org','@graph':[{'@type':'Person','@id':'#profile','name':p.name,'description':p.bio,'image':p.avatar,'homeLocation':{'@type':'Place','name':`${p.city}، ${p.country}`}},{'@type':'CollectionPage','name':'ئەرشیفی مەکۆ','inLanguage':'ku','hasPart':state.posts.map(post=>({'@type':'SocialMediaPosting','headline':post.text.slice(0,60),'articleBody':post.text,'author':{'@type':'Person','name':post.author},'datePublished':'2026-11-03'})), 'mentions':(state.library||seedLibrary).map(book=>({'@type':'Book','name':book.title,'author':{'@type':'Person','name':book.author},'inLanguage':'ku','text':book.text}))}]});}
+  function bindEvents(){document.addEventListener('click',event=>{const action=event.target.closest('[data-action]')?.dataset.action;if(action){if(action==='open-create')openSheet('create-sheet');if(action==='open-menu'){updateSheetMini();openSheet('menu-sheet')}if(action==='close-sheet')closeSheet();if(action==='open-library'){closeSheet();showView('library')}if(action==='open-profile'){closeSheet();showView('profile')}if(action==='edit-profile')openEditProfile();if(action==='toggle-theme'){state.theme=state.theme==='dark'?'light':'dark';saveState();applyTheme();showToast(state.theme==='dark'?'دۆخی تاریک چالاکە':'دۆخی ڕووناک چالاکە')}if(action==='publish-post')addPost();if(action==='toggle-poetry'){poetryDraft=!poetryDraft;$('#poetry-toggle').classList.toggle('is-on',poetryDraft)}if(action==='new-group')createGroup();if(action==='copy-text'){navigator.clipboard?.writeText($('#reader-content .reader-raw-text')?.textContent||'');showToast('دەقەکە کۆپی کرا')}if(action==='open-reader'){const row=event.target.closest('[data-book-id]');const book=(state.library||seedLibrary).find(b=>b.id===row.dataset.bookId);openReader(book)}if(action==='download-book')showToast('دەقەکە ئامادەی داگرتنە')}const nav=event.target.closest('[data-nav]');if(nav)showView(nav.dataset.nav);const chatRow=event.target.closest('.chat-row');if(chatRow){activeChatId=chatRow.dataset.chatId;renderChatRoom()}const filter=event.target.closest('[data-filter]');if(filter){activeLibraryFilter=filter.dataset.filter;renderLibrary()}const libraryRow=event.target.closest('.library-row');if(libraryRow&&!event.target.closest('[data-action="download-book"]')&&!event.target.closest('[data-action="open-reader"]')){const book=(state.library||seedLibrary).find(b=>b.id===libraryRow.dataset.bookId);if(book)openReader(book)}const like=event.target.closest('[data-action="like-post"]');if(like){const post=state.posts.find(p=>p.id===like.closest('.post').dataset.postId);if(post){post.liked=!post.liked;post.likes=Math.max(0,(post.likes||0)+(post.liked?1:-1));saveState();renderTimeline();updateJsonLd()}}const comments=event.target.closest('[data-action="toggle-comments"]');if(comments)comments.closest('.post').querySelector('.comments').classList.toggle('hidden');const share=event.target.closest('[data-action="share-post"]');if(share){navigator.clipboard?.writeText(location.href);showToast('بەستەرەکە کۆپی کرا')}});
+    document.addEventListener('submit',event=>{if(event.target.id==='profile-form'){event.preventDefault();const oldName=state.profile.name;const data=new FormData(event.target);state.profile={...state.profile,name:data.get('name').trim(),bio:data.get('bio').trim(),avatar:data.get('avatar').trim()||defaultAvatar,country:data.get('country'),city:data.get('city')};state.posts=state.posts.map(p=>p.author===oldName?{...p,author:state.profile.name,avatar:state.profile.avatar}:p);saveState();updateGlobalProfile();renderProfile();renderTimeline();closeSheet();showToast('پڕۆفایلەکەت نوێکرایەوە');updateJsonLd()}if(event.target.id==='chat-form'){event.preventDefault();sendMessage()}if(event.target.classList.contains('comment-form')){event.preventDefault();const post=state.posts.find(p=>p.id===event.target.closest('.post').dataset.postId);const input=event.target.elements.comment;const text=input.value.trim();if(post&&text){post.comments.push({id:'c-'+Date.now(),author:state.profile.name,avatar:state.profile.avatar,text});saveState();renderTimeline();showToast('لێدوانەکەت زیادکرا');updateJsonLd()}}});
+    document.addEventListener('input',event=>{if(event.target.id==='chat-input'){const input=event.target;input.style.height='auto';input.style.height=Math.min(input.scrollHeight,80)+'px';input.style.overflowY=input.scrollHeight>80?'auto':'hidden';$('#send-button')?.classList.toggle('hidden',!input.value.trim())}if(event.target.id==='search-input')renderSearch(event.target.value)});
+    $('#country-select').addEventListener('change',()=>populateCities(''));
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSheet()});
+  }
+  function updateSheetMini(){const p=state.profile;$('#sheet-profile-mini').innerHTML=`<div class="sheet-profile-mini"><img src="${escapeHtml(p.avatar)}" alt=""><div><strong>${escapeHtml(p.name)}</strong><span>${escapeHtml(p.city)}، ${escapeHtml(p.country)}</span></div></div>`}
+  function init(){state.library=state.library||seedLibrary;applyTheme();updateGlobalProfile();renderTimeline();renderProfile();renderChatList();renderLibrary();updateJsonLd();bindEvents();renderIcons();}
+  init();
 })();
