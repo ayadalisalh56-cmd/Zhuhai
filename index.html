@@ -1,25 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ku" dir="rtl" class="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مەکۆ — ئەرشیفی کراوەی زمان و ئەدەبی کوردی</title>
-<meta name="description" content="مەکۆ پلاتفۆرمێکی کراوەی ئەدەبی، زمانەوانی و ئەرشیفی دیجیتاڵیی کوردییە.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Vazirmatn','sans-serif'],serif:['Amiri','serif']}}}}</script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="مەکۆ؛ پلاتفۆرمێکی کوردی بۆ ئەدەب، زمان، کۆمەڵگا و ئەرشیفی دیجیتاڵی کراوە.">
+  <meta property="og:title" content="مەکۆ — ئەدەب، زمان و ئەرشیفی کوردی">
+  <meta property="og:description" content="شوێنێک بۆ نووسین، خوێندنەوە، گفتوگۆ و پاراستنی دەقی کوردی.">
+  <title>مەکۆ — ئەدەب، زمان و ئەرشیفی کوردی</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'sans-serif'],
+            serif: ['Amiri', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script id="meko-jsonld" type="application/ld+json">{"@context":"https://schema.org","@graph":[]}</script>
+  <script src="unicode-engine.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
-<body class="font-sans">
-<div class="app-shell"><main id="view"></main></div>
-<nav id="nav" class="glass-nav" aria-label="سەرەکی"></nav>
-<div id="pop" class="menu-pop" hidden></div>
-<div id="ov"></div>
-<div id="toast" class="toast"></div>
-<footer class="sr-only"><p>مەکۆ — ئەرشیفی کراوەی کوردی</p></footer>
-<script src="unicode-engine.js"></script>
-<script src="app.js"></script>
+<body>
+  <div id="app" class="app-shell">
+    <main id="main-content" class="main-content" tabindex="-1"></main>
+    <nav id="bottom-nav" class="bottom-nav" aria-label="گەشتکردنی سەرەکی"></nav>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
