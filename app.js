@@ -1,296 +1,183 @@
-/* Meko — application logic (state in localStorage, SPA routing) */
 (() => {
 'use strict';
-const U = window.UnicodeEngine;
-const KEY = 'meko.state.v1';
-const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const kn = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
-const ic = (n, c = '') => `<i data-lucide="${n}" class="${c}"></i>`;
-const icons = () => window.lucide && lucide.createIcons({ attrs: { 'stroke-width': 1.5 } });
-const now = () => Date.now(), H = 3600e3;
+const $ = (s, r = document) => r.querySelector(s);
+const KEY = 'meko.v2', KD = '٠١٢٣٤٥٦٧٨٩', H = 3600000;
+const num = n => String(n).replace(/\d/g, d => KD[d]);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const icons = () => { if (window.lucide) lucide.createIcons({ attrs: { 'stroke-width': 1.75 } }); };
+const I = n => `<i data-lucide="${n}"></i>`;
 
-const DIAL = ['سۆرانی', 'کرمانجی', 'کەڵهوڕی', 'هەورامی', 'زازاکی'];
-const TAGS = ['زمانەوانی', 'ڕێزمان', 'وشەسازی', 'شیعر', 'ئەدەبیات', 'مێژوو'];
-const CATS = { all: 'هەموو', pdf: 'پەڕتووکی PDF', txt: 'دەقی خاو (TXT)', ling: 'زمان و فەرهەنگ', poetry: 'دیوانی شیعر' };
-const TABS = { feed: 'گۆڕەپان', library: 'کتێبخانە و ئەرشیف', dm: 'نامەدان', profile: 'پڕۆفایل' };
-const REPLIES = ['زۆر سوپاس، لە نزیکەوە سەیری دەکەم.', 'بیرۆکەیەکی بەنرخە؛ با لە مەکۆ بەشی بکەین.', 'ئەم دەقە بۆ ئەرشیف گونجاوە، بە یونیکۆدی پاک دەیخەینە کتێبخانە.', 'دەستخۆش، سبەینێ زیاتر قسەی لەسەر دەکەین.'];
+const CITIES = ['ئامەد','ئیلام','بۆکان','پاوە','پیرانشار','جزیری بۆتان','جۆلەمێرگ','خانەقین','دهۆک','دێرسم','ڕحا','زاخۆ','سنە','سلێمانی','سەقز','شنگال','عاموودێ','عەفرین','قامیشلۆ','قارس','کرماشان','کەرکووک','کۆبانێ','مەریوان','مەهاباد','مێردین','ورمێ','وان','هەولێر','هەڵەبجە'];
+const WORLD = { 'ئەڵمانیا': ['بەرلین','هامبورگ','کۆلن','میونشن'], 'بەریتانیا': ['بیرمنگهام','لەندەن','مانچێستەر'], 'سوید': ['ئۆپسالا','ستۆکهۆلم','گۆتەبۆری'], 'فەڕەنسا': ['پاریس','لیۆن','مارسێل'], 'ئەمریکا': ['لۆس ئەنجلس','نیویۆرک','نەشڤێل'], 'کەنەدا': ['تۆرۆنتۆ','مۆنتریاڵ','ڤانکۆڤەر'], 'هۆڵەندا': ['ئەمستردام','ئوتریخت','ڕۆتردام'], 'نەرویج': ['بێرگن','ئۆسلۆ','ترۆنهایم'] };
+const citiesOf = c => c === 'کوردستان' ? CITIES : (WORLD[c] || []);
 
-/* ---------- seed data ---------- */
+const now = Date.now();
 const seed = () => ({
-  theme: 'dark', tab: 'feed', active: 'c1', filter: { d: null, t: null }, lib: { cat: 'all', q: '' }, prof: 'posts',
-  me: { name: 'ئاراس ڕەحمان', handle: 'aras', region: 'سلێمانی', pen: 'توێژەری زمان و ئەدەبی کوردی',
-    bio: 'لە سلێمانی دەژیم و لەسەر ڕێنووس، وشەسازی و پاراستنی دەقی کوردی بە یونیکۆد کار دەکەم. کۆکردنەوەی دەقی کۆن و گۆڕینیان بۆ UTF-8 ـی پاک کارە سەرەکییەکەمە.',
-    lv: { 'سۆرانی': 5, 'کرمانجی': 3, 'کەڵهوڕی': 4, 'هەورامی': 2, 'زازاکی': 1 } },
+  dark: false,
+  me: { name: 'ئاراس ڕەحمان', handle: 'aras.rahman', bio: 'وشە ماڵی منە،\nو هەر شیعرێک دەرگایەکە بۆ ئاسۆ.', country: 'کوردستان', city: 'کەرکووک', followers: 1284, following: 312 },
   posts: [
-    { id: 1, au: 'د. شیلان ئەمین', h: 'shilan', reg: 'هەولێر', d: 'سۆرانی', tag: 'زمانەوانی', ts: now() - 2 * H, likes: 42, dislikes: 1, me: {},
-      text: 'جیاوازیی «ه» و «ە» لە ڕێنووسی کوردیدا جیاوازیی شێوە نییە، جیاوازیی دەنگە: «ە» بزوێنە و «ه» دەنگی بێ‌دەنگی هەناسەیە. تێکەڵکردنی ئەم دوو پیتە لە دەقی دیجیتاڵیدا گەڕان و ئەرشیف دەشکێنێت.',
-      comments: [{ n: 'کاوە بەرلین', t: 'ڕاستە؛ لە ئەرشیفی کۆندا ژمارەیەکی زۆر وشە بەهۆی ئەم هەڵەیەوە دووبارە نووسراونەتەوە.' }] },
-    { id: 2, au: 'ئاڤین دهۆکی', h: 'avin', reg: 'دهۆک', d: 'کرمانجی', tag: 'ڕێزمان', ts: now() - 5 * H, likes: 27, dislikes: 0, me: {},
-      text: 'د کرمانجیێ دا ل دەمێ بۆری، کریار د گەل ئەگەرێ دهێتە ڕێزکرن؛ ئەڤە جیاوازییەکا گرنگە دناڤبەرا کرمانجی و سۆرانی دا.',
-      comments: [] },
-    { id: 3, au: 'کامەران سالار', h: 'kamaran', reg: 'سلێمانی', d: 'سۆرانی', tag: 'شیعر', ts: now() - 9 * H, likes: 63, dislikes: 2, me: {},
-      text: 'ئەی نەسیمی بەربەیان بۆنی بەهاری بۆ بێنە | سڵاوی ئاشقی بێکەس بگەیەنە بۆ دڵداری\nدڵ لە نیگای تۆ ڕۆشنە وەک مانگی چواردە | شەوی تاریکی دووری بووە ڕۆژی بەهاران',
-      comments: [{ n: 'نارین سلێمانی', t: 'ئاوازی ڕێبازی بابانی تێدا دیارە.' }] },
-    { id: 4, au: 'ئاراس ڕەحمان', h: 'aras', reg: 'سلێمانی', d: 'کەڵهوڕی', tag: 'مێژوو', ts: now() - 26 * H, likes: 18, dislikes: 0, me: {}, mine: 1,
-      text: 'کەڵهوڕەکان لە ناوچەکانی کرماشان و ئیلام و پشتکۆیان دەژین و زاراوەکەیان وشەی کۆنی زۆری پارێزراوە؛ کۆکردنەوەی گۆرانی و ئاخاوتنی ئەم ناوچانە بەشێکە لە پاراستنی میراتی نەتەوەیی.',
-      comments: [] }
+    { id: 1, author: 'ڕێبین کەریم', text: 'زمان تەنها ئامرازی قسەکردن نییە؛ ماڵی بیرەوەرییەکانمانە.', poetry: false, ts: now - 2 * H, likes: 45, liked: false, comments: [{ a: 'دانا سەعید', t: 'ڕاستە، با بیپارێزین.' }] },
+    { id: 2, author: 'هێڤی ئامەدی', text: 'هەر وشەیەک کە دەیڵێم\nپردێکە بۆ دایکم،\nلە دوورەوە دەمگەڕێنێتەوە\nبۆ ماڵی ڕۆژانی منداڵی.', poetry: true, ts: now - 5 * H, likes: 118, liked: false, comments: [] },
+    { id: 3, author: 'ئاراس ڕەحمان', me: true, text: 'ئەمڕۆ دەستم کرد بە ڕێکخستنی ئەرشیفی دەقە کوردییەکان. زۆربەی ئەو کتێبانەی کە دەیان ساڵ لەمەوبەر چاپکراون، تەنها وەک وێنە ماونەتەوە و گەڕان تێیاندا مومکین نییە. ئەگەر دەقەکان بە یونیکۆدی پاک بپارێزرێن، هەموو نەوەیەک دەتوانێت بیانخوێنێتەوە، لێیان بگەڕێت و کۆپییان بکات. ئەمە هەنگاوی یەکەمە بۆ کتێبخانەیەکی گەورەتر.', poetry: false, ts: now - 26 * H, likes: 73, liked: true, comments: [{ a: 'شادی ئەحمەد', t: 'کارێکی زۆر بەنرخە.' }, { a: 'ڕێبین کەریم', t: 'بەردەوام بە.' }] }
+  ],
+  contacts: [
+    { id: 1, name: 'ڕێبین کەریم', online: true, unread: true, msgs: [{ me: false, t: 'فایلی دیوانەکەت گەیشت، سوپاس.', ts: now - 2 * H }] },
+    { id: 2, name: 'هێڤی ئامەدی', online: false, unread: false, msgs: [{ me: true, t: 'شیعرەکەت زۆر جوان بوو.', ts: now - 30 * H }] },
+    { id: 3, name: 'دانا سەعید', online: true, unread: false, msgs: [{ me: false, t: 'سبەی دەتوانین کۆببینەوە؟', ts: now - 3 * 24 * H }] },
+    { id: 4, name: 'شادی ئەحمەد', online: false, unread: false, msgs: [{ me: false, t: 'ڕێنووسەکە ناردم بۆت.', ts: now - 6 * 24 * H }] }
   ],
   books: [
-    { id: 'b1', title: 'ڕێنووسی کوردی: ڕێنمایی یونیکۆد', author: 'ئەرشیفی مەکۆ', d: 'سۆرانی', cat: 'ling', pdf: 'renusi-unicode.pdf',
-      txt: 'ڕێنووسی کوردی: ڕێنمایی یونیکۆد\n\n١. پیتەکانی «ک» و «ی» دەبێت لە شێوەی کوردییان بنووسرێن، نەک عەرەبی (ك، ي).\n٢. «ە» بزوێنەیە و «ه» دەنگی هەناسەیە؛ تێکەڵیان مەکە.\n٣. «ڕ» و «ڵ» پیتی سەربەخۆن و ناگۆڕدرێن بە «ر» و «ل».\n٤. بۆ دەقی درێژ هەمیشە UTF-8 بەکاربهێنە.' },
-    { id: 'b2', title: 'دیوانی شیعر — هەڵبژاردەی ڕێبازی بابان', author: 'کۆکراوەی مەکۆ', d: 'سۆرانی', cat: 'poetry', pdf: '',
-      txt: 'دیوانی هەڵبژاردە\n\nبەهار هات و گوڵ پشکووت و دڵ ئاوێتەی هیوایە\nچرا هەڵکرا لە شەودا و ڕێگا ڕووناکە و وایە\n\nلە کێوان خۆر هەڵدێت و ئاو دەگاتە دەشتی ئارام\nژیان دووبارە دەست پێ دەکات، بەم شێوەیە هەر ئەنجام' },
-    { id: 'b3', title: 'ڕێزمانی کرمانجی بۆ فێرخوازان', author: 'ئاڤین دهۆکی', d: 'کرمانجی', cat: 'ling', pdf: 'grammar-kurmanji.pdf', txt: '' },
-    { id: 'b4', title: 'فەرهەنگۆکی وشەی کەڵهوڕی', author: 'ئەرشیفی مەکۆ', d: 'کەڵهوڕی', cat: 'ling', pdf: '',
-      txt: 'فەرهەنگۆکی وشەی کەڵهوڕی\n\nئاو: ئاو؛ ئاوی ڕووبار و کانی\nنان: نان؛ خۆراکی سەرەکی\nکێو: چیا؛ شاخ\nدڵ: دڵ؛ ناوەندی هەست' },
-    { id: 'b5', title: 'وشەنامەی هەورامی–سۆرانی', author: 'دەستەی مەکۆ', d: 'هەورامی', cat: 'ling', pdf: 'hawrami-sorani.pdf',
-      txt: 'وشەنامەی هەورامی–سۆرانی\n\nنموونەی تۆمار: وشەی هەورامی ← واتای سۆرانی ← نموونەی بەکارهێنان.\nئەم فایلە بۆ زیادکردنی تۆمارەکان بە UTF-8 ئامادەکراوە.' },
-    { id: 'b6', title: 'چیرۆکە فۆلکلۆرییەکان', author: 'ئاراس ڕەحمان', d: 'سۆرانی', cat: 'other', pdf: '', mine: 1,
-      txt: 'چیرۆکە فۆلکلۆرییەکان\n\nلە کۆنەوە دەگێڕنەوە کە لە گوندێکی چیاکاندا کانییەک هەبوو...\n(نموونەی دەقی خاو بۆ تاقیکردنەوەی خوێنەری TXT)' }
+    { id: 1, title: 'فەرهەنگی زاراوە زمانناسییەکان', author: 'ئەرشیفی مەکۆ', pdf: true, cat: 'lang', desc: 'کۆمەڵێک زاراوەی زمانناسی بە شیکردنەوەی کورت و نموونە.', text: 'ڕستە\nیەکەیەکی زمانییە کە واتایەکی تەواو دەگەیەنێت.\n\nڕەگ\nبنەڕەتی وشەیە پێش زیادکردنی پاشگر و پێشگر.\n\nپاشگر\nپارچەیەکە کە دوای ڕەگ دێت و واتای وشە دەگۆڕێت.' },
+    { id: 2, title: 'هەڵبژاردەی شیعری کوردی', author: 'چەند نووسەرێک', pdf: false, cat: 'poetry', mine: true, desc: 'دەقی خاوی کۆمەڵێک شیعر بە یونیکۆدی پاک.', text: 'شەوێک لە شاخ\n\nمانگ لەسەر سەرم دەگەڕا\nو بای شەمال دەیگوت:\nهەر ڕێگایەک بەرەو ماڵ دەچێت.' },
+    { id: 3, title: 'ڕێنووسی کوردی: ڕێبەرێکی کورت', author: 'ئەرشیفی مەکۆ', pdf: true, cat: 'lang', desc: 'یاساکانی نووسینی پیتەکان و جیاکردنەوەی ئەو نووسینانەی کە زۆر تێکەڵ دەکرێن.', text: 'ک و ی و ە و ۆ پیتی کوردین و لەگەڵ ك و ي و ة و ؤی عەرەبی تێکەڵ نەکرێن.' },
+    { id: 4, title: 'نامەکانی دوور', author: 'ئاراس ڕەحمان', pdf: false, cat: 'poetry', desc: 'نامەی ئەدەبی کورت، وەک دەقی خاو پارێزراوە.', text: 'بۆ ئەو کەسەی لە دوورە،\n\nئەم وشانە بەبێ ڕازاندنەوە دەنێرم؛\nبەڵکو لە شوێنی خۆیان بمێننەوە.' }
   ],
-  chats: [
-    { id: 'c1', n: 'شنۆ ئەحمەد', reg: 'کەرکووک', on: 1, m: [{ me: 0, t: 'سڵاو، دەقی نوێی ڕێزمانەکەم نارد بۆ ئەرشیف.', ts: now() - 3 * H }] },
-    { id: 'c2', n: 'دیار ئامەدی', reg: 'ئامەد', on: 1, m: [{ me: 0, t: 'ڕێنووسی کرمانجی بە ئەلفبێی عەرەبی دەمەوێت بەراورد بکەم.', ts: now() - 6 * H }] },
-    { id: 'c3', n: 'ڕێبوار مەهابادی', reg: 'مەهاباد', on: 0, m: [{ me: 1, t: 'گۆرانییە کۆنەکانی ناوچەکەتان تۆمار کراون؟', ts: now() - 30 * H }] },
-    { id: 'c4', n: 'ڤیان قامیشلۆ', reg: 'قامیشلۆ', on: 1, m: [] },
-    { id: 'c5', n: 'نارین سلێمانی', reg: 'سلێمانی', on: 0, m: [{ me: 0, t: 'دیوانەکە بە یونیکۆد ئامادە بوو.', ts: now() - 50 * H }] },
-    { id: 'c6', n: 'کاوە بەرلین', reg: 'بەرلین', on: 1, m: [{ me: 0, t: 'لە دیاسپۆرا منداڵان کوردی فێر دەکەین، یارمەتی پێویستە.', ts: now() - 8 * H }] }
-  ]
+  saved: { posts: [], books: [] }
 });
 
-/* ---------- state ---------- */
-let S = (() => { try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && r.posts && r.books) return r; } catch (e) {} return seed(); })();
+let S;
+try { S = Object.assign(seed(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { S = seed(); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
-const OPEN = new Set(), TYPING = {};
-let mob = 'list', curBook = null, shareId = null;
 
-/* ---------- helpers ---------- */
-const av = (n, c = '') => `<span class="avatar ${c}">${esc([...String(n).replace(/^د\.\s*/, '')][0] || '؟')}</span>`;
-const words = t => t.trim().split(/\s+/).filter(Boolean).length;
-const clock = ts => { const d = new Date(ts); return kn(String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')); };
-function ago(ts) { const m = Math.max(1, Math.round((now() - ts) / 6e4)); if (m < 60) return kn(m) + ' خولەک لەمەوپێش'; const h = Math.round(m / 60); return h < 24 ? kn(h) + ' کاتژمێر لەمەوپێش' : kn(Math.round(h / 24)) + ' ڕۆژ لەمەوپێش'; }
-function toast(m) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = m; $('#toasts').appendChild(t); setTimeout(() => t.classList.add('out'), 2300); setTimeout(() => t.remove(), 2700); }
-const fit = t => { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 320) + 'px'; };
-const modal = (id, on) => { $('#' + id).classList.toggle('hidden', !on); document.body.classList.toggle('noscroll', !!$$('.modal:not(.hidden)').length); };
-async function copy(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); } }
-function download(name, text) {
-  const a = document.createElement('a'), url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-  a.href = url; a.download = name.replace(/[\\/:*?"<>|]+/g, '-') + '.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+let cur = 'feed', chatId = null, ptab = 'posts', flt = 'all', fq = null, bq = '', dq = '';
+const C = new Set(), X = new Set();
+
+const ago = ts => { const m = Math.max(0, (Date.now() - ts) / 60000); return m < 1 ? 'ئێستا' : m < 60 ? num(Math.floor(m)) + ' خولەک لەمەوبەر' : m < 1440 ? num(Math.floor(m / 60)) + ' کاتژمێر لەمەوبەر' : num(Math.floor(m / 1440)) + ' ڕۆژ لەمەوبەر'; };
+const short = ts => { const m = (Date.now() - ts) / 60000; return m < 60 ? num(Math.max(1, Math.floor(m))) + 'خ' : m < 1440 ? num(Math.floor(m / 60)) + 'ک' : num(Math.floor(m / 1440)) + 'ڕ'; };
+const cc = n => 'c' + (([...n].reduce((a, c) => a + c.charCodeAt(0), 0) % 5) + 1);
+const av = (n, s = '', on) => `<span class="av ${cc(n)} ${s}">${esc([...n][0] || '؟')}${on ? '<i class="on-dot"></i>' : ''}</span>`;
+const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 1800); };
+const loc = m => `${m.country}، ${m.city}`;
+const myPosts = () => S.posts.filter(p => p.me);
+
+/* ---------- components ---------- */
+const post = p => {
+  const poem = p.poetry, sh = p.text.length < 120 && !poem, lg = p.text.length > 200 && !poem, ex = X.has(p.id);
+  const cm = C.has(p.id) ? `<div class="cm">${p.comments.map(c => `<div class="c">${av(c.a, 'sm')}<div class="t"><b>${esc(c.a)}</b>${esc(c.t)}</div></div>`).join('')}<form data-f="cm" data-id="${p.id}"><input class="field" name="t" placeholder="لێدوانێک بنووسە..." autocomplete="off"><button class="send" aria-label="ناردن">${I('send')}</button></form></div>` : '';
+  return `<article class="post" data-id="${p.id}"><div class="ph">${av(p.author)}<div class="pm"><b>${esc(p.author)}</b><span>${ago(p.ts)}</span></div><button class="ib" data-a="more" data-id="${p.id}" aria-label="زیاتر">${I('more-horizontal')}</button></div>
+<div class="pb ${poem ? 'poem' : sh ? 'short' : ''}${lg && !ex ? ' clamp' : ''}">${esc(p.text)}</div>${lg ? `<button class="more" data-a="exp" data-id="${p.id}">${ex ? 'کەمتر' : 'زیاتر ببینە...'}</button>` : ''}
+<div class="sum"><span>${num(p.likes)} پەسەندکردن</span><span>${num(p.comments.length)} لێدوان</span></div>
+<div class="acts"><button class="${p.liked ? 'on' : ''}" data-a="like" data-id="${p.id}">${I('thumbs-up')}پەسەندکردن</button><button data-a="cmt" data-id="${p.id}">${I('message-square')}لێدوان</button><button data-a="share" data-id="${p.id}">${I('share-2')}هاوبەشیکردن</button></div>${cm}</article><div class="gap"></div>`;
+};
+const postList = (arr, q = '') => { const l = arr.filter(p => !q || p.text.includes(q) || p.author.includes(q)); return l.length ? l.map(post).join('') : '<div class="empty">هیچ پۆستێک نەدۆزرایەوە.</div>'; };
+const bookCard = (b, i) => `<button class="bk k${i % 5}" data-a="book" data-id="${b.id}"><div class="cv"><h3>${esc(b.title)}</h3><small>${esc(b.author)}</small></div><h4>${esc(b.title)}</h4><p>${esc(b.author)}</p><div class="pills">${b.pdf ? '<span class="pill">PDF</span>' : ''}<span class="pill">TXT</span></div></button>`;
+const bookGrid = arr => arr.length ? `<div class="grid">${arr.map(bookCard).join('')}</div>` : '<div class="empty">هیچ پەڕتووکێک نییە.</div>';
+const FIL = [['all', 'هەموو'], ['pdf', 'پەڕتووکی PDF'], ['txt', 'دەقی خاو (TXT)'], ['lang', 'زمان و فەرهەنگ'], ['poetry', 'دیوانی شیعر']];
+const books = () => S.books.filter(b => (flt === 'all' || (flt === 'pdf' && b.pdf) || (flt === 'txt' && !b.pdf) || b.cat === flt) && (!bq || b.title.includes(bq) || b.author.includes(bq)));
+const back = (v, t, extra = '') => `<header class="hd"><button class="ib" data-a="go" data-v="${v}" aria-label="گەڕانەوە">${I('arrow-right')}</button><h2>${t}</h2>${extra}</header>`;
+
+/* ---------- views ---------- */
+const views = {
+  feed: () => `<header class="hd">${fq === null ? `<h1>مەکۆ</h1><button class="ib" data-a="search" aria-label="گەڕان">${I('search')}</button>` : `<label class="srch">${I('search')}<input id="fq" value="${esc(fq)}" placeholder="گەڕان لە پۆستەکان..." autofocus></label><button class="ib" data-a="search" aria-label="داخستن">${I('x')}</button>`}</header><div id="list">${postList(S.posts, fq || '')}</div>`,
+  menu: () => `<header class="hd"><h1>مینیو</h1></header>
+<button class="card" data-a="go" data-v="profile">${av(S.me.name, 'md')}<div><b>${esc(S.me.name)}</b><span>${esc(loc(S.me))}</span></div></button>
+<div class="sc"><button data-a="go" data-v="library">${I('library')}کتێبخانە و ئەرشیف</button><button data-a="go" data-v="saved">${I('bookmark')}پاشەکەوتکراوەکان</button></div>
+<div class="set"><div class="row"><span>گۆڕینی ڕووکار (تاریک / ڕووناک)</span><button class="tog ${S.dark ? 'on' : ''}" data-a="theme" role="switch" aria-checked="${S.dark}" aria-label="ڕووکاری تاریک"></button></div></div>`,
+  profile: () => { const m = S.me, mine = myPosts(), bk = S.books.filter(b => b.mine || S.saved.books.includes(b.id));
+    return `<div class="pt"><b>${esc(m.handle)}</b><button class="ib" data-a="go" data-v="menu" aria-label="مینیو">${I('menu')}</button></div>
+<div class="pr">${av(m.name, 'lg')}<div class="st"><div><b>${num(mine.length)}</b><span>پۆست</span></div><div><b>${num(m.followers)}</b><span>شوێنکەوتووان</span></div><div><b>${num(m.following)}</b><span>شوێنکەوتوو</span></div></div></div>
+<div class="bio"><b>${esc(m.name)}</b><p>${esc(m.bio)}</p><div class="loc">${I('map-pin')}${esc(loc(m))}</div></div>
+<div class="btns"><button class="btn" data-a="edit">دەستکاریکردنی پڕۆفایل</button><button class="btn" data-a="shareP">هاوبەشیکردنی پڕۆفایل</button></div>
+<div class="tabs"><button class="${ptab === 'posts' ? 'on' : ''}" data-a="ptab" data-v="posts">نووسراوەکان</button><button class="${ptab === 'books' ? 'on' : ''}" data-a="ptab" data-v="books">پەڕتووکەکان</button></div>
+${ptab === 'posts' ? postList(mine) : bookGrid(bk)}`; },
+  dm: () => `<header class="hd"><h1>نامەدان</h1><button class="ib" data-a="newdm" aria-label="نامەی نوێ">${I('square-pen')}</button></header>
+<div style="padding:10px 16px"><label class="srch" style="height:42px">${I('search')}<input id="dq" value="${esc(dq)}" placeholder="گەڕان لە نامەکان..."></label></div><div id="list">${dmList()}</div>`,
+  chat: () => { const c = S.contacts.find(x => x.id === chatId);
+    return `<header class="hd"><button class="ib" data-a="go" data-v="dm" aria-label="گەڕانەوە">${I('arrow-right')}</button>${av(c.name, 'sm', c.online)}<h2>${esc(c.name)}</h2></header><div class="msgs" id="msgs">${c.msgs.map(m => `<div class="bub ${m.me ? 'me' : ''}">${esc(m.t)}</div>`).join('')}</div><form class="cb" data-f="dm"><input class="field" name="t" placeholder="نامەیەک بنووسە..." autocomplete="off"><button class="send" aria-label="ناردن">${I('send')}</button></form>`; },
+  library: () => `<div style="position:sticky;top:0;z-index:20;background:var(--bg)">${back('menu', 'کتێبخانە و ئەرشیف')}<div style="display:flex;gap:8px;padding:10px 16px"><label class="srch">${I('search')}<input id="bq" value="${esc(bq)}" placeholder="گەڕان لە پەڕتووکەکان..."></label><button class="ib" style="background:var(--tx);color:var(--bg)" data-a="addbook" aria-label="زیادکردنی پەڕتووک">${I('plus')}</button></div><div class="fl">${FIL.map(f => `<button class="${flt === f[0] ? 'on' : ''}" data-a="flt" data-v="${f[0]}">${f[1]}</button>`).join('')}</div></div><div id="list">${bookGrid(books())}</div>`,
+  saved: () => { const sp = S.posts.filter(p => S.saved.posts.includes(p.id)), sb = S.books.filter(b => S.saved.books.includes(b.id));
+    return back('menu', 'پاشەکەوتکراوەکان') + (sp.length || sb.length ? sp.map(post).join('') + bookGrid(sb) : '<div class="empty">هێشتا هیچت پاشەکەوت نەکردووە. لە پۆستێک یان پەڕتووکێک دوگمەی پاشەکەوتکردن بگرە.</div>'); }
+};
+function dmList() {
+  const l = S.contacts.filter(c => !dq || c.name.includes(dq));
+  return l.length ? l.map(c => { const m = c.msgs[c.msgs.length - 1]; return `<button class="dm" data-a="chat" data-id="${c.id}">${av(c.name, 'md', c.online)}<div class="m"><b>${esc(c.name)}</b><span>${m.me ? 'تۆ: ' : ''}${esc(m.t)} · ${short(m.ts)}</span></div>${c.unread ? '<i class="ud"></i>' : ''}</button>`; }).join('') : '<div class="empty">هیچ گفتوگۆیەک نەدۆزرایەوە.</div>';
 }
 
-/* ---------- timeline ---------- */
-function postHTML(p) {
-  const poem = p.tag === 'شیعر', open = OPEN.has(p.id), m = p.me || {};
-  const body = poem
-    ? `<div class="poem">${p.text.split('\n').filter(l => l.trim()).map(l => { const h = l.split('|'); return h.length > 1 ? `<div class="beyt"><span>${esc(h[0].trim())}</span><i class="orn"></i><span>${esc(h[1].trim())}</span></div>` : `<div class="beyt one">${esc(l.trim())}</div>`; }).join('')}</div>`
-    : `<p class="prose">${esc(p.text).replace(/\n/g, '<br>')}</p>`;
-  const act = (a, i, n, on, l) => `<button class="act ${on ? 'on' : ''}" data-act="${a}" data-id="${p.id}" aria-label="${l}">${ic(i)}${n != null ? `<span>${kn(n)}</span>` : ''}</button>`;
-  return `<article class="card post" id="post-${p.id}">
-    <header class="flex items-center gap-3">${av(p.au)}
-      <div class="min-w-0 flex-1"><div class="flex items-center gap-2"><b class="truncate">${esc(p.au)}</b><span class="text-xs text-mute">@${esc(p.h)}</span></div>
-      <div class="text-xs text-mute">${esc(p.reg)} · ${ago(p.ts)}</div></div>
-      <span class="badge bronze">${esc(p.d)}</span></header>
-    <div class="mt-4">${body}</div>
-    <div class="mt-3 flex items-center gap-3"><span class="tag">#${esc(p.tag)}</span><span class="badge ok">${ic('shield-check')}UTF-8</span></div>
-    <footer class="actbar">${act('like', 'thumbs-up', p.likes, m.like, 'ڵایک')}${act('dislike', 'thumbs-down', p.dislikes, m.dislike, 'دیسڵایک')}${act('comment', 'message-square', p.comments.length, open, 'کۆمێنت')}${act('share', 'share-2', null, false, 'شەیرکردن')}</footer>
-    ${open ? `<div class="comments">${p.comments.map(c => `<div class="cm">${av(c.n, 'sm')}<div><b class="text-sm">${esc(c.n)}</b><p class="text-sm">${esc(c.t)}</p></div></div>`).join('')}
-      <div data-uni-wrap><textarea class="field" rows="1" data-uni placeholder="کۆمێنتێک بنووسە..."></textarea>
-      <div class="mt-2 flex items-center justify-between">${U.badge()}<button class="btn sm" data-act="sendcomment" data-id="${p.id}">ناردن</button></div></div></div>` : ''}
-  </article>`;
-}
-function renderFeed() {
-  const f = S.filter, L = S.posts.filter(p => (!f.d || p.d === f.d) && (!f.t || p.tag === f.t));
-  const bar = f.d || f.t ? `<div class="filterbar"><span>فلتەر: ${esc(f.d || '')} ${f.t ? '#' + esc(f.t) : ''}</span><button data-act="clearf">لابردنی فلتەر</button></div>` : '';
-  $('#feed').innerHTML = bar + (L.map(postHTML).join('') || '<p class="empty">هیچ نووسراوەیەک بەم فلتەرە نەدۆزرایەوە.</p>');
+/* ---------- render ---------- */
+function render() {
+  const app = $('#app');
+  app.className = cur === 'chat' ? 'chatting' : '';
+  app.innerHTML = views[cur]();
+  $('#nav').style.display = cur === 'chat' ? 'none' : '';
+  const grp = { feed: 'feed', dm: 'dm', chat: 'dm' }[cur] || 'menu';
+  ['feed', 'dm', 'menu'].forEach(g => $('#n-' + g).classList.toggle('on', g === grp));
+  $('#n-av').className = 'av ' + cc(S.me.name); $('#n-av').textContent = [...S.me.name][0];
+  $('#n-dot').style.display = S.contacts.some(c => c.unread) ? 'block' : 'none';
+  document.documentElement.dataset.theme = S.dark ? 'dark' : 'light';
   icons();
+  const m = $('#msgs'); if (m) m.scrollTop = m.scrollHeight;
 }
-function repost(id) {
-  const p = S.posts.find(x => x.id == id), el = $('#post-' + id);
-  if (!el) return renderFeed();
-  const d = $('textarea[data-uni]', el); const v = d ? d.value : '';
-  el.outerHTML = postHTML(p);
-  const t = $('#post-' + id + ' textarea[data-uni]'); if (t && v) t.value = v;
-  icons();
-}
-function react(id, k) {
-  const p = S.posts.find(x => x.id == id), o = k === 'like' ? 'dislike' : 'like'; p.me = p.me || {};
-  if (p.me[k]) { p.me[k] = 0; p[k + 's']--; } else { p.me[k] = 1; p[k + 's']++; if (p.me[o]) { p.me[o] = 0; p[o + 's']--; } }
-  save(); repost(id);
-}
-function publish() {
-  const ta = $('#c-text'), t = U.clean(ta.value).trim();
-  if (!t) return toast('تکایە سەرەتا دەقێک بنووسە');
-  S.posts.unshift({ id: now(), au: S.me.name, h: S.me.handle, reg: S.me.region, d: $('#c-dialect').value, tag: $('#c-tag').value, ts: now(), text: t, likes: 0, dislikes: 0, me: {}, comments: [], mine: 1 });
-  ta.value = ''; fit(ta); save(); renderFeed(); renderSide(); renderProfile(); toast('نووسراوەکە بڵاوکرایەوە');
-}
-function sendComment(id) {
-  const ta = $('#post-' + id + ' textarea[data-uni]'), t = U.clean(ta.value).trim();
-  if (!t) return toast('کۆمێنتەکە بەتاڵە');
-  S.posts.find(x => x.id == id).comments.push({ n: S.me.name, t }); save(); repost(id); toast('کۆمێنتەکە زیادکرا');
-}
-function openShare(id) {
-  shareId = id;
-  $('#share-body').innerHTML = `<button class="btn ghost w-full" data-act="copylink">${ic('link')}کۆپیکردنی بەستەری نووسراوە</button>
-    <h4 class="sh mt-5">ناردن بۆ نامەدان</h4><div class="grid gap-1">${S.chats.map(c => `<button class="conv" data-act="shareto" data-id="${c.id}">${av(c.n)}<span class="meta"><b>${esc(c.n)}</b><small>${esc(c.reg)}</small></span></button>`).join('')}</div>`;
-  modal('m-share', 1); icons();
-}
-const postLink = () => location.href.split('#')[0] + '#post-' + shareId;
+const go = v => { cur = v; render(); scrollTo(0, 0); };
+const rp = id => { const p = S.posts.find(x => x.id === id), el = $(`.post[data-id="${id}"]`); if (el && p) { el.outerHTML = post(p); icons(); } };
+const refill = (sel, html) => { $(sel).innerHTML = html; icons(); };
 
-/* ---------- discovery panel ---------- */
-function renderSide() {
-  const cnt = d => S.posts.filter(p => p.d === d).length, tc = t => S.posts.filter(p => p.tag === t).length;
-  const wc = S.books.reduce((a, b) => a + words(b.txt || ''), 0);
-  $('#side').innerHTML = `<section><h3 class="sh">فلتەری زاراوە</h3><div class="flex flex-wrap gap-2">${DIAL.map(d => `<button class="chip ${S.filter.d === d ? 'on' : ''}" data-act="fd" data-v="${d}">${d}<small>${kn(cnt(d))}</small></button>`).join('')}</div></section>
-    <section><h3 class="sh">بابەتە ئەدەبییە چالاکەکان</h3><div class="flex flex-wrap gap-2">${TAGS.map(t => `<button class="chip ${S.filter.t === t ? 'on' : ''}" data-act="ft" data-v="${t}">#${t}<small>${kn(tc(t))}</small></button>`).join('')}</div></section>
-    <section><h3 class="sh">ئامارەکانی کتێبخانە</h3><dl class="grid gap-2 text-sm">
-      <div class="flex justify-between border-b border-line pb-2"><dt class="text-mute">کۆی پەڕتووکەکان</dt><dd>${kn(S.books.length)}</dd></div>
-      <div class="flex justify-between border-b border-line pb-2"><dt class="text-mute">دەقی خاو (TXT)</dt><dd>${kn(S.books.filter(b => b.txt).length)}</dd></div>
-      <div class="flex justify-between border-b border-line pb-2"><dt class="text-mute">پەڕتووکی PDF</dt><dd>${kn(S.books.filter(b => b.pdf).length)}</dd></div>
-      <div class="flex justify-between"><dt class="text-mute">کۆی وشەکانی ئەرشیف</dt><dd>${kn(wc)}</dd></div></dl></section>`;
-  icons();
+/* ---------- modals ---------- */
+function modal(html, full) {
+  const m = document.createElement('div'); m.className = 'mask';
+  m.innerHTML = `<div class="sheet${full ? ' full' : ''}" role="dialog"><div class="grab"></div>${html}</div>`;
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+  document.body.appendChild(m); icons(); return m;
 }
-
-/* ---------- library ---------- */
-function libFilter() {
-  const { cat, q } = S.lib, s = q.trim();
-  return S.books.filter(b => (cat === 'all' || (cat === 'pdf' ? b.pdf : cat === 'txt' ? b.txt : b.cat === cat)) && (!s || (b.title + ' ' + b.author + ' ' + b.d).includes(s)));
-}
-function bookHTML(b) {
-  return `<article class="card book"><div class="flex items-start justify-between gap-3"><div><h3 class="font-lit text-xl leading-9">${esc(b.title)}</h3><p class="text-sm text-mute">${esc(b.author)}</p></div><span class="badge bronze">${esc(b.d)}</span></div>
-    <div class="mt-3 flex gap-2">${b.pdf ? '<span class="fmt">PDF</span>' : ''}${b.txt ? '<span class="fmt">TXT (UTF-8)</span>' : ''}</div>
-    <div class="mt-4 flex flex-wrap gap-2">${b.txt ? `<button class="btn sm" data-act="readtxt" data-id="${b.id}">${ic('file-text')}خوێندنەوەی دەقی خاو (TXT)</button><button class="btn ghost sm" data-act="dltxt" data-id="${b.id}">${ic('download')}.TXT</button>` : ''}${b.pdf ? `<button class="btn ghost sm" data-act="pdf" data-id="${b.id}">${ic('book-open')}PDF</button>` : ''}</div></article>`;
-}
-function renderLibList() { $('#lib-list').innerHTML = libFilter().map(bookHTML).join('') || '<p class="empty sm:col-span-2">هیچ پەڕتووکێک نەدۆزرایەوە. بە دوگمەی «زیادکردن» دەتوانیت یەکەمیان بخەیتە ئەرشیف.</p>'; icons(); }
-function renderLib() {
-  $('#lib-tabs').innerHTML = Object.entries(CATS).map(([k, v]) => `<button class="tabbtn ${S.lib.cat === k ? 'on' : ''}" data-act="libcat" data-v="${k}">${v}</button>`).join('');
-  renderLibList();
-}
-function openTxt(id) {
-  const b = S.books.find(x => x.id == id); curBook = b;
-  $('#txt-title').textContent = b.title;
-  $('#txt-stats').textContent = `${kn(words(b.txt))} وشە · ${kn([...b.txt].length)} پیت · ${kn(b.txt.split('\n').length)} دێڕ · UTF-8`;
-  $('#txt-body').innerHTML = b.txt.split('\n').map(l => `<li>${esc(l)}</li>`).join('');
-  modal('m-txt', 1); $('#txt-body').scrollTop = 0;
-}
-function saveBook() {
-  const g = i => $('#' + i), title = U.clean(g('ab-title').value).trim(), author = U.clean(g('ab-author').value).trim(), txt = U.clean(g('ab-txt').value).trim(), pdf = g('ab-pdf').value.trim();
-  if (!title) return toast('ناونیشانی پەڕتووک پێویستە');
-  if (!txt && !pdf) return toast('دەقی خاو یان زانیاری PDF زیاد بکە');
-  S.books.unshift({ id: 'b' + now(), title, author: author || S.me.name, d: g('ab-dialect').value, cat: g('ab-cat').value, pdf, txt, mine: 1 });
-  ['ab-title', 'ab-author', 'ab-pdf', 'ab-txt'].forEach(i => g(i).value = '');
-  save(); modal('m-add', 0); S.lib.cat = 'all'; renderLib(); renderSide(); renderProfile(); toast('پەڕتووکەکە بە یونیکۆدی پاک خرایە ئەرشیف');
-}
-
-/* ---------- direct messages ---------- */
-const chat = () => S.chats.find(c => c.id === S.active);
-function renderDM() {
-  $('#dm-wrap').dataset.m = mob;
-  $('#dm-list').innerHTML = S.chats.map(c => { const l = c.m[c.m.length - 1];
-    return `<button class="conv ${c.id === S.active ? 'on' : ''}" data-act="chat" data-id="${c.id}"><span class="avwrap">${av(c.n)}<i class="dot ${c.on ? 'live' : ''}"></i></span>
-      <span class="meta"><b>${esc(c.n)}<span class="badge">${esc(c.reg)}</span></b><small>${l ? esc(l.t) : 'گفتوگۆیەکی نوێ دەستپێبکە'}</small></span></button>`; }).join('');
-  icons();
-}
-function renderChat() {
-  const c = chat(); if (!c) return;
-  $('#dm-head').innerHTML = `<button class="iconbtn md:hidden" data-act="back" aria-label="گەڕانەوە">${ic('chevron-right')}</button>${av(c.n)}<div><b>${esc(c.n)}</b><div class="text-xs text-mute">${c.on ? 'ئۆنلاین' : 'ئۆفلاین'} · ${esc(c.reg)}</div></div>`;
-  $('#dm-msgs').innerHTML = (c.m.map(m => `<div class="bub ${m.me ? 'me' : ''}"><p>${esc(m.t).replace(/\n/g, '<br>')}</p><time>${clock(m.ts)}</time></div>`).join('') || '<p class="empty">هێشتا نامەیەک نییە.</p>') + (TYPING[c.id] ? '<div class="bub typing"><span></span><span></span><span></span></div>' : '');
-  const b = $('#dm-msgs'); b.scrollTop = b.scrollHeight; icons();
-}
-function sendMsg() {
-  const i = $('#dm-in'), t = U.clean(i.value).trim(), c = chat(); if (!t) return;
-  c.m.push({ me: 1, t, ts: now() }); i.value = ''; fit(i); save(); renderChat(); renderDM();
-  if (!c.on) return;
-  TYPING[c.id] = 1; renderChat();
-  setTimeout(() => { delete TYPING[c.id]; c.m.push({ me: 0, t: REPLIES[Math.floor(Math.random() * REPLIES.length)], ts: now() }); save(); if (S.tab === 'dm') { if (S.active === c.id) renderChat(); renderDM(); } }, 1400 + Math.random() * 1200);
-}
-
-/* ---------- profile ---------- */
-function renderProfile() {
-  const m = S.me, mp = S.posts.filter(p => p.mine), mb = S.books.filter(b => b.mine);
-  $('#prof').innerHTML = `<div class="border-b border-line p-6"><div class="flex items-center gap-4">${av(m.name, 'xl')}<div><h2 class="text-xl font-semibold">${esc(m.name)}</h2><p class="font-lit text-xl text-mute">${esc(m.pen)}</p><p class="text-xs text-mute">@${esc(m.handle)} · ${esc(m.region)}</p></div></div>
-    <p class="mt-4 leading-8">${esc(m.bio)}</p>
-    <div class="mt-4 flex flex-wrap gap-2">${DIAL.map(d => `<span class="badge bronze lv">${d}<span class="dots">${[0, 1, 2, 3, 4].map(i => `<s class="${i < (m.lv[d] || 0) ? 'f' : ''}"></s>`).join('')}</span></span>`).join('')}</div></div>
-    <div class="tabs px-4"><button class="tabbtn ${S.prof === 'posts' ? 'on' : ''}" data-act="ptab" data-v="posts">نووسراوەکان (${kn(mp.length)})</button><button class="tabbtn ${S.prof === 'works' ? 'on' : ''}" data-act="ptab" data-v="works">بەرهەمەکانی کتێبخانە PDF / TXT (${kn(mb.length)})</button></div>
-    <div class="grid gap-4 p-4">${S.prof === 'posts' ? (mp.map(postHTML).join('') || '<p class="empty">هێشتا نووسراوەت بڵاو نەکردووەتەوە. لە گۆڕەپان یەکەمیان بنووسە.</p>') : (mb.map(bookHTML).join('') || '<p class="empty">هێشتا بەرهەمێکت نەخستووەتە کتێبخانە.</p>')}</div>`;
-  icons();
-}
-
-/* ---------- routing ---------- */
-function go(t, push = true) {
-  S.tab = t; save();
-  $$('.view').forEach(v => v.classList.toggle('hidden', v.id !== 'view-' + t));
-  $$('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
-  $('#view-title').textContent = TABS[t];
-  if (push) { try { history.replaceState(null, '', '#' + t); } catch (e) {} }
-  ({ feed: renderFeed, library: renderLib, dm: () => { renderDM(); renderChat(); }, profile: renderProfile })[t]();
-  window.scrollTo(0, 0);
-}
-function route() {
-  const h = location.hash.slice(1);
-  if (h.startsWith('post-')) { S.filter = { d: null, t: null }; go('feed', false); setTimeout(() => { const e = $('#' + h); e && e.scrollIntoView({ block: 'center' }); }, 60); }
-  else if (TABS[h]) go(h, false);
-  else go(S.tab, false);
-}
+const mh = t => `<div class="sh"><h3>${t}</h3><button class="ib" data-a="close" aria-label="داخستن">${I('x')}</button></div>`;
+const opts = (l, s) => l.map(x => `<option ${x === s ? 'selected' : ''}>${esc(x)}</option>`).join('');
+const newPost = () => { modal(`${mh('پۆستی نوێ')}<textarea class="in" id="np" placeholder="چی لە دڵتدایە؟" autofocus></textarea><button class="chip" id="poem" data-a="poem">${I('feather')}شیعر</button><div class="col"><button class="btn p" style="height:46px;font-size:16px" data-a="publish">بڵاوکردنەوە</button></div>`); };
+const editProfile = () => { const m = S.me; modal(`${mh('دەستکاریکردنی پڕۆفایل')}<label class="lbl">ناو</label><input class="in" id="ep-n" value="${esc(m.name)}"><label class="lbl">ژیاننامە</label><textarea class="in" id="ep-b" style="min-height:90px">${esc(m.bio)}</textarea><label class="lbl">وڵات</label><select class="in" id="ep-c">${opts(['کوردستان', ...Object.keys(WORLD)], m.country)}</select><label class="lbl">شار</label><select class="in" id="ep-ci">${opts(citiesOf(m.country), m.city)}</select><div class="col"><button class="btn p" style="height:46px" data-a="saveP">پاشەکەوتکردن</button></div>`); };
+const bookDetail = id => { const b = S.books.find(x => x.id === id), sv = S.saved.books.includes(id);
+  modal(`${mh('')}<h3 style="font-family:Amiri,serif;font-size:26px;line-height:1.6">${esc(b.title)}</h3><p style="color:var(--mut)">${esc(b.author)}</p><div class="pills">${b.pdf ? '<span class="pill">PDF</span>' : ''}<span class="pill">TXT</span></div><p style="margin-top:14px">${esc(b.desc)}</p><div class="col"><button class="btn p" style="height:46px" data-a="readtxt" data-id="${id}">خوێندنەوەی دەقی خاو (TXT)</button><button class="btn" style="height:46px" data-a="openpdf" data-id="${id}">کردنەوەی پەڕتووکی PDF</button><button class="btn" style="height:46px" data-a="bsave" data-id="${id}">${sv ? 'لابردن لە پاشەکەوتکراوەکان' : 'پاشەکەوتکردن'}</button></div>`); };
+const reader = id => { const b = S.books.find(x => x.id === id), w = b.text.trim().split(/\s+/).filter(Boolean).length;
+  modal(`${mh(esc(b.title))}<div class="meta"><span>${num(w)} وشە</span><span>${num(b.text.length)} پیت</span></div><div class="btns" style="padding:12px 0 0"><button class="btn" data-a="copytxt" data-id="${id}">کۆپیکردنی دەق</button><button class="btn p" data-a="dltxt" data-id="${id}">داگرتنی فایلی .TXT</button></div><div class="rd" dir="rtl">${esc(b.text)}</div>`, true); };
+const addBook = () => { modal(`${mh('زیادکردنی پەڕتووک / دەقی خاو')}<label class="lbl">ناونیشان</label><input class="in" id="ab-t"><label class="lbl">نووسەر</label><input class="in" id="ab-a"><label class="lbl">پۆل</label><select class="in" id="ab-c"><option value="lang">زمان و فەرهەنگ</option><option value="poetry">دیوانی شیعر</option></select><label class="lbl">دەقی خاو یان فایلی TXT</label><textarea class="in" id="ab-x" placeholder="دەق لێرە دابنێ..."></textarea><input type="file" id="ab-f" accept=".txt,text/plain" style="margin-top:8px"><div class="col"><button class="btn p" style="height:46px" data-a="saveBook">زیادکردن</button></div>`); };
+const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); a.download = name.replace(/[\\/:*?"<>|]/g, '') + '.txt'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+const copy = t => (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); document.execCommand('copy'); x.remove(); });
 
 /* ---------- events ---------- */
-document.addEventListener('click', async e => {
-  const el = e.target.closest('[data-act]'); if (!el) return;
-  const a = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
-  switch (a) {
-    case 'tab': go(el.dataset.tab); break;
-    case 'theme': S.theme = S.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = S.theme; save(); break;
-    case 'like': case 'dislike': react(id, a); break;
-    case 'comment': OPEN.has(+id) ? OPEN.delete(+id) : OPEN.add(+id); repost(id); if (OPEN.has(+id)) { const t = $('#post-' + id + ' textarea[data-uni]'); t && t.focus(); } break;
-    case 'sendcomment': sendComment(id); break;
-    case 'share': openShare(id); break;
-    case 'copylink': await copy(postLink()); modal('m-share', 0); toast('بەستەری نووسراوە کۆپی کرا'); break;
-    case 'shareto': { const c = S.chats.find(x => x.id === id), p = S.posts.find(x => x.id == shareId), ex = [...p.text.replace(/\|/g, ' ')].slice(0, 70).join('');
-      c.m.push({ me: 1, t: `نووسراوەیەکی مەکۆ: «${ex}…»\n${postLink()}`, ts: now() }); save(); modal('m-share', 0); renderDM(); toast('نێردرا بۆ ' + c.n); break; }
-    case 'publish': publish(); break;
-    case 'fd': S.filter.d = S.filter.d === v ? null : v; save(); renderFeed(); renderSide(); go('feed', false); break;
-    case 'ft': S.filter.t = S.filter.t === v ? null : v; save(); renderFeed(); renderSide(); go('feed', false); break;
-    case 'clearf': S.filter = { d: null, t: null }; save(); renderFeed(); renderSide(); break;
-    case 'libcat': S.lib.cat = v; save(); renderLib(); break;
-    case 'readtxt': openTxt(id); break;
-    case 'dltxt': { const b = S.books.find(x => x.id == id); download(b.title, b.txt); toast('فایلی .txt داگیرا'); break; }
-    case 'dltxt2': download(curBook.title, curBook.txt); toast('فایلی .txt داگیرا'); break;
-    case 'copytxt': await copy(curBook.txt); toast('تەواوی دەق کۆپی کرا'); break;
-    case 'pdf': { const b = S.books.find(x => x.id == id); /^https?:\/\//.test(b.pdf) ? window.open(b.pdf, '_blank', 'noopener') : toast('PDF: ' + b.pdf + ' — تەنها زانیاری فایلەکە تۆمارکراوە'); break; }
-    case 'addbook': modal('m-add', 1); break;
-    case 'savebook': saveBook(); break;
-    case 'close': { const m = el.closest('.modal'); if (m) modal(m.id, 0); break; }
-    case 'chat': S.active = id; mob = 'chat'; save(); renderDM(); renderChat(); break;
-    case 'back': mob = 'list'; renderDM(); break;
-    case 'sendmsg': sendMsg(); break;
-    case 'ptab': S.prof = v; save(); renderProfile(); break;
-  }
+const A = {
+  go: d => { if (d.v === 'profile') ptab = 'posts'; go(d.v); },
+  new: () => newPost(), close: (d, el) => el.closest('.mask').remove(),
+  like: d => { const p = S.posts.find(x => x.id === +d.id); p.liked = !p.liked; p.likes += p.liked ? 1 : -1; save(); rp(p.id); },
+  cmt: d => { const id = +d.id; C.has(id) ? C.delete(id) : C.add(id); rp(id); },
+  exp: d => { const id = +d.id; X.has(id) ? X.delete(id) : X.add(id); rp(id); },
+  more: d => { const id = +d.id, l = S.saved.posts, i = l.indexOf(id); i < 0 ? l.push(id) : l.splice(i, 1); save(); toast(i < 0 ? 'پۆستەکە پاشەکەوت کرا' : 'لە پاشەکەوتکراوەکان لابرا'); },
+  share: d => { copy(location.href.split('#')[0] + '#post-' + d.id).then(() => toast('بەستەرەکە کۆپی کرا')); },
+  search: () => { fq = fq === null ? '' : null; render(); const e = $('#fq'); if (e) e.focus(); },
+  theme: () => { S.dark = !S.dark; save(); render(); },
+  edit: () => editProfile(),
+  shareP: () => copy(location.href.split('#')[0] + '#' + S.me.handle).then(() => toast('بەستەری پڕۆفایل کۆپی کرا')),
+  ptab: d => { ptab = d.v; render(); },
+  flt: d => { flt = d.v; render(); },
+  book: d => bookDetail(+d.id),
+  bsave: (d, el) => { const id = +d.id, l = S.saved.books, i = l.indexOf(id); i < 0 ? l.push(id) : l.splice(i, 1); save(); el.textContent = i < 0 ? 'لابردن لە پاشەکەوتکراوەکان' : 'پاشەکەوتکردن'; toast(i < 0 ? 'پاشەکەوت کرا' : 'لابرا'); },
+  readtxt: (d, el) => { el.closest('.mask').remove(); reader(+d.id); },
+  openpdf: d => toast('پەڕتووکی PDF دەکرێتەوە...'),
+  copytxt: d => copy(S.books.find(b => b.id === +d.id).text).then(() => toast('دەقەکە کۆپی کرا')),
+  dltxt: d => { const b = S.books.find(x => x.id === +d.id); download(b.title, b.text); toast('فایلی TXT داگیرا'); },
+  addbook: () => addBook(),
+  newdm: () => modal(`${mh('نامەی نوێ')}${S.contacts.map(c => `<button class="dm" style="padding-inline:0" data-a="pick" data-id="${c.id}">${av(c.name, 'md', c.online)}<div class="m"><b>${esc(c.name)}</b></div></button>`).join('')}`),
+  pick: (d, el) => { el.closest('.mask').remove(); A.chat(d); },
+  chat: d => { chatId = +d.id; S.contacts.find(c => c.id === chatId).unread = false; save(); go('chat'); },
+  poem: (d, el) => el.classList.toggle('on'),
+  publish: (d, el) => { const t = $('#np').value.trim(); if (!t) return toast('سەرەتا شتێک بنووسە'); S.posts.unshift({ id: Date.now(), author: S.me.name, me: true, text: t, poetry: $('#poem').classList.contains('on'), ts: Date.now(), likes: 0, liked: false, comments: [] }); save(); el.closest('.mask').remove(); go('feed'); toast('بڵاوکرایەوە'); },
+  saveP: (d, el) => { const n = $('#ep-n').value.trim(); if (!n) return toast('ناو بەتاڵە'); Object.assign(S.me, { name: n, bio: $('#ep-b').value.trim(), country: $('#ep-c').value, city: $('#ep-ci').value }); S.posts.forEach(p => { if (p.me) p.author = n; }); save(); el.closest('.mask').remove(); render(); toast('پاشەکەوت کرا'); },
+  saveBook: (d, el) => { const t = $('#ab-t').value.trim(), x = $('#ab-x').value.trim(); if (!t || !x) return toast('ناونیشان و دەق پێویستن'); S.books.unshift({ id: Date.now(), title: t, author: $('#ab-a').value.trim() || 'نەزانراو', pdf: false, cat: $('#ab-c').value, mine: true, desc: 'دەقی خاوی زیادکراو بە یونیکۆدی پاک.', text: x }); save(); el.closest('.mask').remove(); if (cur === 'library') render(); toast('پەڕتووکەکە زیادکرا'); }
+};
+document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (el && A[el.dataset.a]) A[el.dataset.a](el.dataset, el); });
+document.addEventListener('submit', e => {
+  const f = e.target.closest('[data-f]'); if (!f) return; e.preventDefault();
+  const v = f.elements.t.value.trim(); if (!v) return;
+  if (f.dataset.f === 'cm') { const p = S.posts.find(x => x.id === +f.dataset.id); p.comments.push({ a: S.me.name, t: v }); save(); rp(p.id); const i = $(`.post[data-id="${p.id}"] input`); if (i) i.focus(); }
+  else { const c = S.contacts.find(x => x.id === chatId); c.msgs.push({ me: true, t: v, ts: Date.now() }); save(); render(); $('.cb input').focus(); }
 });
-document.addEventListener('input', e => { if (e.target.matches('textarea.field')) fit(e.target); });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') $$('.modal:not(.hidden)').forEach(m => modal(m.id, 0));
-  if (e.target.id === 'dm-in' && e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendMsg(); }
+document.addEventListener('input', e => {
+  const i = e.target.id;
+  if (i === 'fq') { fq = e.target.value; refill('#list', postList(S.posts, fq)); }
+  if (i === 'dq') { dq = e.target.value; refill('#list', dmList()); }
+  if (i === 'bq') { bq = e.target.value; refill('#list', bookGrid(books())); }
 });
+document.addEventListener('change', e => {
+  if (e.target.id === 'ep-c') $('#ep-ci').innerHTML = opts(citiesOf(e.target.value));
+  if (e.target.id === 'ab-f' && e.target.files[0]) { const f = e.target.files[0]; UnicodeEngine.readTxt(f).then(t => { $('#ab-x').value = t; if (!$('#ab-t').value) $('#ab-t').value = UnicodeEngine.clean(f.name.replace(/\.txt$/i, '')); }); }
+});
+document.addEventListener('click', e => { const el = e.target.closest('#nav [data-a]'); if (el && el.dataset.a === 'go' && el.dataset.v === 'feed') { fq = null; } }, true);
 
-/* ---------- init ---------- */
-function init() {
-  document.documentElement.dataset.theme = S.theme;
-  const opt = a => a.map(x => `<option value="${x}">${x}</option>`).join('');
-  $('#c-dialect').innerHTML = opt(DIAL); $('#ab-dialect').innerHTML = opt(DIAL);
-  $('#c-tag').innerHTML = TAGS.map(t => `<option value="${t}">#${t}</option>`).join('');
-  $('#c-tag').addEventListener('change', e => $('#poem-hint').classList.toggle('hidden', e.target.value !== 'شیعر'));
-  $('#me-av').textContent = [...S.me.name][0];
-  $('#lib-q').value = S.lib.q;
-  $('#lib-q').addEventListener('input', e => { S.lib.q = e.target.value; save(); renderLibList(); });
-  $('#ab-file').addEventListener('change', async e => {
-    const f = e.target.files[0]; if (!f) return;
-    $('#ab-txt').value = U.decodeBuffer(await f.arrayBuffer());
-    if (!$('#ab-title').value) $('#ab-title').value = f.name.replace(/\.[^.]+$/, '');
-    fit($('#ab-txt')); e.target.value = ''; toast('فایلەکە خوێندرایەوە و بوو بە UTF-8ـی پاک');
-  });
-  U.bind();
-  renderSide(); renderProfile(); renderDM(); renderChat();
-  route(); addEventListener('hashchange', route); icons();
-}
-init();
+render();
 })();
