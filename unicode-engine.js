@@ -1,82 +1,34 @@
-/**
- * MEKO (مەکۆ) — SILENT KURDISH UNICODE ENGINE
- * Silently normalizes legacy Arabic/Ali-font characters into standard Kurdish UTF-8
- * across all <input> and <textarea> elements while preserving cursor positions.
- */
-(function () {
-  'use strict';
-
-  function normalizeKurdishText(raw) {
-    if (!raw || typeof raw !== 'string') return raw;
-    return raw
-      // Multi-char legacy Arabic hamza combinations first
-      .replace(/\u0625/g, 'ئی') // إ -> ئی
-      .replace(/\u0623/g, 'ئە') // أ -> ئە
-      // Single-char legacy Arabic to Kurdish standard mappings
-      .replace(/\u0643/g, '\u06A9') // ك -> ک
-      .replace(/[\u064A\u0649]/g, '\u06CC') // ي / ى -> ی
-      .replace(/\u0629/g, '\u06D5') // ة -> ە
-      .replace(/\u0624/g, '\u06C6') // ؤ -> ۆ
-      // Strip Tatweel (Kashida)
-      .replace(/\u0640/g, '');
+(function(){
+  var MAP={'\u0643':'\u06A9','\u064A':'\u06CC','\u0649':'\u06CC','\u0629':'\u06D5','\u0624':'\u06C6','\u0625':'\u0626\u06CC','\u0623':'\u0626\u06D5','\u0640':''};
+  var RE=/[\u0643\u064A\u0649\u0629\u0624\u0625\u0623\u0640]/g;
+  var TEST=/[\u0643\u064A\u0649\u0629\u0624\u0625\u0623\u0640]/;
+  var SKIP=/^(file|checkbox|radio|button|submit|range|color|number|date|time)$/;
+  function fix(s){return s.replace(RE,function(c){return MAP[c];});}
+  function ok(el){
+    if(!el||!el.matches||!el.matches('input,textarea'))return false;
+    return !(el.tagName==='INPUT'&&SKIP.test(el.type));
   }
-
-  function shouldBypassElement(el) {
-    if (!el) return true;
-    const tag = el.tagName ? el.tagName.toLowerCase() : '';
-    if (tag !== 'input' && tag !== 'textarea') return true;
-    // Do not convert Latin username handle field
-    if (el.id === 'edit-username-handle') return true;
-    const type = (el.getAttribute('type') || 'text').toLowerCase();
-    if (type !== 'text' && type !== 'search' && tag !== 'textarea') return true;
-    return false;
+  function convert(el){
+    var v=el.value;
+    if(!TEST.test(v))return;
+    var s=el.selectionStart,e=el.selectionEnd;
+    var ns=fix(v.slice(0,s)).length,ne=fix(v.slice(0,e)).length;
+    el.value=fix(v);
+    try{el.setSelectionRange(ns,ne);}catch(_){}
   }
-
-  function applySilentNormalization(el) {
-    if (shouldBypassElement(el)) return;
-    const original = el.value;
-    if (!original) return;
-
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-
-    const beforeCursor = original.slice(0, start);
-    const normalizedFull = normalizeKurdishText(original);
-
-    if (normalizedFull !== original) {
-      const normalizedBefore = normalizeKurdishText(beforeCursor);
-      const newCursorPos = normalizedBefore.length;
-      el.value = normalizedFull;
-      try {
-        el.setSelectionRange(newCursorPos, newCursorPos + (end - start));
-      } catch (_) {
-        // Ignore if input type does not support selection range
-      }
-    }
-  }
-
-  document.addEventListener(
-    'input',
-    function (e) {
-      applySilentNormalization(e.target);
-    },
-    true
-  );
-
-  document.addEventListener(
-    'paste',
-    function (e) {
-      const target = e.target;
-      if (shouldBypassElement(target)) return;
-      setTimeout(function () {
-        applySilentNormalization(target);
-      }, 0);
-    },
-    true
-  );
-
-  // Expose helper for programmatic normalization
-  window.MekoUnicode = {
-    normalize: normalizeKurdishText
-  };
+  document.addEventListener('input',function(ev){
+    if(ok(ev.target))convert(ev.target);
+  },true);
+  document.addEventListener('paste',function(ev){
+    var el=ev.target;
+    if(!ok(el)||!ev.clipboardData)return;
+    var txt=ev.clipboardData.getData('text');
+    if(!TEST.test(txt))return;
+    ev.preventDefault();
+    var s=el.selectionStart,e=el.selectionEnd,out=fix(txt);
+    el.value=el.value.slice(0,s)+out+el.value.slice(e);
+    var p=s+out.length;
+    try{el.setSelectionRange(p,p);}catch(_){}
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+  },true);
 })();
