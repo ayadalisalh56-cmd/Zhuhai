@@ -1,4 +1,6 @@
-/* CORE VARIABLES & THEME SYSTEM */
+/* ============================================================================
+   MEKO CORE VARIABLES & THEME SYSTEM
+   ============================================================================ */
 :root, html.light {
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
@@ -27,21 +29,58 @@ html.dark {
     --msg-in-bg: #27272a;
 }
 
-/* GLOBAL RESETS & TYPOGRAPHY */
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-primary); color: var(--text-main); margin: 0; padding: 0; }
-input, textarea, select, button { font-family: inherit; border: none; background: none; color: inherit; }
+/* ============================================================================
+   GLOBAL RESETS & TYPOGRAPHY
+   ============================================================================ */
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    outline: none; 
+}
+
+body { 
+    font-family: 'Vazirmatn', sans-serif; 
+    background-color: var(--bg-primary); 
+    color: var(--text-main); 
+    margin: 0; 
+    padding: 0; 
+}
+
+input, textarea, select, button { 
+    font-family: inherit; 
+    border: none; 
+    background: none; 
+    color: inherit; 
+}
+
 button { cursor: pointer; }
 
-/* MANDATORY PURE-CSS FAILSAFES */
-img { max-width: 100%; height: auto; display: block; object-fit: cover; }
+/* ============================================================================
+   MANDATORY PURE-CSS FAILSAFES (Protects layout if CDN lags)
+   ============================================================================ */
+img { 
+    max-width: 100%; 
+    height: auto; 
+    display: block; 
+    object-fit: cover; 
+}
+
 .avatar-xs { width: 28px !important; height: 28px !important; min-width: 28px !important; border-radius: 9999px !important; object-fit: cover !important; }
 .avatar-sm { width: 42px !important; height: 42px !important; min-width: 42px !important; border-radius: 9999px !important; object-fit: cover !important; }
 .avatar-md { width: 52px !important; height: 52px !important; min-width: 52px !important; border-radius: 9999px !important; object-fit: cover !important; }
 .avatar-lg { width: 84px !important; height: 84px !important; min-width: 84px !important; border-radius: 9999px !important; object-fit: cover !important; }
-.app-shell { max-width: 600px; margin: 0 auto; min-height: 100dvh; position: relative; padding-bottom: 100px; }
 
-/* GLASSMORPHISM BOTTOM BAR */
+.app-shell { 
+    max-width: 600px; 
+    margin: 0 auto; 
+    min-height: 100dvh; 
+    position: relative; 
+    padding-bottom: 100px; 
+}
+
+/* ============================================================================
+   GLASSMORPHISM BOTTOM BAR
+   ============================================================================ */
 .glass-bottom-bar {
     background: var(--glass-bg) !important;
     backdrop-filter: blur(24px) saturate(180%) !important;
@@ -50,41 +89,180 @@ img { max-width: 100%; height: auto; display: block; object-fit: cover; }
     box-shadow: var(--glass-shadow) !important;
 }
 
-/* TIMELINE POST STYLES */
-.post-divider { height: 6px; background: var(--bg-post-divider); width: 100%; border: none; }
-.post-body-prose { font-family: 'Vazirmatn', sans-serif; font-size: 15.5px; line-height: 1.75; text-align: right; white-space: pre-wrap; }
-.post-body-poetry { font-family: 'Amiri', serif; font-size: 18.5px; line-height: 2.15; text-align: center; white-space: pre-wrap; }
-.post-body-latin { direction: ltr; text-align: left; font-feature-settings: "ss01"; letter-spacing: 0.01em; }
-.post-body-poetry.post-body-latin { text-align: center; }
+/* ============================================================================
+   TIMELINE POST STYLES (Facebook Mobile Style)
+   ============================================================================ */
+.post-divider { 
+    height: 6px; 
+    background: var(--bg-post-divider); 
+    width: 100%; 
+    border: none; 
+}
 
-/* INTERACTION BAR */
-.interaction-bar { padding: 4px 16px 14px; display: flex; align-items: center; justify-content: space-between; border-top: none !important; }
-.action-icon { display: flex; align-items: center; gap: 6px; color: var(--text-muted); transition: color 0.2s; font-size: 14px; font-weight: 500; }
+.post-body-prose { 
+    font-family: 'Vazirmatn', sans-serif; 
+    font-size: 15.5px; 
+    line-height: 1.75; 
+    text-align: right; 
+    white-space: pre-wrap; 
+}
+
+.post-body-poetry { 
+    font-family: 'Amiri', serif; 
+    font-size: 18.5px; 
+    line-height: 2.15; 
+    text-align: center; 
+    white-space: pre-wrap; 
+}
+
+.post-body-latin { 
+    direction: ltr; 
+    text-align: left; 
+    font-feature-settings: "ss01"; 
+    letter-spacing: 0.01em; 
+}
+
+.post-body-poetry.post-body-latin { 
+    text-align: center; 
+}
+
+/* Interaction Bar - NO TOP BORDER */
+.interaction-bar { 
+    padding: 4px 16px 14px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    border-top: none !important; 
+}
+
+.action-icon { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    color: var(--text-muted); 
+    transition: color 0.2s; 
+    font-size: 14px; 
+    font-weight: 500; 
+}
+
 .action-icon.liked { color: #ef4444; fill: #ef4444; }
 .action-icon.saved { color: var(--text-main); fill: var(--text-main); }
 
-/* CHAT BUBBLES */
-.bubble-in { background: var(--msg-in-bg); border-radius: 18px 18px 18px 4px; color: var(--text-main); padding: 10px 14px; max-width: 75%; align-self: flex-start; }
-.bubble-out { background: var(--msg-out-bg); color: #fff; border-radius: 18px 18px 4px 18px; padding: 10px 14px; max-width: 75%; align-self: flex-end; }
+/* ============================================================================
+   CHAT BUBBLES (Messenger Style)
+   ============================================================================ */
+.bubble-in { 
+    background: var(--msg-in-bg); 
+    border-radius: 18px 18px 18px 4px; 
+    color: var(--text-main); 
+    padding: 10px 14px; 
+    max-width: 75%; 
+    align-self: flex-start; 
+}
 
-/* SMART INPUT */
-.smart-input-container { position: sticky; bottom: 0; background: var(--bg-primary); padding: 10px 12px; border-top: 1px solid var(--border-hairline); display: flex; align-items: flex-end; gap: 8px; z-index: 20; }
-.smart-textarea { flex: 1; background: var(--bg-secondary); border-radius: 20px; padding: 10px 16px; font-size: 15px; line-height: 1.4; max-height: 96px; overflow-y: auto; resize: none; border: 1px solid transparent; transition: border-color 0.2s; }
+.bubble-out { 
+    background: var(--msg-out-bg); 
+    color: #fff; 
+    border-radius: 18px 18px 4px 18px; 
+    padding: 10px 14px; 
+    max-width: 75%; 
+    align-self: flex-end; 
+}
+
+/* Smart Auto-Expanding Input */
+.smart-input-container { 
+    position: sticky; 
+    bottom: 0; 
+    background: var(--bg-primary); 
+    padding: 10px 12px; 
+    border-top: 1px solid var(--border-hairline); 
+    display: flex; 
+    align-items: flex-end; 
+    gap: 8px; 
+    z-index: 20; 
+}
+
+.smart-textarea { 
+    flex: 1; 
+    background: var(--bg-secondary); 
+    border-radius: 20px; 
+    padding: 10px 16px; 
+    font-size: 15px; 
+    line-height: 1.4; 
+    max-height: 96px; 
+    overflow-y: auto; 
+    resize: none; 
+    border: 1px solid transparent; 
+    transition: border-color 0.2s; 
+}
+
 .smart-textarea:focus { border-color: var(--border-hairline); }
-.send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--text-main); color: var(--bg-primary); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; opacity: 0; width: 0; pointer-events: none; overflow: hidden; }
-.send-btn.visible { opacity: 1; width: 36px; pointer-events: auto; }
 
-/* LIBRARY HERO CARD */
-.library-hero { border-radius: 22px; padding: 24px 20px; position: relative; overflow: hidden; background: linear-gradient(135deg, #18181b 0%, #27272a 100%); color: #fafafa; margin: 0 16px 20px; }
-.library-hero::before { content: ''; position: absolute; top: -20%; right: -10%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%); pointer-events: none; }
+.send-btn { 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%; 
+    background: var(--text-main); 
+    color: var(--bg-primary); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: all 0.2s ease; 
+    opacity: 0; 
+    width: 0; 
+    pointer-events: none; 
+    overflow: hidden; 
+}
 
-/* READER MODAL THEMES */
+.send-btn.visible { 
+    opacity: 1; 
+    width: 36px; 
+    pointer-events: auto; 
+}
+
+/* ============================================================================
+   LIBRARY HERO CARD
+   ============================================================================ */
+.library-hero { 
+    border-radius: 22px; 
+    padding: 24px 20px; 
+    position: relative; 
+    overflow: hidden; 
+    background: linear-gradient(135deg, #18181b 0%, #27272a 100%); 
+    color: #fafafa; 
+    margin: 0 16px 20px; 
+}
+
+.library-hero::before { 
+    content: ''; 
+    position: absolute; 
+    top: -20%; 
+    right: -10%; 
+    width: 200px; 
+    height: 200px; 
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%); 
+    pointer-events: none; 
+}
+
+/* ============================================================================
+   READER MODAL THEMES
+   ============================================================================ */
 .reader-theme-white { background: #ffffff; color: #09090b; }
 .reader-theme-sepia { background: #f8f1e5; color: #433422; }
 .reader-theme-dark { background: #09090b; color: #fafafa; }
 
-/* UTILITIES */
+/* ============================================================================
+   UTILITIES & ANIMATIONS
+   ============================================================================ */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 [dir="ltr"] .post-body-prose, [dir="ltr"] .smart-textarea { text-align: left; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+.animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+.animate-scaleIn { animation: scaleIn 0.2s ease-out; }
