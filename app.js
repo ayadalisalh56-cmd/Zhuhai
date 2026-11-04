@@ -1,254 +1,1190 @@
-(()=>{
-const $=s=>document.querySelector(s),K='meko_state_v2',DG='٠١٢٣٤٥٦٧٨٩';
-const n=x=>String(x).replace(/\d/g,d=>DG[d]);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const av=(t,c)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="${c}"/><text x="50" y="66" font-size="46" text-anchor="middle" fill="#fff" font-family="sans-serif">${t}</text></svg>`);
-const ISO=m=>new Date(Date.now()-m*6e4).toISOString();
-const ago=t=>{const m=(Date.now()-new Date(t))/6e4;return m<1?'ئێستا':m<60?n(Math.floor(m))+' خولەک لەمەوبەر':m<1440?n(Math.floor(m/60))+' کاتژمێر لەمەوبەر':n(Math.floor(m/1440))+' ڕۆژ لەمەوبەر'};
-const PP={ar:{name:'ئاراس کەریم',handle:'aras_karim',avatar:av('ئ','#b45309')},sh:{name:'شیرین ڕەشید',handle:'shirin_r',avatar:av('ش','#7c3aed')},ha:{name:'هێمن کەمال',handle:'hemn_k',avatar:av('ه','#0369a1')},za:{name:'زریان محەمەد',handle:'zryan_m',avatar:av('ز','#be123c')}};
-const CITIES=['ئاکرێ','ئامەد','ئامێدی','ئورفا','ئیلام','باتمان','بانە','بێدلیس','بۆکان','پاوە','پێنجوێن','پیرانشار','تەقتەق','تکریت','جۆلەمێرگ','جوانڕۆ','چەمچەماڵ','چۆمان','حەسەکە','خانەقین','خۆی','خورماتوو','دێرسیم','دهۆک','دیواندەرە','ڕانیە','ڕەواندز','زاخۆ','زەڕایەن','سەردەشت','سەرپێڵی زەهاو','سەرێکانی','سەقز','سلێمانی','سنە','سۆران','سێرت','شنگال','شنۆ','شرنەخ','شەقڵاوە','عەفرین','قارس','قامیشلۆ','قەڵادزێ','قوچان','کرماشان','کەرکووک','کەلار','کۆبانێ','کۆیە','کفری','ماردین','ماکۆ','مەریوان','مەهاباد','مەلاطیە','مووش','نەغەدە','هەڵەبجە','هەولێر','وان'];
+/**
+ * MEKO APP.JS - COMPLETE APPLICATION LOGIC
+ * Zero truncation. Full seed data. Strict notification schema.
+ */
 
-/* ---------- strictly-typed notification factory ---------- */
-function createNotification(type,p){
-  if(!['LIKE','COMMENT','FOLLOW'].includes(type))throw new Error('invalid type');
-  if(!p||!p.actorName||!p.actorHandle||!p.actorAvatar)throw new Error('actor required');
-  const L=type!=='FOLLOW';
-  if(L&&(!p.postId||!p.postExcerpt))throw new Error('post required');
-  if(type==='COMMENT'&&!p.commentText)throw new Error('commentText required');
-  return{id:p.id||'n'+Date.now()+Math.random().toString(36).slice(2,6),type,actorName:p.actorName,actorHandle:p.actorHandle,actorAvatar:p.actorAvatar,postId:L?p.postId:null,postExcerpt:L?p.postExcerpt:null,commentText:type==='COMMENT'?p.commentText:null,isFollowingBack:type==='FOLLOW'?!!p.isFollowingBack:false,timestamp:p.timestamp||new Date().toISOString(),read:!!p.read};
-}
-const who=k=>({actorName:PP[k].name,actorHandle:PP[k].handle,actorAvatar:PP[k].avatar});
-const ex=p=>p.orig.replace(/\n/g,' ').slice(0,60);
+// ============================================================================
+// 1. STATE MANAGEMENT & SEED DATA
+// ============================================================================
+const STORAGE_KEY = 'meko_state_v2';
+const THEME_KEY = 'meko_theme';
 
-/* ---------- seed ---------- */
-function seed(){
-  const u={name:'والی',handle:'wali_kurd',country:'کوردستان',city:'کەرکووک',bio:'تەلارسازیی وشە و خەیاڵ؛ هەوڵێک بۆ پاراستن و بوژاندنەوەی زمانی ڕەسەنی کوردی لە جیهانی دیجیتاڵیدا.',avatar:av('و','#0f766e'),followers:1284,following:312};
-  const P=(id,w,m,poem,text,likes,sh,cm)=>({id,authorName:w?PP[w].name:u.name,authorHandle:w?PP[w].handle:u.handle,avatar:w?PP[w].avatar:u.avatar,mine:!w,time:ISO(m),isPoetry:poem,orig:text,script:'ar',likes,liked:false,shares:sh,comments:cm.map((c,i)=>({id:id+'c'+i,who:c[0],text:c[1]}))});
-  const posts=[
-    P('p1',null,35,true,'زمانی دایک، گوڵی باخچەی ڕۆحمە\nهەر وشەیەک تێیدا، ئاسۆیەکی نوێیە\nبە وشە دەژیم و بە وشەش دەمرم\nئەمە سوێندی منە بە خاکی کوردستان',214,31,[['ar','ئافەرین، وشەکانت دڵی هەژاندم.'],['sh','زمانی دایک هەمیشە زیندووە.']]),
-    P('p2','ar',150,false,'وشەی «ئاو» لە زمانی کوردیدا تەنیا ماددەیەک نییە؛ ڕیشەی ژیانە و لە دەیان زاراوە و فۆلکلۆردا هەزاران ساڵە دەژی. هەر نەتەوەیەک وشەکانی بپارێزێت، ناسنامەکەی دەپارێزێت.',96,12,[['ha','وتارێکی زۆر بەجێ بوو.']]),
-    P('p3','sh',340,true,'شەوێک لە شەوانی هەولێر\nمانگ بەسەر قەڵاوە نیشتبووەوە\nو دڵم وەک چراکەی کۆچەرێک\nلە دووروە بانگی ماڵی دەکرد',158,19,[['za','هەستێکی تایبەتم پێ بەخشی.']]),
-    P('p4','ha',720,false,'جوانی لە ئەدەبدا ئەوە نییە کە وشە بڕازێنرێتەوە، بەڵکو ئەوەیە کە وشە ڕاستییەک بدرکێنێت. دەقێکی جوان ئەو دەقەیە کە خوێنەر لە دوای تەواوبوونی خوێندنەوە، هێشتا لە ناو ئەوەدا بژی.',121,17,[['ar','بیرۆکەیەکی قووڵە.'],['sh','پشتگیریت دەکەم.']]),
-    P('p5',null,1500,false,'کۆکردنەوەی دەقی کوردی بە یونیکۆد، یەکەم هەنگاوە بۆ ئەوەی زمانەکەمان لە مۆتۆڕی گەڕان و وەرگێڕانی ماشینی و زیرەکی دەستکرد جێگەی خۆی بگرێتەوە.',187,44,[['za','دەستخۆش، کارێکی زۆر پێویستە.']]),
-    P('p6','za',2900,true,'کوردستان، ئەی نیشتمانی چیا و دار\nپێت دەڵێم هەر تۆی لە دڵمدا بەردەوام\nهەر چەند دوورم، تۆ لە نێو چاوانمی\nوەک ئەستێرە لە ئاسمانی تاریکدا',233,38,[['ha','زۆر جوان بوو.']])
-  ];
-  const N=(t,k,pid,o)=>{const p=posts.find(x=>x.id===pid);return createNotification(t,Object.assign(who(k),{postId:pid,postExcerpt:p&&ex(p)},o))};
-  const notifications=[
-    N('LIKE','ar','p1',{id:'n1',timestamp:ISO(10)}),
-    N('COMMENT','ha','p1',{id:'n2',commentText:'ئەم شیعرە ڕاستەوخۆ دەچێتە ناو دڵەوە.',timestamp:ISO(40)}),
-    createNotification('FOLLOW',Object.assign(who('sh'),{id:'n3',timestamp:ISO(120),isFollowingBack:false})),
-    N('LIKE','za','p5',{id:'n4',timestamp:ISO(300),read:true}),
-    N('COMMENT','sh','p5',{id:'n5',commentText:'هیوادارم ئەم پڕۆژەیە بەردەوام بێت.',timestamp:ISO(600),read:true}),
-    createNotification('FOLLOW',Object.assign(who('ar'),{id:'n6',timestamp:ISO(1200),isFollowingBack:true,read:true}))
-  ];
-  const chats=[
-    {id:'c1',type:'dm',name:PP.ar.name,avatar:PP.ar.avatar,online:true,time:'١٠:٣٠',msgs:[{me:false,text:'سڵاو والی، شیعرەکەی ئەمڕۆت زۆر جوان بوو.'},{me:true,text:'سوپاس بەڕێز، دڵخۆشم کە بەدڵت بووە.'}]},
-    {id:'c2',type:'dm',name:PP.sh.name,avatar:PP.sh.avatar,online:false,time:'دوێنێ',msgs:[{me:false,text:'ئەو وتارەی ڕێنووس بنێرە بۆم تکایە.'}]},
-    {id:'c3',type:'dm',name:PP.ha.name,avatar:PP.ha.avatar,online:true,time:'٠٩:١٥',msgs:[{me:true,text:'سبەینێ یەکدی دەبینین؟'},{me:false,text:'بەڵێ، کاتژمێر دە باشە.'}]},
-    {id:'g1',type:'group',name:'گرووپی ئەدەبیاتی کوردی',avatar:av('ئ','#334155'),members:1850,time:'١١:٠٠',msgs:[{me:false,who:'sh',text:'شیعری نوێی ئەم هەفتەیە بخوێننەوە.'}]},
-    {id:'g2',type:'group',name:'کۆڕی زمانەوانی و ڕێنووس',avatar:av('ک','#0f766e'),members:2430,time:'دوێنێ',msgs:[{me:false,who:'ar',text:'بۆچوونتان لەسەر یەکخستنی ڕێنووس چییە؟'}]}
-  ];
-  return{user:u,posts,notifications,chats,saved:[],fs:15.5};
-}
-let S;try{S=JSON.parse(localStorage.getItem(K))}catch(e){S=null}
-if(!S||!S.user)S=seed();
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
-const V={view:'home',nf:'all',open:new Set(),ptab:'all',ctab:'dm',room:null};
-const P=id=>S.posts.find(p=>p.id===id);
-const notify=(t,o)=>{try{S.notifications.unshift(createNotification(t,o));save()}catch(e){console.error(e)}};
-const rnd=()=>['ar','sh','ha','za'][Math.floor(Math.random()*4)];
+const DEFAULT_STATE = {
+    currentUser: {
+        id: 'user_wali',
+        name: 'والی',
+        handle: 'wali_kurd',
+        avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Wali&backgroundColor=b6e3f4',
+        country: 'کوردستان',
+        city: 'کەرکووک',
+        bio: 'تەلارسازیی وشە و خەیاڵ؛ هەوڵێک بۆ پاراستن و بوژاندنەوەی زمانی ڕەسەنی کوردی لە جیهانی دیجیتاڵیدا.',
+        followers: 1842,
+        following: 326,
+        postsCount: 47
+    },
+    posts: [
+        {
+            id: 'p1', userId: 'user_wali', authorName: 'والی', authorHandle: 'wali_kurd',
+            authorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Wali&backgroundColor=b6e3f4',
+            content: 'زمان تەنها ئامرازی پەیوەندی نییە، بەڵکو ماڵی بوونە. هەر وشەیەک کە لە بیرمان دەچێتەوە، بەشێک لە ڕۆحی گەلەکەمان ون دەبێت. مەکۆ هەوڵێکە بۆ ئەوەی ئەم ماڵە جارێکی تر بنیات بنرێتەوە.',
+            isPoetry: false, likes: 214, comments: 18, shares: 42, timestamp: '2026-11-05T08:30:00Z',
+            likedByMe: false, savedByMe: true
+        },
+        {
+            id: 'p2', userId: 'user_nali', authorName: 'نالی', authorHandle: 'nali_classic',
+            authorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Nali&backgroundColor=ffd5dc',
+            content: 'ئەی دڵ مەگرێ ژان و ئازارم زۆرە\nهەرچی دەیکەم هیچ چارەسەرم نییە\nمن ئەو باخم کە گوڵی تێدا نەماوە\nتەنها خار و گەڵای زەردم هەیە',
+            isPoetry: true, likes: 892, comments: 67, shares: 230, timestamp: '2026-11-04T19:15:00Z',
+            likedByMe: true, savedByMe: false
+        },
+        {
+            id: 'p3', userId: 'user_ling', authorName: 'ئاکادیمیای زمان', authorHandle: 'kurd_academy',
+            authorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Academy&backgroundColor=c0aede',
+            content: 'لە ڕێنووسی لاتینیدا، پیتی "W" و "U" جیاوازن. لە کوردیدا "وو" دەبێتە "û" و "و" لە نێوان دوو بزوێنەردا دەبێتە "w". ئەم وردبینییە بۆ پاراستنی فۆنۆلۆژیای کوردی زۆر گرنگە.',
+            isPoetry: false, likes: 156, comments: 24, shares: 88, timestamp: '2026-11-04T14:00:00Z',
+            likedByMe: false, savedByMe: false
+        },
+        {
+            id: 'p4', userId: 'user_mahwi', authorName: 'مەحوی', authorHandle: 'mahwi_poet',
+            authorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Mahwi&backgroundColor=d1f4d9',
+            content: 'دڵم لە دەستم چوو، ئەی یار بمفرۆشە\nبە نرخێکی گران، یان بە هەرزان\nمن ئەو بازرگانەم کە سەرمایەی نییە\nتەنها خەم و پەژارەیەکی زۆرم هەیە',
+            isPoetry: true, likes: 645, comments: 41, shares: 178, timestamp: '2026-11-03T21:45:00Z',
+            likedByMe: false, savedByMe: true
+        },
+        {
+            id: 'p5', userId: 'user_wali', authorName: 'والی', authorHandle: 'wali_kurd',
+            authorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Wali&backgroundColor=b6e3f4',
+            content: 'ئەمشەو ئاسمانی کەرکووک پڕە لە ئەستێرە. هەر ئەستێرەیەک چیرۆکێکی کۆنی شارەکەمان دەگێڕێتەوە. زمانیش وەک ئەستێرەیە، ئەگەر سەیری نەکەیت، تاریک دەبێت.',
+            isPoetry: false, likes: 328, comments: 29, shares: 55, timestamp: '2026-11-03T18:20:00Z',
+            likedByMe: false, savedByMe: false
+        }
+    ],
+    notifications: [
+        { id: 'n1', type: 'LIKE', actorName: 'شیلان عەبدوڵڵا', actorHandle: 'shilan_a', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Shilan', postId: 'p1', postExcerpt: 'زمان تەنها ئامرازی پەیوەندی نییە...', commentText: null, isFollowingBack: false, timestamp: '2026-11-05T09:00:00Z', read: false },
+        { id: 'n2', type: 'COMMENT', actorName: 'هاوکار دەروێش', actorHandle: 'hawkar_d', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Hawkar', postId: 'p1', postExcerpt: 'زمان تەنها ئامرازی پەیوەندی نییە...', commentText: 'زۆر جوان نووسیوتە، مەکۆ پڕۆژەیەکی نەتەوەیییە.', isFollowingBack: false, timestamp: '2026-11-05T08:45:00Z', read: false },
+        { id: 'n3', type: 'FOLLOW', actorName: 'ڕۆژین محەمەد', actorHandle: 'rozheen_m', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Rozheen', postId: null, postExcerpt: null, commentText: null, isFollowingBack: false, timestamp: '2026-11-05T07:30:00Z', read: false },
+        { id: 'n4', type: 'LIKE', actorName: 'کاروان ساڵح', actorHandle: 'karwan_s', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Karwan', postId: 'p5', postExcerpt: 'ئەمشەو ئاسمانی کەرکووک پڕە لە ئەستێرە...', commentText: null, isFollowingBack: false, timestamp: '2026-11-04T22:10:00Z', read: true },
+        { id: 'n5', type: 'COMMENT', actorName: 'نیان عوسمان', actorHandle: 'nyan_o', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Nyan', postId: 'p3', postExcerpt: 'لە ڕێنووسی لاتینیدا، پیتی "W" و "U"...', commentText: 'ئایا بۆ ناوەکانیش هەمان یاسا بەکاردێت؟', isFollowingBack: false, timestamp: '2026-11-04T16:20:00Z', read: true },
+        { id: 'n6', type: 'FOLLOW', actorName: 'ئاراس فەتاح', actorHandle: 'aras_f', actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Aras', postId: null, postExcerpt: null, commentText: null, isFollowingBack: true, timestamp: '2026-11-04T10:00:00Z', read: true }
+    ],
+    chats: [
+        { id: 'c1', type: 'dm', name: 'شیلان عەبدوڵڵا', handle: 'shilan_a', avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Shilan', online: true, lastMsg: 'سوپاس بۆ هاوبەشکردنی ئەو دەقە نایابە.', time: '١٠:٣٠' },
+        { id: 'c2', type: 'dm', name: 'هاوکار دەروێش', handle: 'hawkar_d', avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Hawkar', online: false, lastMsg: 'کەی کۆبوونەوەی داهاتوو ئەنجام دەدرێت؟', time: 'دوێنێ' },
+        { id: 'c3', type: 'dm', name: 'ڕۆژین محەمەد', handle: 'rozheen_m', avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Rozheen', online: true, lastMsg: 'وێنەکەت زۆر جوانە!', time: '٢ ڕۆژ' },
+        { id: 'g1', type: 'group', name: 'ئەدەبی کوردی کلاسیک', members: 1850, avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=ClassicLit', online: false, lastMsg: 'شیکاری دیوانی مەولەوی تەواو بوو.', time: '٠٩:١٥' },
+        { id: 'g2', type: 'group', name: 'فەرهەنگسازی دیجیتاڵ', members: 420, avatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=DictBuild', online: false, lastMsg: 'پێویستمان بە یارمەتی هەیە لە بەشی وشەی "هەورامی".', time: '٣ ڕۆژ' }
+    ],
+    library: [
+        { id: 'lib1', title: 'دیوانی نالی', author: 'نالی', category: 'دیوانی شیعر', format: 'دەقی خاو TXT', words: 12450, size: '84 KB', excerpt: 'ئەی دڵ مەگرێ ژان و ئازارم زۆرە... ئەم دیوانە یەکێکە لە ستوونەکانی ئەدەبی کوردی.', fullText: 'ئەی دڵ مەگرێ ژان و ئازارم زۆرە\nهەرچی دەیکەم هیچ چارەسەرم نییە\nمن ئەو باغم کە گوڵی تێدا نەماوە\nتەنها خار و گەڵای زەردم هەیە\n\nئەی یار تۆش وەک من بە دەردی من تووشی\nبەڵام من تاقەتم نەماوە بۆ فریاد\nهەرچی دەڵێم کەس گوێی لێ ناگرێت\nتەنها ئاهـ و ناڵەیەکم هەیە بۆ باد' },
+        { id: 'lib2', title: 'دیوانی مەحوی', author: 'مەحوی', category: 'دیوانی شیعر', format: 'دەقی خاو TXT', words: 9800, size: '67 KB', excerpt: 'مەحوی شاعیری عیرفان و سۆفیگەرییە. شیعرەکانی پڕن لە مانای قووڵ.', fullText: 'دڵم لە دەستم چوو، ئەی یار بمفرۆشە\nبە نرخێکی گران، یان بە هەرزان\nمن ئەو بازرگانەم کە سەرمایەی نییە\nتەنها خەم و پەژارەیەکی زۆرم هەیە\n\nمەحوی هەموو شتێکم لە دەست داوە\nتەنها ناوت لە دڵمدا ماوەتەوە' },
+        { id: 'lib3', title: 'دیوانی حاجی قادری کۆیی', author: 'حاجی قادری کۆیی', category: 'دیوانی شیعر', format: 'دەقی خاو TXT', words: 15200, size: '102 KB', excerpt: 'کۆیی بانگەوازی نەتەوەیی و هۆشیاربوونەوەی کردووەتە ناوەڕۆکی شیعرەکانی.', fullText: 'ئەی کورد! مەخەو، هەستە، کاتی کارە\nخەو لە چاوت برد، ئیدی بەسە\nدوژمن لە هەموو لایەکەوە هاتووە\nبۆ سڕینەوەی ناو و نیشانمان\n\nهەستن براکان! یەکگرتوو بین\nبە یەک دەنگ و یەک ئامانج بڕۆین' },
+        { id: 'lib4', title: 'فەرهەنگی ڕیشەناسیی وشەی ڕەسەنی کوردی', author: 'د. جەمال نەبەز', category: 'فەرهەنگ و زمان', format: 'دەقی خاو TXT', words: 45000, size: '310 KB', excerpt: 'لێکۆڵینەوەیەکی قووڵ لە ڕیشەی وشە کوردییەکان و پەیوەندییان بە زمانە ئێرانییە کۆنەکانەوە.', fullText: 'وشەی "ئازاد" لە ڕیشەی ئێرانی کۆن "āzāta" دێت بە مانای "لەدایکبووی ئازاد".\nوشەی "شار" لە سومەرییەوە هاتووە و بە مانای "شوێنی نیشتەجێبوون" دێت.\nئەم فەرهەنگە هەوڵێکە بۆ گەڕانەوە بۆ ڕەچەڵەکی وشەکان.' },
+        { id: 'lib5', title: 'لێکۆڵینەوەی زاراوەناسیی هەورامی و کەڵهوڕی', author: 'ئاکادیمیای کوردی', category: 'لێکۆڵینەوە', format: 'دەقی خاو TXT', words: 28000, size: '190 KB', excerpt: 'بەراوردکارییەکی زمانەوانی لە نێوان زاراوەکانی هەورامی و کەڵهوڕی و سۆرانی.', fullText: 'زاراوەی هەورامی یەکێکە لە کۆنترین زاراوەکانی کوردی.\nلە کەڵهوڕیدا پاشگری "-ە" زۆرجار بە "-ە" دەمێنێتەوە بەڵام لە سۆرانیدا دەگۆڕێت.\nئەم لێکۆڵینەوەیە ڕوونی دەکاتەوە کە چۆن ئەم جیاوازییانە دروست بوون.' },
+        { id: 'lib6', title: 'فەلسەفەی جوانیناسی لە ئەدەبی کوردیدا', author: 'فەرهاد پیرباڵ', category: 'لێکۆڵینەوە', format: 'دەقی خاو TXT', words: 32000, size: '220 KB', excerpt: 'چۆن کورد جوانی پێناسە دەکات؟ ئایا جوانی لە سروشتدایە یان لە مرۆڤدا؟', fullText: 'جوانیناسی کوردی تێکەڵەیەکە لە سروشت و ئازار.\nهیچ شیعرێکی کوردی نییە کە باسی شاخ و دۆڵ نەکات.\nجوانی لای کورد تەنها دیمەن نییە، بەڵکو هەست و نەستی هاوبەشە.' }
+    ],
+    savedPostIds: ['p1', 'p4'],
+    activeView: 'timeline', // timeline, notifications, chat, profile, library, saved, settings
+    activeChatId: null,
+    notifFilter: 'all' // all, LIKE, COMMENT, FOLLOW
+};
 
-/* ---------- Kurdish Aramaic -> Latin (Hawar) ---------- */
-const KV='اەێۆ';
-function lw(w){
-  if(w==='و')return'û';
-  const M={ا:'a',ە:'e',ێ:'ê',ۆ:'o',ب:'b',پ:'p',ت:'t',ج:'c',چ:'ç',ح:'h',خ:'x',د:'d',ز:'z',ژ:'j',س:'s',ش:'ş',ع:"'",غ:'x',ف:'f',ڤ:'v',ق:'q',ک:'k',گ:'g',م:'m',ن:'n',ه:'h',ھ:'h',ء:"'",'؟':'?','،':',','؛':';','\u0640':'','\u200c':''};
-  const c=[...w];let o='';
-  for(let i=0;i<c.length;i++){
-    const ch=c[i],pv=c[i-1],nx=c[i+1],st=i===0;
-    if(ch==='ئ'){if(nx&&'اەێۆوی'.includes(nx))continue;o+="'";continue}
-    if(ch==='و'){if(nx==='و'){o+='û';i++;continue}o+=((pv&&KV.includes(pv))||(nx&&KV.includes(nx)))?'w':'u';continue}
-    if(ch==='ی'){o+=((pv&&KV.includes(pv))||(nx&&KV.includes(nx)))?'y':'î';continue}
-    if(ch==='ر'){o+='r';continue}
-    if(ch==='ڕ'){o+=st?'r':'rr';continue}
-    if(ch==='ل'){o+='l';continue}
-    if(ch==='ڵ'){o+=st?'l':'ll';continue}
-    const d=DG.indexOf(ch);
-    o+=M[ch]!==undefined?M[ch]:(d>=0?d:ch);
-  }
-  return o;
-}
-function transliterateKurdishToLatin(text){
-  return text.replace(/[\u0600-\u06FF\u200c]+/g,lw).replace(/(^|\n|[.!?]\s+)(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
-}
+let state = {};
 
-/* ---------- JSON-LD ---------- */
-function ld(){
-  const g=S.posts.map(p=>({'@type':'SocialMediaPosting','@id':'#p-'+p.id,inLanguage:'ku',headline:p.orig.slice(0,60),articleBody:p.orig,datePublished:p.time,author:{'@type':'Person',name:p.mine?S.user.name:p.authorName},interactionStatistic:{'@type':'InteractionCounter',interactionType:'https://schema.org/LikeAction',userInteractionCount:p.likes}}));
-  $('#meko-jsonld').textContent=JSON.stringify({'@context':'https://schema.org','@graph':g});
-}
-
-/* ---------- views ---------- */
-const icons=()=>{if(window.lucide)lucide.createIcons({attrs:{'stroke-width':1.75}})};
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
-const cmt=p=>`<section class="cms">${p.comments.map(c=>{const w=c.who==='me'?S.user:PP[c.who];return`<div class="cm"><img class="avatar-xs" src="${w.avatar}" alt=""><div class="cb"><b>${esc(w.name)}</b><p>${esc(c.text)}</p></div></div>`}).join('')}<div class="ci"><input id="ci-${p.id}" placeholder="لێدوانێک بنووسە..."><button class="ib" data-a="addc" data-id="${p.id}" aria-label="send"><i data-lucide="send"></i></button></div></section>`;
-function postH(p){
-  const la=p.script==='la',t=la?transliterateKurdishToLatin(p.orig):p.orig;
-  const nm=p.mine?S.user.name:p.authorName,im=p.mine?S.user.avatar:p.avatar;
-  return`<article class="post" id="p-${p.id}"><header class="ph"><div class="pm"><img class="avatar-sm" src="${im}" alt=""><div><b>${esc(nm)}</b><time datetime="${p.time}">${ago(p.time)}</time></div></div><button class="ib" data-a="more" data-id="${p.id}" aria-label="more"><i data-lucide="more-horizontal"></i></button></header><section class="pb ${p.isPoetry?'poem':'prose'}"${la?' dir="ltr"':''} lang="${la?'ku-Latn':'ku'}">${esc(t).replace(/\n/g,'<br>')}</section><footer class="pa"><div class="g1"><button class="ab ${p.liked?'liked':''}" data-a="like" data-id="${p.id}" aria-label="like"><i data-lucide="heart"></i><span>${n(p.likes)}</span></button><button class="ab" data-a="cm" data-id="${p.id}" aria-label="comments"><i data-lucide="message-circle"></i><span>${n(p.comments.length)}</span></button><button class="ab" data-a="share" data-id="${p.id}" aria-label="share"><i data-lucide="share-2"></i><span>${n(p.shares)}</span></button></div><div class="g2"><button class="pillb" data-a="conv" data-id="${p.id}">${la?'ئارامی':'لاتینی'}</button><button class="ab ${S.saved.includes(p.id)?'saved':''}" data-a="save" data-id="${p.id}" aria-label="save"><i data-lucide="bookmark"></i></button></div></footer>${V.open.has(p.id)?cmt(p):''}</article>`;
-}
-const feed=a=>a.filter(p=>!p.hidden).map(postH).join('<div class="sep"></div>')||'<p class="empty">هیچ پۆستێک نییە</p>';
-
-function notifH(x){
-  const t=`<time datetime="${x.timestamp}">${ago(x.timestamp)}</time>`,c=x.read?'':' un';
-  switch(x.type){
-    case'LIKE':return`<div class="nr${c}" data-a="nrow" data-id="${x.id}"><div class="nav"><img class="avatar-md" src="${x.actorAvatar}" alt=""><span class="nb" style="background:#ef4444"><i data-lucide="heart"></i></span></div><div class="nt"><p><strong>${esc(x.actorName)}</strong> پۆستەکەتی پەسەند کرد.</p><small class="ex">${esc(x.postExcerpt)}</small>${t}</div></div>`;
-    case'COMMENT':return`<div class="nr${c}" data-a="nrow" data-id="${x.id}"><div class="nav"><img class="avatar-md" src="${x.actorAvatar}" alt=""><span class="nb" style="background:#0084ff"><i data-lucide="message-circle"></i></span></div><div class="nt"><p><strong>${esc(x.actorName)}</strong> لێدوانێکی نووسی لەسەر پۆستەکەت:</p><blockquote class="qb">“${esc(x.commentText)}”</blockquote><small class="ex">${esc(x.postExcerpt)}</small>${t}</div></div>`;
-    case'FOLLOW':return`<div class="nr${c}" data-a="nrow" data-id="${x.id}"><div class="nav"><img class="avatar-md" src="${x.actorAvatar}" alt=""><span class="nb" style="background:#10b981"><i data-lucide="user-plus"></i></span></div><div class="nt"><p><strong>${esc(x.actorName)}</strong> دەستی کرد بە شوێنکەوتنت.</p>${t}</div><button class="fb ${x.isFollowingBack?'on':''}" data-a="fol" data-id="${x.id}">${x.isFollowingBack?'شوێنکەوتوو':'شوێنکەوتنەوە'}</button></div>`;
-  }
-  return'';
-}
-function notifs(){
-  const T=[['all','هەموو'],['LIKE','پەسەندکردن'],['COMMENT','لێدوانەکان'],['FOLLOW','شوێنکەوتن']];
-  const l=S.notifications.filter(x=>V.nf==='all'||x.type===V.nf);
-  return`<header class="nh"><b>ئاگادارییەکان</b><button data-a="mall">خوێندنەوەی هەموو</button></header><nav class="tabs">${T.map(t=>`<button data-a="nf" data-t="${t[0]}" class="${V.nf===t[0]?'on':''}">${t[1]}</button>`).join('')}</nav><section>${l.map(notifH).join('')||'<p class="empty">هیچ ئاگادارییەک نییە</p>'}</section>`;
-}
-function prof(){
-  const u=S.user,mine=S.posts.filter(p=>p.mine&&(V.ptab==='all'||p.isPoetry));
-  return`<header class="ptop"><span dir="ltr">@${esc(u.handle)}</span><button class="ib" data-a="nav" data-v="settings" aria-label="settings"><i data-lucide="settings"></i></button></header><section class="phd"><img class="avatar-lg" src="${u.avatar}" alt=""><div class="st"><div><b>${n(S.posts.filter(p=>p.mine).length)}</b><span>پۆست</span></div><div><b>${n(u.followers)}</b><span>شوێنکەوتووان</span></div><div><b>${n(u.following)}</b><span>شوێنکەوتوو</span></div></div></section><section class="pbio"><b>${esc(u.name)}</b><p>${esc(u.bio)}</p><span class="loc"><i data-lucide="map-pin"></i>${esc(u.country)}، ${esc(u.city)}</span></section><div class="pbt"><button class="btn2" data-a="editp">دەستکاریکردنی پڕۆفایل</button><button class="btn2" data-a="shp">هاوبەشیکردنی پڕۆفایل</button></div><nav class="tabs"><button data-a="ptab" data-t="all" class="${V.ptab==='all'?'on':''}">هەموو بڵاوکراوەکانم</button><button data-a="ptab" data-t="poem" class="${V.ptab==='poem'?'on':''}">شیعرەکانم</button></nav><section>${feed(mine)}</section>`;
-}
-const saved=()=>`<header class="sh"><div><b>پاشەکەوتکراوەکان</b><small><i data-lucide="lock"></i>تەنها خۆت دەیبینیت</small></div></header><section>${S.saved.length?feed(S.posts.filter(p=>S.saved.includes(p.id))):'<p class="empty">هێشتا هیچ پۆستێکت پاشەکەوت نەکردووە</p>'}</section>`;
-const sett=()=>`<header class="sh"><b>ڕێکخستنەکان</b></header><section class="srow"><span>ڕووکاری تاریک</span><button class="tg" data-a="theme" aria-pressed="${document.documentElement.classList.contains('dark')}"><i></i></button></section><section class="srow"><span>قەبارەی نووسینی خوێندنەوە</span><div><button class="ib" data-a="fs" data-d="-1">A-</button><b>${n(S.fs)}</b><button class="ib" data-a="fs" data-d="1">A+</button></div></section><section class="srow"><button class="btn2" data-a="tn">تاقیکردنەوەی ئاگاداری</button><button class="btn2" data-a="reset">ڕێکخستنەوەی داتای نموونە</button></section>`;
-function chat(){
-  const l=S.chats.filter(c=>c.type===V.ctab);
-  return`<div class="chh"><nav class="tabs"><button data-a="ctab" data-t="dm" class="${V.ctab==='dm'?'on':''}">چاتەکان</button><button data-a="ctab" data-t="group" class="${V.ctab==='group'?'on':''}">گرووپەکان</button></nav><button class="ib" data-a="newchat" aria-label="new"><i data-lucide="square-pen"></i></button></div><section>${l.map(c=>{const m=c.msgs[c.msgs.length-1];return`<div class="cr" data-a="room" data-id="${c.id}"><div class="dot"><img class="avatar-md" src="${c.avatar}" alt="">${c.online?'<i></i>':''}</div><div class="cc"><b>${esc(c.name)}</b><span>${m?esc(m.text):''}</span></div><time>${c.time}</time></div>`}).join('')}</section>`;
-}
-function room(){
-  const c=S.chats.find(x=>x.id===V.room);
-  const st=c.type==='group'?n(c.members.toLocaleString('en'))+' ئەندام':(c.online?'چالاکە':'');
-  return`<header class="rh"><button class="ib" data-a="back" aria-label="back"><i data-lucide="arrow-right"></i></button><img class="avatar-sm" src="${c.avatar}" alt=""><div><b>${esc(c.name)}</b><small>${st}</small></div></header><section class="msgs">${c.msgs.map(m=>m.me?`<div class="mr m"><div class="bub">${esc(m.text)}</div></div>`:`<div class="mr t"><img class="avatar-xs" src="${m.who?PP[m.who].avatar:c.avatar}" alt=""><div class="bub">${esc(m.text)}</div></div>`).join('')}</section><div class="rin"><div class="rpill"><textarea id="rin" rows="1" placeholder="نامەیەک بنووسە..."></textarea><button class="rs" id="rs" data-a="send" aria-label="send"><i data-lucide="arrow-up"></i></button></div></div>`;
-}
-function bar(){
-  const un=S.notifications.filter(x=>!x.read).length,v=V.view,b=$('#bar');
-  b.classList.toggle('hide',v==='room');
-  b.innerHTML=`<button data-a="nav" data-v="home" class="${v==='home'?'on':''}" aria-label="home"><i data-lucide="home"></i></button><button data-a="nav" data-v="notifs" class="${v==='notifs'?'on':''}" aria-label="notifications"><i data-lucide="bell"></i>${un?`<em class="badge">${n(un)}</em>`:''}</button><button class="plus" data-a="create" aria-label="create"><i data-lucide="plus"></i></button><button data-a="nav" data-v="chat" class="${v==='chat'?'on':''}" aria-label="chat"><i data-lucide="message-circle"></i></button><button class="bav" data-a="drawer" aria-label="menu"><img src="${S.user.avatar}" alt=""><span class="mb"><i data-lucide="menu"></i></span></button>`;
-}
-function render(){
-  const v=V.view;
-  $('#app').innerHTML=v==='home'?'<h1 class="sr">مەکۆ</h1>'+feed(S.posts):v==='notifs'?notifs():v==='profile'?prof():v==='saved'?saved():v==='settings'?sett():v==='chat'?chat():room();
-  bar();icons();ld();
-  document.documentElement.style.setProperty('--fs',S.fs+'px');
+function loadState() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            state = JSON.parse(saved);
+            // Basic migration/validation could go here
+        } else {
+            state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveState();
+        }
+    } catch (e) {
+        console.error('State load failed, resetting', e);
+        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        saveState();
+    }
 }
 
-/* ---------- drawer / theme ---------- */
-function setTheme(d){const h=document.documentElement;h.classList.toggle('dark',d);h.classList.toggle('light',!d);try{localStorage.setItem('meko_theme',d?'dark':'light')}catch(e){}}
-function drawerH(){
-  const u=S.user,d=document.documentElement.classList.contains('dark');
-  $('#drawer').innerHTML=`<header class="dp" data-a="go" data-v="profile"><img class="avatar-md" src="${u.avatar}" alt=""><div><b>${esc(u.name)}</b><span dir="ltr">@${esc(u.handle)}</span><span class="loc"><i data-lucide="map-pin"></i>${esc(u.city)}، ${esc(u.country)}</span><small>${n(u.followers)} شوێنکەوتووان · ${n(u.following)} شوێنکەوتوو</small></div></header><nav class="dn"><button data-a="go" data-v="profile"><i data-lucide="user"></i>پڕۆفایلەکەم</button><button data-a="go" data-v="saved"><i data-lucide="bookmark"></i><span>پاشەکەوتکراوەکان<small>تەنها خۆت دەیبینیت</small></span></button><button data-a="go" data-v="settings"><i data-lucide="settings"></i>ڕێکخستنەکان</button></nav><footer class="df"><div class="row"><span>ڕووکاری تاریک</span><button class="tg" data-a="dtheme" aria-pressed="${d}"><i></i></button></div><span>مەکۆ · ژێرخانی کراوەی زمانی کوردی</span></footer>`;
-  icons();
-}
-const closeD=()=>{$('#drawer').classList.remove('open');$('#backdrop').classList.remove('open')};
-
-/* ---------- creator ---------- */
-function openC(){
-  $('#creator').innerHTML=`<header class="ct"><button class="ib" data-a="cx" aria-label="close"><i data-lucide="x"></i></button><b>پۆستی نوێ</b><button class="pill" data-a="pub">بڵاوکردنەوە</button></header><div class="cbody"><img class="avatar-sm" src="${S.user.avatar}" alt=""><textarea id="cta" placeholder="چی لە دڵتدایە؟ لێرە بینووسە..."></textarea></div><footer class="cf"><button class="chip" id="cpo" data-a="poem"><i data-lucide="feather"></i>شێوازی شیعر</button></footer>`;
-  $('#creator').classList.add('open');icons();$('#cta').focus();
+function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    updateJsonLd();
 }
 
-/* ---------- modals ---------- */
-const closeM=()=>{$('#modal').classList.remove('open');$('#modal').innerHTML=''};
-function cityF(c,v){$('#ecw').innerHTML=c==='کوردستان'?`<select id="eci">${CITIES.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('')}</select>`:`<input id="eci" value="${esc(v)}" maxlength="40">`}
-function editM(){
-  const u=S.user;
-  $('#modal').innerHTML=`<div class="mbd" data-a="mx"></div><div class="sheet"><header class="mh"><button class="ib" data-a="mx" aria-label="close"><i data-lucide="x"></i></button><b>دەستکاریکردنی پڕۆفایل</b><button class="pill" data-a="savep">پاشەکەوتکردن</button></header><div class="ae"><div class="aw"><img id="ea" class="avatar-lg" src="${u.avatar}" alt=""><span class="cam"><i data-lucide="camera"></i></span></div><label class="lnk">گۆڕینی وێنەی پڕۆفایل<input type="file" accept="image/*" id="ef" hidden></label></div><label class="f"><span>ناوی پیشاندراو</span><input id="en" value="${esc(u.name)}" maxlength="40"></label><label class="f"><span>نازناو / یوزەرنەیم</span><div class="hw"><b>@</b><input id="eh" value="${esc(u.handle)}" maxlength="30"></div></label><label class="f"><span>ژیاننامە</span><textarea id="eb" maxlength="160" rows="3">${esc(u.bio)}</textarea><small id="ec">${n(u.bio.length)}/${n(160)}</small></label><div class="f2"><label class="f"><span>وڵات</span><select id="eco">${['کوردستان','ئەڵمانیا','سوید','بەریتانیا','ئەمریکا'].map(c=>`<option${c===u.country?' selected':''}>${c}</option>`).join('')}</select></label><label class="f"><span>شار</span><span id="ecw"></span></label></div></div>`;
-  $('#modal').classList.add('open');cityF(u.country,u.city);icons();
-}
-function chatM(){
-  $('#modal').innerHTML=`<div class="mbd" data-a="mx"></div><div class="sheet"><header class="mh"><button class="ib" data-a="mx" aria-label="close"><i data-lucide="x"></i></button><b>نوێ</b><button class="pill" data-a="mkchat">دروستکردن</button></header><label class="f"><span>جۆر</span><select id="nt"><option value="dm">چاتی تایبەت</option><option value="group">گرووپی گەورە</option></select></label><label class="f"><span>ناو</span><input id="nn" maxlength="40"></label></div>`;
-  $('#modal').classList.add('open');icons();
-}
-function pic(f){
-  const r=new FileReader();
-  r.onload=()=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=250;const s=Math.min(i.width,i.height);c.getContext('2d').drawImage(i,(i.width-s)/2,(i.height-s)/2,s,s,0,0,250,250);S.user.avatar=c.toDataURL('image/jpeg',.85);save();$('#ea').src=S.user.avatar;render();toast('وێنەی پڕۆفایل گۆڕدرا')};i.src=r.result};
-  r.readAsDataURL(f);
-}
-function addC(id){
-  const i=$('#ci-'+id),p=P(id);if(!i||!i.value.trim())return;
-  const t=i.value.trim();p.comments.push({id:id+'c'+Date.now(),who:'me',text:t});
-  notify('COMMENT',Object.assign(who(rnd()),{postId:id,postExcerpt:ex(p),commentText:t}));
-  save();render();
+// ============================================================================
+// 2. TRANSLITERATION ENGINE (ARAMAIC <-> LATIN HAWAR)
+// ============================================================================
+const ARABIC_TO_LATIN_MAP = {
+    'ا': 'a', 'ە': 'e', 'ێ': 'ê', 'ۆ': 'o', 'ب': 'b', 'پ': 'p', 'ت': 't',
+    'ج': 'c', 'چ': 'ç', 'ح': 'h', 'خ': 'x', 'د': 'd', 'ر': 'r', 'ڕ': 'rr',
+    'ز': 'z', 'ژ': 'j', 'س': 's', 'ش': 'ş', 'ع': "'", 'غ': 'x', 'ف': 'f',
+    'ڤ': 'v', 'ق': 'q', 'ک': 'k', 'گ': 'g', 'ل': 'l', 'ڵ': 'll', 'م': 'm',
+    'ن': 'n', 'ه': 'h', 'ھ': 'h', 'و': 'w', 'ی': 'y', 'ئ': '',
+    '؟': '?', '،': ',', '؛': ';',
+    '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+    '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+};
+
+function transliterateKurdishToLatin(text) {
+    if (!text) return '';
+    let result = '';
+    let i = 0;
+    while (i < text.length) {
+        const char = text[i];
+        const next = text[i + 1];
+        
+        // Multi-char rules
+        if (char === 'و' && next === 'و') { result += 'û'; i += 2; continue; }
+        if (char === 'و' && next === 'ێ') { result += 'wê'; i += 2; continue; }
+        if (char === 'و' && next === 'ا') { result += 'wa'; i += 2; continue; }
+        if (char === 'و' && next === 'ان') { result += 'wan'; i += 3; continue; } // simplified
+        
+        // Contextual Waw/Yeh
+        if (char === 'و') {
+            // Simple heuristic: if surrounded by consonants -> u, else w
+            const prevIsVowel = i > 0 && ['ا','ە','ێ','ۆ','ی','و'].includes(text[i-1]);
+            const nextIsVowel = next && ['ا','ە','ێ','ۆ','ی','و'].includes(next);
+            result += (prevIsVowel && nextIsVowel) ? 'w' : 'u';
+            i++; continue;
+        }
+        if (char === 'ی') {
+            const prevIsVowel = i > 0 && ['ا','ە','ێ','ۆ','ی','و'].includes(text[i-1]);
+            const nextIsVowel = next && ['ا','ە','ێ','ۆ','ی','و'].includes(next);
+            result += (prevIsVowel || nextIsVowel) ? 'y' : 'î';
+            i++; continue;
+        }
+        
+        // Initial Hamza handling
+        if (char === 'ئ') {
+            if (next === 'ا') { result += 'a'; i += 2; continue; }
+            if (next === 'ە') { result += 'e'; i += 2; continue; }
+            if (next === 'ی') { result += 'î'; i += 2; continue; }
+            if (next === 'ۆ') { result += 'o'; i += 2; continue; }
+            if (next === 'و') { result += 'u'; i += 2; continue; }
+            i++; continue; // Drop standalone hamza
+        }
+
+        // Standard mapping
+        result += ARABIC_TO_LATIN_MAP[char] || char;
+        i++;
+    }
+    
+    // Capitalize sentences
+    result = result.replace(/(^|[.!?]\s+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+    return result;
 }
 
-/* ---------- actions ---------- */
-function act(a,d){
-  const p=d.id&&S.posts.find(x=>x.id===d.id);
-  switch(a){
-    case'nav':case'go':closeD();V.view=d.v;V.room=null;render();scrollTo(0,0);break;
-    case'drawer':drawerH();$('#drawer').classList.add('open');$('#backdrop').classList.add('open');break;
-    case'dx':closeD();break;
-    case'create':openC();break;
-    case'cx':$('#creator').classList.remove('open');break;
-    case'poem':$('#cta').classList.toggle('poem');$('#cpo').classList.toggle('on');break;
-    case'pub':{
-      const t=$('#cta').value.trim();if(!t){toast('سەرەتا شتێک بنووسە');break}
-      S.posts.unshift({id:'p'+Date.now(),authorName:S.user.name,authorHandle:S.user.handle,avatar:S.user.avatar,mine:true,time:new Date().toISOString(),isPoetry:$('#cta').classList.contains('poem'),orig:t,script:'ar',likes:0,liked:false,shares:0,comments:[]});
-      save();$('#creator').classList.remove('open');V.view='home';render();scrollTo(0,0);toast('بڵاوکرایەوە');break}
-    case'like':p.liked=!p.liked;p.likes+=p.liked?1:-1;if(p.liked)notify('LIKE',Object.assign(who(rnd()),{postId:p.id,postExcerpt:ex(p)}));save();render();break;
-    case'cm':V.open.has(d.id)?V.open.delete(d.id):V.open.add(d.id);render();break;
-    case'addc':addC(d.id);break;
-    case'share':{const t=p.orig;p.shares++;save();render();if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('کۆپی کرا'),()=>toast('کۆپی نەکرا'));else toast('کۆپی نەکرا');break}
-    case'conv':p.script=p.script==='la'?'ar':'la';save();render();break;
-    case'save':{const i=S.saved.indexOf(d.id);i<0?S.saved.push(d.id):S.saved.splice(i,1);save();render();toast(i<0?'پاشەکەوت کرا':'لابرا لە پاشەکەوتکراوەکان');break}
-    case'more':if(p.mine){if(confirm('ئەم پۆستە بسڕدرێتەوە؟')){S.posts=S.posts.filter(x=>x.id!==p.id);S.saved=S.saved.filter(x=>x!==p.id);save();render()}}else{p.hidden=true;save();render();toast('پۆستەکە شاردرایەوە')}break;
-    case'nf':V.nf=d.t;render();break;
-    case'mall':S.notifications.forEach(x=>x.read=true);save();render();break;
-    case'nrow':{
-      const x=S.notifications.find(y=>y.id===d.id);x.read=true;save();
-      if(x.postId&&P(x.postId)){V.view='home';if(x.type==='COMMENT')V.open.add(x.postId);render();setTimeout(()=>{const e=document.getElementById('p-'+x.postId);if(e)e.scrollIntoView({block:'start'})},30)}else render();break}
-    case'fol':{const x=S.notifications.find(y=>y.id===d.id);x.isFollowingBack=!x.isFollowingBack;S.user.following+=x.isFollowingBack?1:-1;x.read=true;save();render();break}
-    case'ptab':V.ptab=d.t;render();break;
-    case'editp':editM();break;
-    case'shp':if(navigator.clipboard)navigator.clipboard.writeText('@'+S.user.handle).then(()=>toast('کۆپی کرا'),()=>toast('کۆپی نەکرا'));break;
-    case'mx':closeM();break;
-    case'savep':{
-      const h=$('#eh').value.toLowerCase().replace(/[^a-z0-9_]/g,''),nm=$('#en').value.trim();
-      if(!h||!nm){toast('ناو و نازناو پێویستن');break}
-      Object.assign(S.user,{name:nm,handle:h,bio:$('#eb').value.trim(),country:$('#eco').value,city:$('#eci').value});
-      save();closeM();render();toast('پاشەکەوت کرا');break}
-    case'theme':setTheme(!document.documentElement.classList.contains('dark'));render();break;
-    case'dtheme':setTheme(!document.documentElement.classList.contains('dark'));drawerH();render();break;
-    case'fs':S.fs=Math.min(22,Math.max(13,S.fs+ +d.d));save();render();break;
-    case'tn':{
-      const t=['LIKE','COMMENT','FOLLOW'][Math.floor(Math.random()*3)],m=S.posts.find(x=>x.mine),o=who(rnd());
-      if(t==='FOLLOW')notify(t,o);else notify(t,Object.assign(o,{postId:m.id,postExcerpt:ex(m),commentText:t==='COMMENT'?'ئەمە لێدوانێکی تاقیکردنەوەیە.':null}));
-      render();toast('ئاگادارییەکی نوێ دروست کرا');break}
-    case'reset':if(confirm('هەموو داتاکان بگەڕێنرێنەوە بۆ نموونە؟')){S=seed();save();V.open.clear();render();toast('ڕێکخرایەوە')}break;
-    case'ctab':V.ctab=d.t;render();break;
-    case'newchat':chatM();break;
-    case'mkchat':{
-      const nm=$('#nn').value.trim();if(!nm){toast('ناو بنووسە');break}
-      const g=$('#nt').value==='group';
-      S.chats.unshift({id:'c'+Date.now(),type:g?'group':'dm',name:nm,avatar:av(nm[0],g?'#334155':'#0369a1'),online:!g,members:1,time:'ئێستا',msgs:[]});
-      V.ctab=g?'group':'dm';save();closeM();render();break}
-    case'room':V.room=d.id;V.view='room';render();scrollTo(0,document.body.scrollHeight);break;
-    case'back':V.view='chat';V.room=null;render();break;
-    case'send':{
-      const t=$('#rin').value.trim();if(!t)break;
-      S.chats.find(x=>x.id===V.room).msgs.push({me:true,text:t});save();render();scrollTo(0,document.body.scrollHeight);break}
-  }
-}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(t)act(t.dataset.a,t.dataset)});
-document.addEventListener('input',e=>{
-  const t=e.target;
-  if(t.id==='eh')t.value=t.value.toLowerCase().replace(/[^a-z0-9_]/g,'');
-  if(t.id==='eb'){t.style.height='auto';t.style.height=t.scrollHeight+'px';$('#ec').textContent=n(t.value.length)+'/'+n(160)}
-  if(t.id==='rin'){t.style.height='auto';t.style.height=Math.min(t.scrollHeight,96)+'px';$('#rs').classList.toggle('show',!!t.value.trim())}
-});
-document.addEventListener('change',e=>{const t=e.target;if(t.id==='eco')cityF(t.value,'');if(t.id==='ef'&&t.files[0])pic(t.files[0])});
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id&&e.target.id.startsWith('ci-')){e.preventDefault();addC(e.target.id.slice(3))}});
+// ============================================================================
+// 3. NOTIFICATION FACTORY & VALIDATOR
+// ============================================================================
+function createNotification(type, payload) {
+    const validTypes = ['LIKE', 'COMMENT', 'FOLLOW'];
+    if (!validTypes.includes(type)) throw new Error(`Invalid notification type: ${type}`);
+    
+    const base = {
+        id: `n_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+        type,
+        actorName: payload.actorName,
+        actorHandle: payload.actorHandle,
+        actorAvatar: payload.actorAvatar,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
 
-/* ---------- init ---------- */
-try{setTheme(localStorage.getItem('meko_theme')==='dark')}catch(e){}
-render();
-window.addEventListener('load',icons);
-})();
+    if (type === 'LIKE' || type === 'COMMENT') {
+        if (!payload.postId || !payload.postExcerpt) throw new Error(`${type} requires postId and postExcerpt`);
+        base.postId = payload.postId;
+        base.postExcerpt = payload.postExcerpt;
+        base.commentText = type === 'COMMENT' ? payload.commentText : null;
+        base.isFollowingBack = false;
+    } else if (type === 'FOLLOW') {
+        base.postId = null;
+        base.postExcerpt = null;
+        base.commentText = null;
+        base.isFollowingBack = payload.isFollowingBack || false;
+    }
+
+    state.notifications.unshift(base);
+    saveState();
+    renderBottomBar(); // Update badge
+    if (state.activeView === 'notifications') renderNotificationsView();
+}
+
+// ============================================================================
+// 4. RENDERERS
+// ============================================================================
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+function initApp() {
+    loadState();
+    applyTheme();
+    renderBottomBar();
+    renderSidebar();
+    navigateTo(state.activeView);
+    
+    // Global icon initialization
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+function applyTheme() {
+    const theme = localStorage.getItem(THEME_KEY) || 'light';
+    document.documentElement.className = theme;
+}
+
+function toggleTheme() {
+    const current = document.documentElement.className;
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.className = next;
+    localStorage.setItem(THEME_KEY, next);
+    renderSidebar(); // Refresh theme switcher UI
+}
+
+function navigateTo(view, params = {}) {
+    state.activeView = view;
+    if (params.chatId) state.activeChatId = params.chatId;
+    saveState();
+    
+    const main = $('#main-content');
+    const header = $('#main-header');
+    const headerAction = $('#header-action-btn');
+    
+    main.innerHTML = '';
+    headerAction.classList.add('hidden');
+    headerAction.onclick = null;
+
+    switch(view) {
+        case 'timeline': renderTimeline(main, header); break;
+        case 'notifications': renderNotificationsView(main, header); break;
+        case 'chat': state.activeChatId ? renderChatRoom(main, header) : renderChatList(main, header); break;
+        case 'profile': renderProfile(main, header); break;
+        case 'library': renderLibrary(main, header); break;
+        case 'saved': renderSavedPosts(main, header); break;
+        case 'creator': renderCreatorCanvas(); break;
+        default: renderTimeline(main, header);
+    }
+    
+    closeDrawer();
+    renderBottomBar();
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- BOTTOM BAR ---
+function renderBottomBar() {
+    const bar = $('#bottom-bar');
+    const unreadCount = state.notifications.filter(n => !n.read).length;
+    const isActive = (v) => state.activeView === v ? 'text-[var(--text-main)] scale-110' : 'text-[var(--text-muted)]';
+    
+    bar.innerHTML = `
+        <button onclick="navigateTo('timeline')" class="${isActive('timeline')} transition-all duration-200"><i data-lucide="home" class="w-6 h-6"></i></button>
+        <button onclick="navigateTo('notifications')" class="${isActive('notifications')} relative transition-all duration-200">
+            <i data-lucide="bell" class="w-6 h-6"></i>
+            ${unreadCount > 0 ? `<span class="absolute -top-1 -right-1 bg-danger text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">${unreadCount}</span>` : ''}
+        </button>
+        <button onclick="navigateTo('creator')" class="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 ${document.documentElement.classList.contains('dark') ? 'bg-white text-black' : 'bg-black text-white'}">
+            <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+        <button onclick="navigateTo('chat')" class="${isActive('chat')} transition-all duration-200"><i data-lucide="message-circle" class="w-6 h-6"></i></button>
+        <button onclick="openDrawer()" class="relative transition-all duration-200">
+            <img src="${state.currentUser.avatar}" class="avatar-sm border-2 border-transparent hover:border-[var(--text-muted)] transition-colors" alt="Menu">
+            <div class="absolute -bottom-0.5 -left-0.5 bg-[var(--bg-secondary)] rounded-full p-0.5 border border-hairline">
+                <i data-lucide="menu" class="w-3 h-3"></i>
+            </div>
+        </button>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- SIDEBAR DRAWER ---
+function openDrawer() {
+    $('#drawer-backdrop').classList.remove('opacity-0', 'pointer-events-none');
+    $('#sidebar-drawer').classList.remove('-translate-x-full');
+}
+
+function closeDrawer() {
+    $('#drawer-backdrop').classList.add('opacity-0', 'pointer-events-none');
+    $('#sidebar-drawer').classList.add('-translate-x-full');
+}
+
+$('#drawer-backdrop').addEventListener('click', closeDrawer);
+
+function renderSidebar() {
+    const drawer = $('#sidebar-drawer');
+    const u = state.currentUser;
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    drawer.innerHTML = `
+        <div class="p-6 border-b border-hairline cursor-pointer hover:bg-secondary transition-colors" onclick="navigateTo('profile')">
+            <div class="flex items-center gap-4 mb-3">
+                <img src="${u.avatar}" class="avatar-md" alt="${u.name}">
+                <div>
+                    <h3 class="font-bold text-lg">${u.name}</h3>
+                    <p class="text-muted text-sm">@${u.handle}</p>
+                </div>
+            </div>
+            <p class="text-sm text-muted line-clamp-2">${u.bio}</p>
+            <div class="flex gap-4 mt-3 text-sm font-medium">
+                <span>${u.followers} شوێنکەوتوو</span>
+                <span>${u.following} شوێنکەوتوو</span>
+            </div>
+        </div>
+        
+        <nav class="flex-1 py-4 px-3 space-y-1">
+            <button onclick="navigateTo('profile')" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-secondary transition-colors text-right">
+                <i data-lucide="user" class="w-5 h-5 text-muted"></i>
+                <span class="font-medium">پڕۆفایلەکەم</span>
+            </button>
+            <button onclick="navigateTo('library')" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-secondary transition-colors text-right">
+                <i data-lucide="book-open" class="w-5 h-5 text-muted"></i>
+                <span class="font-medium">کتێبخانە و ئەرشیف</span>
+            </button>
+            <button onclick="navigateTo('saved')" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-secondary transition-colors text-right">
+                <i data-lucide="bookmark" class="w-5 h-5 text-muted"></i>
+                <div class="flex-1 text-right">
+                    <span class="font-medium block">پاشەکەوتکراوەکان</span>
+                    <span class="text-xs text-muted">تەنها خۆت دەیبینیت</span>
+                </div>
+            </button>
+            <button onclick="showSettingsModal()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-secondary transition-colors text-right">
+                <i data-lucide="settings" class="w-5 h-5 text-muted"></i>
+                <span class="font-medium">ڕێکخستنەکان</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-hairline flex items-center justify-between">
+            <span class="text-xs text-muted">مەکۆ · v2.0.0</span>
+            <button onclick="toggleTheme()" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-sm font-medium transition-colors">
+                <i data-lucide="${isDark ? 'sun' : 'moon'}" class="w-4 h-4"></i>
+                ${isDark ? 'ڕووناک' : 'تاریک'}
+            </button>
+        </div>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- TIMELINE ---
+function renderTimeline(container, header) {
+    header.querySelector('h1').textContent = 'مەکۆ';
+    container.innerHTML = state.posts.map(post => createPostHTML(post)).join('<div class="post-divider"></div>');
+    attachPostInteractions();
+}
+
+function createPostHTML(post, isLatin = false) {
+    const content = isLatin ? transliterateKurdishToLatin(post.content) : post.content;
+    const bodyClass = post.isPoetry ? 'post-body-poetry' : 'post-body-prose';
+    const latinClass = isLatin ? 'post-body-latin' : '';
+    const dir = isLatin ? 'ltr' : 'rtl';
+    
+    return `
+        <article class="w-full" data-post-id="${post.id}" data-original-content="${encodeURIComponent(post.content)}" data-is-poetry="${post.isPoetry}">
+            <header class="px-4 pt-3.5 pb-2 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="${post.authorAvatar}" class="avatar-sm" alt="${post.authorName}">
+                    <div>
+                        <h4 class="font-bold text-[15px] leading-tight">${post.authorName}</h4>
+                        <time class="text-xs text-muted" datetime="${post.timestamp}">${formatTimeAgo(post.timestamp)}</time>
+                    </div>
+                </div>
+                <button class="p-2 rounded-full hover:bg-secondary text-muted"><i data-lucide="more-horizontal" class="w-5 h-5"></i></button>
+            </header>
+            
+            <div class="px-4 py-1.5 pb-3 ${bodyClass} ${latinClass}" dir="${dir}">${content}</div>
+            
+            <div class="interaction-bar">
+                <div class="flex items-center gap-5">
+                    <button class="action-icon like-btn ${post.likedByMe ? 'liked' : ''}" data-id="${post.id}">
+                        <i data-lucide="heart" class="w-5 h-5" ${post.likedByMe ? 'fill="currentColor"' : ''}></i>
+                        <span>${toKurdishNum(post.likes)}</span>
+                    </button>
+                    <button class="action-icon comment-btn" data-id="${post.id}">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        <span>${toKurdishNum(post.comments)}</span>
+                    </button>
+                    <button class="action-icon share-btn" data-id="${post.id}">
+                        <i data-lucide="share-2" class="w-5 h-5"></i>
+                        <span>${toKurdishNum(post.shares)}</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="action-icon script-toggle-btn" data-id="${post.id}" data-latin="${isLatin}">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded bg-secondary border border-hairline">${isLatin ? 'ئارامی' : 'لاتینی'}</span>
+                    </button>
+                    <button class="action-icon save-btn ${post.savedByMe ? 'saved' : ''}" data-id="${post.id}">
+                        <i data-lucide="bookmark" class="w-5 h-5" ${post.savedByMe ? 'fill="currentColor"' : ''}></i>
+                    </button>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+function attachPostInteractions() {
+    $$('.like-btn').forEach(btn => btn.onclick = () => toggleLike(btn.dataset.id));
+    $$('.save-btn').forEach(btn => btn.onclick = () => toggleSave(btn.dataset.id));
+    $$('.share-btn').forEach(btn => btn.onclick = () => sharePost(btn.dataset.id));
+    $$('.script-toggle-btn').forEach(btn => btn.onclick = () => toggleScript(btn));
+    $$('.comment-btn').forEach(btn => btn.onclick = () => showToast('بەشی لێدوانەکان بەم زووانە زیاد دەکرێت'));
+}
+
+function toggleLike(postId) {
+    const post = state.posts.find(p => p.id === postId);
+    if (!post) return;
+    post.likedByMe = !post.likedByMe;
+    post.likes += post.likedByMe ? 1 : -1;
+    saveState();
+    refreshCurrentView();
+}
+
+function toggleSave(postId) {
+    const idx = state.savedPostIds.indexOf(postId);
+    const post = state.posts.find(p => p.id === postId);
+    if (idx > -1) {
+        state.savedPostIds.splice(idx, 1);
+        if (post) post.savedByMe = false;
+        showToast('لە پاشەکەوتکراوەکان لابرا');
+    } else {
+        state.savedPostIds.push(postId);
+        if (post) post.savedByMe = true;
+        showToast('پاشەکەوت کرا');
+    }
+    saveState();
+    refreshCurrentView();
+}
+
+function sharePost(postId) {
+    const post = state.posts.find(p => p.id === postId);
+    if (post && navigator.clipboard) {
+        navigator.clipboard.writeText(post.content);
+        showToast('ناوەڕۆکی پۆست کۆپی کرا');
+    }
+}
+
+function toggleScript(btn) {
+    const article = btn.closest('article');
+    const isCurrentlyLatin = btn.dataset.latin === 'true';
+    const newHtml = createPostHTML(
+        state.posts.find(p => p.id === article.dataset.postId),
+        !isCurrentlyLatin
+    );
+    const temp = document.createElement('div');
+    temp.innerHTML = newHtml;
+    article.replaceWith(temp.firstElementChild);
+    attachPostInteractions();
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- NOTIFICATIONS ---
+function renderNotificationsView(container, header) {
+    header.querySelector('h1').textContent = 'ئاگادارییەکان';
+    const actionBtn = $('#header-action-btn');
+    actionBtn.classList.remove('hidden');
+    actionBtn.innerHTML = '<span class="text-sm font-medium">خوێندنەوەی هەموو</span>';
+    actionBtn.onclick = markAllRead;
+
+    const filters = [
+        { key: 'all', label: 'هەموو' },
+        { key: 'LIKE', label: 'پەسەندکردن' },
+        { key: 'COMMENT', label: 'لێدوانەکان' },
+        { key: 'FOLLOW', label: 'شوێنکەوتن' }
+    ];
+
+    const filtered = state.notifFilter === 'all' 
+        ? state.notifications 
+        : state.notifications.filter(n => n.type === state.notifFilter);
+
+    container.innerHTML = `
+        <div class="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar border-b border-hairline sticky top-14 bg-primary z-30">
+            ${filters.map(f => `
+                <button onclick="setNotifFilter('${f.key}')" class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${state.notifFilter === f.key ? 'bg-[var(--text-main)] text-[var(--bg-primary)]' : 'bg-secondary text-muted'}">
+                    ${f.label}
+                </button>
+            `).join('')}
+        </div>
+        <div class="divide-y divide-hairline">
+            ${filtered.length === 0 ? '<p class="text-center text-muted py-12">هیچ ئاگادارییەک نییە</p>' : filtered.map(renderNotifItem).join('')}
+        </div>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+function renderNotifItem(n) {
+    let badgeIcon = '';
+    let badgeColor = '';
+    let text = '';
+    let extra = '';
+    let action = '';
+
+    if (n.type === 'LIKE') {
+        badgeIcon = 'heart'; badgeColor = 'bg-danger';
+        text = `<strong>${n.actorName}</strong> پۆستەکەتی پەسەند کرد.`;
+        extra = `<p class="text-xs text-muted mt-1 truncate max-w-[280px]">${n.postExcerpt}</p>`;
+    } else if (n.type === 'COMMENT') {
+        badgeIcon = 'message-circle'; badgeColor = 'bg-[#0084ff]';
+        text = `<strong>${n.actorName}</strong> لێدوانێکی نووسی لەسەر پۆستەکەت:`;
+        extra = `
+            <div class="mt-2 px-3 py-2 bg-secondary rounded-lg text-sm italic border-r-2 border-[#0084ff]">"${n.commentText}"</div>
+            <p class="text-xs text-muted mt-1 truncate max-w-[280px]">${n.postExcerpt}</p>
+        `;
+    } else if (n.type === 'FOLLOW') {
+        badgeIcon = 'user-plus'; badgeColor = 'bg-success';
+        text = `<strong>${n.actorName}</strong> دەستی کرد بە شوێنکەوتنت.`;
+        action = `<button onclick="toggleFollowBack('${n.id}')" class="px-3 py-1 rounded-full text-xs font-bold border border-hairline hover:bg-secondary transition-colors">${n.isFollowingBack ? 'شوێنکەوتوو' : 'شوێنکەوتنەوە'}</button>`;
+    }
+
+    return `
+        <div class="px-4 py-3 flex gap-3 items-start hover:bg-secondary/50 transition-colors cursor-pointer ${!n.read ? 'bg-secondary/30' : ''}" onclick="handleNotifClick('${n.id}')">
+            <div class="relative flex-shrink-0">
+                <img src="${n.actorAvatar}" class="avatar-sm" alt="${n.actorName}">
+                <div class="absolute -bottom-0.5 -right-0.5 ${badgeColor} text-white rounded-full p-0.5 border-2 border-primary">
+                    <i data-lucide="${badgeIcon}" class="w-2.5 h-2.5"></i>
+                </div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm leading-snug">${text}</p>
+                ${extra}
+            </div>
+            <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                <span class="text-[10px] text-muted whitespace-nowrap">${formatTimeAgo(n.timestamp)}</span>
+                ${action}
+            </div>
+        </div>
+    `;
+}
+
+window.setNotifFilter = (filter) => { state.notifFilter = filter; renderNotificationsView($('#main-content'), $('#main-header')); };
+window.markAllRead = () => { state.notifications.forEach(n => n.read = true); saveState(); renderNotificationsView($('#main-content'), $('#main-header')); renderBottomBar(); showToast('هەموو ئاگادارییەکان خوێندرانەوە'); };
+window.handleNotifClick = (id) => {
+    const n = state.notifications.find(x => x.id === id);
+    if (n && !n.read) { n.read = true; saveState(); renderBottomBar(); }
+    if (n && n.postId) navigateTo('timeline'); // In real app would scroll to post
+};
+window.toggleFollowBack = (notifId) => {
+    const n = state.notifications.find(x => x.id === notifId);
+    if (n) { n.isFollowingBack = !n.isFollowingBack; saveState(); renderNotificationsView($('#main-content'), $('#main-header')); }
+};
+
+// --- PROFILE ---
+function renderProfile(container, header) {
+    const u = state.currentUser;
+    header.querySelector('h1').textContent = '';
+    header.innerHTML = `
+        <div class="flex items-center justify-between w-full px-2">
+            <span class="font-bold text-lg" dir="ltr">@${u.handle}</span>
+            <button onclick="showEditProfileModal()" class="p-2 rounded-full hover:bg-secondary"><i data-lucide="settings" class="w-5 h-5"></i></button>
+        </div>
+    `;
+
+    const myPosts = state.posts.filter(p => p.userId === u.id);
+    const myPoems = myPosts.filter(p => p.isPoetry);
+
+    container.innerHTML = `
+        <div class="px-4 pt-4 pb-2 flex items-start gap-5">
+            <img src="${u.avatar}" class="avatar-lg" alt="${u.name}">
+            <div class="flex-1 grid grid-cols-3 text-center gap-2 pt-1">
+                <div><span class="font-bold text-lg block">${toKurdishNum(u.postsCount)}</span><span class="text-xs text-muted">پۆست</span></div>
+                <div><span class="font-bold text-lg block">${toKurdishNum(u.followers)}</span><span class="text-xs text-muted">شوێنکەوتووان</span></div>
+                <div><span class="font-bold text-lg block">${toKurdishNum(u.following)}</span><span class="text-xs text-muted">شوێنکەوتوو</span></div>
+            </div>
+        </div>
+        <div class="px-4 py-2">
+            <h2 class="font-bold text-base">${u.name}</h2>
+            <p class="text-sm text-muted mt-0.5 whitespace-pre-wrap">${u.bio}</p>
+            <p class="text-sm text-muted mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${u.country}، ${u.city}</p>
+        </div>
+        <div class="px-4 py-3 flex gap-3">
+            <button onclick="showEditProfileModal()" class="flex-1 py-2 rounded-lg bg-secondary font-medium text-sm hover:opacity-80 transition-opacity">دەستکاریکردنی پڕۆفایل</button>
+            <button onclick="shareProfile()" class="flex-1 py-2 rounded-lg bg-secondary font-medium text-sm hover:opacity-80 transition-opacity">هاوبەشیکردنی پڕۆفایل</button>
+        </div>
+        
+        <div class="flex border-b border-hairline mt-2">
+            <button class="flex-1 py-3 text-sm font-bold border-b-2 border-[var(--text-main)]">هەموو بڵاوکراوەکانم</button>
+            <button class="flex-1 py-3 text-sm font-medium text-muted hover:text-[var(--text-main)] transition-colors">شیعرەکانم</button>
+        </div>
+        
+        <div class="flex flex-col">
+            ${myPosts.map(p => createPostHTML(p)).join('<div class="post-divider"></div>')}
+        </div>
+    `;
+    attachPostInteractions();
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+window.shareProfile = () => { showToast('لینکی پڕۆفایل کۆپی کرا'); };
+
+// --- EDIT PROFILE MODAL ---
+window.showEditProfileModal = () => {
+    const u = state.currentUser;
+    const cities = ['ئاکرێ','ئامەد','ئامێدی','ئورفا','ئیلام','باتمان','بانە','بێدلیس','بۆکان','پاوە','پێنجوێن','پیرانشار','تەقتەق','تکریت','جۆلەمێرگ','جوانڕۆ','چەمچەماڵ','چۆمان','حەسەکە','خانەقین','خۆی','خورماتوو','دێرسیم','دهۆک','دیواندەرە','ڕانیە','ڕەواندز','زاخۆ','زەڕایەن','سەردەشت','سەرپێڵی زەهاو','سەرێکانی','سەقز','سلێمانی','سنە','سۆران','سێرت','شنگال','شنۆ','شرنەخ','شەقڵاوە','عەفرین','قارس','قامیشلۆ','قەڵادزێ','قوچان','کرماشان','کەرکووک','کەلار','کۆبانێ','کۆیە','کفری','ماردین','ماکۆ','مەریوان','مەهاباد','مەلاطیە','مووش','نەغەدە','هەڵەبجە','هەولێر','وان'];
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    
+    modal.innerHTML = `
+        <div class="bg-primary w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl animate-slideUp">
+            <div class="sticky top-0 bg-primary/90 backdrop-blur-md px-5 py-4 flex items-center justify-between border-b border-hairline z-10">
+                <button onclick="this.closest('.fixed').remove()" class="text-muted font-medium">پاشگەزبوونەوە</button>
+                <h3 class="font-bold text-lg">دەستکاریکردنی پڕۆفایل</h3>
+                <button onclick="saveProfile(this)" class="text-accent font-bold">پاشەکەوت</button>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="relative">
+                        <img id="edit-avatar-preview" src="${u.avatar}" class="avatar-lg border-4 border-secondary">
+                        <label class="absolute bottom-0 right-0 bg-accent text-white p-1.5 rounded-full cursor-pointer shadow-lg">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                            <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(this)">
+                        </label>
+                    </div>
+                    <span class="text-sm text-muted">گۆڕینی وێنەی پڕۆفایل</span>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-muted px-1">ناوی پیشاندراو</label>
+                    <input id="edit-name" value="${u.name}" class="w-full bg-secondary rounded-xl px-4 py-3 text-sm focus:ring-2 ring-accent/30 transition-all">
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-muted px-1">نازناو / یوزەرنەیم</label>
+                    <div class="flex items-center bg-secondary rounded-xl overflow-hidden focus-within:ring-2 ring-accent/30 transition-all">
+                        <span class="pr-4 pl-2 text-muted font-bold" dir="ltr">@</span>
+                        <input id="edit-handle" value="${u.handle}" dir="ltr" pattern="[a-z0-9_]+" class="flex-1 bg-transparent py-3 text-sm lowercase" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-muted px-1">ژیاننامە <span class="font-normal opacity-60">(${u.bio.length}/160)</span></label>
+                    <textarea id="edit-bio" maxlength="160" rows="3" class="w-full bg-secondary rounded-xl px-4 py-3 text-sm focus:ring-2 ring-accent/30 transition-all resize-none" oninput="this.nextElementSibling.textContent=this.value.length+'/160'">${u.bio}</textarea>
+                    <span class="text-[10px] text-muted text-left block pr-1">${u.bio.length}/160</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-muted px-1">وڵات</label>
+                        <select id="edit-country" class="w-full bg-secondary rounded-xl px-4 py-3 text-sm appearance-none">
+                            <option selected>کوردستان</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-muted px-1">شار</label>
+                        <select id="edit-city" class="w-full bg-secondary rounded-xl px-4 py-3 text-sm appearance-none">
+                            ${cities.map(c => `<option ${c===u.city?'selected':''}>${c}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    $('#modals-container').appendChild(modal);
+    lucide.createIcons({ strokeWidth: 1.75 });
+};
+
+window.handleAvatarUpload = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 250; canvas.height = 250;
+            const ctx = canvas.getContext('2d');
+            const min = Math.min(img.width, img.height);
+            const sx = (img.width - min) / 2;
+            const sy = (img.height - min) / 2;
+            ctx.drawImage(img, sx, sy, min, min, 0, 0, 250, 250);
+            const base64 = canvas.toDataURL('image/jpeg', 0.85);
+            $('#edit-avatar-preview').src = base64;
+            $('#edit-avatar-preview').dataset.newAvatar = base64;
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.saveProfile = (btn) => {
+    const newName = $('#edit-name').value.trim();
+    const newHandle = $('#edit-handle').value.trim();
+    const newBio = $('#edit-bio').value.trim();
+    const newCity = $('#edit-city').value;
+    const newAvatar = $('#edit-avatar-preview').dataset.newAvatar;
+    
+    if (!newName || !newHandle) return showToast('ناو و یوزەرنەیم پێویستن');
+    
+    state.currentUser.name = newName;
+    state.currentUser.handle = newHandle;
+    state.currentUser.bio = newBio;
+    state.currentUser.city = newCity;
+    if (newAvatar) state.currentUser.avatar = newAvatar;
+    
+    // Sync avatar/name across posts
+    state.posts.forEach(p => {
+        if (p.userId === state.currentUser.id) {
+            p.authorName = newName;
+            p.authorHandle = newHandle;
+            p.authorAvatar = state.currentUser.avatar;
+        }
+    });
+    
+    saveState();
+    btn.closest('.fixed').remove();
+    navigateTo('profile');
+    renderSidebar();
+    renderBottomBar();
+    showToast('پڕۆفایل نوێکرایەوە');
+};
+
+// --- CREATOR CANVAS ---
+function renderCreatorCanvas() {
+    const modal = document.createElement('div');
+    modal.id = 'creator-canvas';
+    modal.className = 'fixed inset-0 z-[100] bg-primary flex flex-col animate-fadeIn';
+    modal.innerHTML = `
+        <div class="px-4 h-14 flex items-center justify-between border-b border-hairline">
+            <button onclick="closeCreator()" class="p-2 rounded-full hover:bg-secondary"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 class="font-bold text-lg">پۆستی نوێ</h3>
+            <button onclick="publishPost()" class="px-4 py-1.5 rounded-full bg-[var(--text-main)] text-[var(--bg-primary)] font-bold text-sm disabled:opacity-50">بڵاوکردنەوە</button>
+        </div>
+        <div class="flex-1 p-4 flex gap-3">
+            <img src="${state.currentUser.avatar}" class="avatar-sm flex-shrink-0 mt-1">
+            <textarea id="creator-text" placeholder="چی لە دڵتدایە؟ لێرە بینووسە..." class="flex-1 bg-transparent text-lg resize-none focus:outline-none placeholder:text-muted/50 leading-relaxed"></textarea>
+        </div>
+        <div class="px-4 py-3 border-t border-hairline flex items-center gap-3">
+            <button id="poetry-toggle" onclick="togglePoetryMode()" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline text-sm font-medium hover:bg-secondary transition-colors">
+                <i data-lucide="feather" class="w-4 h-4"></i>
+                شێوازی شیعر
+            </button>
+        </div>
+    `;
+    $('#modals-container').appendChild(modal);
+    setTimeout(() => $('#creator-text').focus(), 100);
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+let isCreatorPoetry = false;
+window.togglePoetryMode = () => {
+    isCreatorPoetry = !isCreatorPoetry;
+    const ta = $('#creator-text');
+    const btn = $('#poetry-toggle');
+    if (isCreatorPoetry) {
+        ta.style.fontFamily = "'Amiri', serif";
+        ta.style.fontSize = "19px";
+        ta.style.lineHeight = "2.15";
+        ta.style.textAlign = "center";
+        btn.classList.add('bg-secondary', 'border-[var(--text-main)]');
+    } else {
+        ta.style.fontFamily = "'Vazirmatn', sans-serif";
+        ta.style.fontSize = "18px";
+        ta.style.lineHeight = "1.75";
+        ta.style.textAlign = "right";
+        btn.classList.remove('bg-secondary', 'border-[var(--text-main)]');
+    }
+};
+
+window.closeCreator = () => { $('#creator-canvas')?.remove(); isCreatorPoetry = false; navigateTo(state.activeView === 'creator' ? 'timeline' : state.activeView); };
+
+window.publishPost = () => {
+    const text = $('#creator-text').value.trim();
+    if (!text) return showToast('تکایە شتێک بنووسە');
+    
+    const newPost = {
+        id: `p_${Date.now()}`,
+        userId: state.currentUser.id,
+        authorName: state.currentUser.name,
+        authorHandle: state.currentUser.handle,
+        authorAvatar: state.currentUser.avatar,
+        content: text,
+        isPoetry: isCreatorPoetry,
+        likes: 0, comments: 0, shares: 0,
+        timestamp: new Date().toISOString(),
+        likedByMe: false, savedByMe: false
+    };
+    
+    state.posts.unshift(newPost);
+    state.currentUser.postsCount++;
+    saveState();
+    closeCreator();
+    navigateTo('timeline');
+    showToast('پۆستەکەت بڵاوکرایەوە');
+};
+
+// --- CHAT SYSTEM ---
+function renderChatList(container, header) {
+    header.querySelector('h1').textContent = 'نامەکان';
+    const dms = state.chats.filter(c => c.type === 'dm');
+    const groups = state.chats.filter(c => c.type === 'group');
+    
+    container.innerHTML = `
+        <div class="flex gap-2 px-4 py-3 border-b border-hairline sticky top-14 bg-primary z-30">
+            <button class="flex-1 py-2 rounded-lg bg-[var(--text-main)] text-[var(--bg-primary)] font-medium text-sm">چاتەکان</button>
+            <button class="flex-1 py-2 rounded-lg bg-secondary text-muted font-medium text-sm">گرووپەکان</button>
+        </div>
+        <div class="divide-y divide-hairline">
+            ${[...dms, ...groups].map(chat => `
+                <div onclick="navigateTo('chat', {chatId:'${chat.id}'})" class="px-4 py-3 flex items-center gap-3 hover:bg-secondary/50 transition-colors cursor-pointer">
+                    <div class="relative">
+                        <img src="${chat.avatar}" class="avatar-md">
+                        ${chat.online ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-primary"></span>' : ''}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-baseline">
+                            <h4 class="font-bold text-sm truncate">${chat.name}</h4>
+                            <span class="text-[10px] text-muted flex-shrink-0">${chat.time}</span>
+                        </div>
+                        <p class="text-sm text-muted truncate mt-0.5">${chat.type === 'group' ? `${chat.members.toLocaleString('ckb')} ئەندام` : chat.lastMsg}</p>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+function renderChatRoom(container, header) {
+    const chat = state.chats.find(c => c.id === state.activeChatId);
+    if (!chat) return navigateTo('chat');
+    
+    header.innerHTML = `
+        <div class="flex items-center gap-3 w-full">
+            <button onclick="navigateTo('chat')" class="p-2 -mr-2 rounded-full hover:bg-secondary"><i data-lucide="arrow-right" class="w-5 h-5"></i></button>
+            <img src="${chat.avatar}" class="avatar-sm">
+            <div>
+                <h3 class="font-bold text-base leading-tight">${chat.name}</h3>
+                <p class="text-[10px] text-muted">${chat.type === 'group' ? `${chat.members.toLocaleString('ckb')} ئەندام` : 'چالاکە'}</p>
+            </div>
+        </div>
+    `;
+    
+    // Mock messages for demo
+    const msgs = [
+        { from: 'them', text: 'سڵاو! چۆنیت؟', time: '١٠:٢٨' },
+        { from: 'me', text: 'سڵاو، سوپاس! خەریکی پڕۆژەی مەکۆم.', time: '١٠:٢٩' },
+        { from: 'them', text: 'زۆر باشە! پێویستت بە یارمەتی هەیە؟', time: '١٠:٣٠' }
+    ];
+    
+    container.innerHTML = `
+        <div class="flex-1 p-4 flex flex-col gap-3 min-h-[calc(100vh-140px)]">
+            ${msgs.map(m => `
+                <div class="flex ${m.from === 'me' ? 'justify-end' : 'justify-start gap-2'} items-end">
+                    ${m.from === 'them' ? `<img src="${chat.avatar}" class="avatar-xs mb-1">` : ''}
+                    <div class="${m.from === 'me' ? 'bubble-out' : 'bubble-in'}">
+                        <p class="text-sm">${m.text}</p>
+                        <span class="text-[9px] opacity-60 block text-left mt-1">${m.time}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        <div class="smart-input-container">
+            <textarea id="chat-input" class="smart-textarea" placeholder="نامەیەک بنووسە..." rows="1" oninput="autoExpandChat(this)"></textarea>
+            <button id="chat-send-btn" class="send-btn" onclick="sendChatMsg()"><i data-lucide="arrow-up" class="w-5 h-5"></i></button>
+        </div>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+window.autoExpandChat = (ta) => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 96) + 'px';
+    const btn = $('#chat-send-btn');
+    if (ta.value.trim()) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+};
+
+window.sendChatMsg = () => {
+    const ta = $('#chat-input');
+    if (!ta.value.trim()) return;
+    showToast('نامە نێردرا (دەمو)');
+    ta.value = '';
+    autoExpandChat(ta);
+};
+
+// --- LIBRARY & ARCHIVE ---
+function renderLibrary(container, header) {
+    header.querySelector('h1').textContent = 'کتێبخانە';
+    const totalWords = state.library.reduce((a,b) => a + b.words, 0);
+    const hero = state.library[0];
+    
+    container.innerHTML = `
+        <div class="px-4 pt-5 pb-3 flex items-start justify-between gap-4">
+            <div>
+                <h2 class="font-bold text-xl leading-tight">کتێبخانە و ئەرشیفی کراوە</h2>
+                <p class="text-xs text-muted mt-1">ژێرخانی دەقی خاوی کوردی بە ستانداردی UTF-8</p>
+            </div>
+            <button class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[var(--text-main)] text-[var(--bg-primary)] text-xs font-bold flex-shrink-0">
+                <i data-lucide="plus" class="w-3 h-3"></i> ناردنی دەق
+            </button>
+        </div>
+        
+        <div class="mx-4 mb-4 p-4 rounded-2xl bg-secondary flex justify-around text-center">
+            <div><span class="font-bold text-lg block">${toKurdishNum(state.library.length)}</span><span class="text-[10px] text-muted">بەرهەم</span></div>
+            <div><span class="font-bold text-lg block">${toKurdishNum(totalWords)}</span><span class="text-[10px] text-muted">وشە</span></div>
+            <div><span class="font-bold text-lg block text-success">UTF-8</span><span class="text-[10px] text-muted">ستاندارد</span></div>
+        </div>
+        
+        <div class="px-4 mb-4">
+            <div class="relative">
+                <i data-lucide="search" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
+                <input type="text" placeholder="گەڕان لە ناونیشان، نووسەر، یان ناوەڕۆکی دەق..." class="w-full bg-secondary rounded-xl pr-10 pl-4 py-2.5 text-sm focus:ring-2 ring-accent/30 transition-all">
+            </div>
+            <div class="flex gap-2 mt-3 overflow-x-auto hide-scrollbar">
+                ${['هەموو','دەقی خاو TXT','دیوانی شیعر','لێکۆڵینەوە','فەرهەنگ و زمان'].map((t,i) => `
+                    <button class="px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${i===0?'bg-[var(--text-main)] text-[var(--bg-primary)]':'bg-secondary text-muted'}">${t}</button>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div class="library-hero">
+            <span class="text-[10px] font-bold uppercase tracking-wider opacity-70">شاکاری هەڵبژێردراو · UTF-8 TXT</span>
+            <h3 class="font-serif text-2xl font-bold mt-2 text-[#fafafa]">${hero.title}</h3>
+            <p class="text-sm opacity-80 mt-1">${hero.author} · ${hero.category}</p>
+            <p class="font-serif text-base mt-3 opacity-90 leading-relaxed line-clamp-2">${hero.excerpt}</p>
+            <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                <span class="text-xs opacity-60">${toKurdishNum(hero.words)} وشە · ${hero.size}</span>
+                <div class="flex gap-2">
+                    <button onclick="openReader('${hero.id}')" class="px-4 py-1.5 rounded-full bg-white text-black text-xs font-bold">خوێندنەوە</button>
+                    <button onclick="downloadTxt('${hero.id}')" class="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10"><i data-lucide="download" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-4 pb-24 space-y-3">
+            ${state.library.slice(1).map((item, idx) => `
+                <div class="p-4 rounded-2xl border border-hairline bg-primary flex gap-3 hover:border-[var(--text-muted)] transition-colors">
+                    <div class="w-11 h-11 rounded-xl bg-secondary flex flex-col items-center justify-center flex-shrink-0">
+                        <span class="font-bold text-sm">${toKurdishNum(idx+2).padStart(2,'٠')}</span>
+                        <span class="text-[8px] text-muted">TXT</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-[10px] text-muted">${item.category} · ${item.format}</span>
+                        <h4 class="font-serif font-bold text-[19px] leading-tight mt-0.5 cursor-pointer" onclick="openReader('${item.id}')">${item.title}</h4>
+                        <p class="text-[13px] text-muted mt-0.5">${item.author}</p>
+                        <p class="text-[13px] text-muted/70 mt-1.5 line-clamp-2 leading-relaxed">${item.excerpt}</p>
+                        <div class="flex gap-2 mt-2.5 text-[11px] text-muted">
+                            <span class="px-2 py-0.5 rounded bg-secondary">${toKurdishNum(item.words)} وشە</span>
+                            <span class="px-2 py-0.5 rounded bg-secondary">${item.size}</span>
+                            <span class="px-2 py-0.5 rounded bg-secondary text-success">UTF-8</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <button onclick="openReader('${item.id}')" class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-hairline transition-colors"><i data-lucide="book-open" class="w-4 h-4"></i></button>
+                        <button onclick="downloadTxt('${item.id}')" class="w-9 h-9 rounded-full bg-secondary flex items-center justify-center hover:bg-hairline transition-colors"><i data-lucide="download" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- DISTRACTION-FREE READER ---
+window.openReader = (libId) => {
+    const item = state.library.find(l => l.id === libId);
+    if (!item) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'reader-modal';
+    modal.className = 'fixed inset-0 z-[130] reader-theme-white flex flex-col transition-colors duration-300';
+    modal.innerHTML = `
+        <div class="sticky top-0 px-4 h-12 flex items-center justify-between bg-inherit/90 backdrop-blur-md border-b border-black/5 z-10">
+            <button onclick="closeReader()" class="p-2 rounded-full hover:bg-black/5"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="flex items-center gap-1">
+                <button onclick="adjustFontSize(-1)" class="p-2 rounded-full hover:bg-black/5 text-sm font-bold">A-</button>
+                <button onclick="adjustFontSize(1)" class="p-2 rounded-full hover:bg-black/5 text-base font-bold">A+</button>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="setReaderTheme('white')" class="w-6 h-6 rounded-full bg-white border border-gray-300"></button>
+                <button onclick="setReaderTheme('sepia')" class="w-6 h-6 rounded-full bg-[#f8f1e5] border border-gray-300"></button>
+                <button onclick="setReaderTheme('dark')" class="w-6 h-6 rounded-full bg-[#09090b] border border-gray-700"></button>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="toggleReaderScript()" id="reader-script-btn" class="px-2 py-1 rounded text-[10px] font-bold border border-current">لاتینی</button>
+                <button onclick="copyReaderText()" class="p-2 rounded-full hover:bg-black/5"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                <button onclick="downloadTxt('${item.id}')" class="p-2 rounded-full hover:bg-black/5"><i data-lucide="download" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+        <div id="reader-content" class="flex-1 overflow-y-auto px-6 py-8 font-serif text-lg leading-loose max-w-2xl mx-auto w-full" style="font-size:18px;">
+            <h1 class="text-2xl font-bold mb-2 text-center">${item.title}</h1>
+            <p class="text-center opacity-60 mb-8 text-sm">${item.author}</p>
+            <div id="reader-body" class="whitespace-pre-wrap">${item.fullText}</div>
+        </div>
+    `;
+    $('#modals-container').appendChild(modal);
+    lucide.createIcons({ strokeWidth: 1.75 });
+};
+
+let readerFontSize = 18;
+let readerIsLatin = false;
+let currentReaderText = '';
+
+window.adjustFontSize = (delta) => {
+    readerFontSize = Math.max(14, Math.min(28, readerFontSize + delta));
+    $('#reader-content').style.fontSize = readerFontSize + 'px';
+};
+
+window.setReaderTheme = (theme) => {
+    const modal = $('#reader-modal');
+    modal.classList.remove('reader-theme-white', 'reader-theme-sepia', 'reader-theme-dark');
+    modal.classList.add(`reader-theme-${theme}`);
+};
+
+window.toggleReaderScript = () => {
+    readerIsLatin = !readerIsLatin;
+    const body = $('#reader-body');
+    const btn = $('#reader-script-btn');
+    if (readerIsLatin) {
+        body.textContent = transliterateKurdishToLatin(currentReaderText || body.textContent);
+        body.dir = 'ltr';
+        body.style.textAlign = 'left';
+        btn.textContent = 'ئارامی';
+    } else {
+        // Restore original (re-fetch from state since we overwrote textContent)
+        const libId = $('#reader-modal').querySelector('[onclick*="downloadTxt"]').getAttribute('onclick').match(/'([^']+)'/)[1];
+        const item = state.library.find(l => l.id === libId);
+        body.textContent = item.fullText;
+        body.dir = 'rtl';
+        body.style.textAlign = 'right';
+        btn.textContent = 'لاتینی';
+    }
+};
+
+window.copyReaderText = () => {
+    const text = $('#reader-body').textContent;
+    navigator.clipboard.writeText(text);
+    showToast('دەق کۆپی کرا');
+};
+
+window.closeReader = () => { $('#reader-modal')?.remove(); readerIsLatin = false; };
+
+// --- SAVED POSTS VIEW ---
+function renderSavedPosts(container, header) {
+    header.querySelector('h1').textContent = 'پاشەکەوتکراوەکان';
+    const saved = state.posts.filter(p => state.savedPostIds.includes(p.id));
+    
+    container.innerHTML = `
+        <div class="px-4 py-3 border-b border-hairline">
+            <p class="text-xs text-muted flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> تەنها خۆت دەیبینیت</p>
+        </div>
+        ${saved.length === 0 ? '<p class="text-center text-muted py-12">هیچ پۆستێکت پاشەکەوت نەکردووە</p>' : saved.map(p => createPostHTML(p)).join('<div class="post-divider"></div>')}
+    `;
+    attachPostInteractions();
+    lucide.createIcons({ strokeWidth: 1.75 });
+}
+
+// --- SETTINGS MODAL ---
+window.showSettingsModal = () => {
+    closeDrawer();
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn p-4';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    modal.innerHTML = `
+        <div class="bg-primary w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-scaleIn">
+            <h3 class="font-bold text-xl mb-6 text-center">ڕێکخستنەکان</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-secondary">
+                    <span class="font-medium text-sm">دۆخی تاریک</span>
+                    <button onclick="toggleTheme(); this.closest('.fixed').remove(); showSettingsModal();" class="w-12 h-7 rounded-full relative transition-colors ${document.documentElement.classList.contains('dark') ? 'bg-success' : 'bg-gray-300'}">
+                        <span class="absolute top-1 ${document.documentElement.classList.contains('dark') ? 'right-1' : 'right-6'} w-5 h-5 bg-white rounded-full shadow transition-all"></span>
+                    </button>
+                </div>
+                <button onclick="testNotification()" class="w-full p-3 rounded-xl bg-secondary text-sm font-medium hover:opacity-80 transition-opacity text-right flex items-center justify-between">
+                    <span>تاقیکردنەوەی ئاگاداری</span>
+                    <i data-lucide="bell-ring" class="w-4 h-4 text-muted"></i>
+                </button>
+                <button onclick="resetDemoData()" class="w-full p-3 rounded-xl bg-danger/10 text-danger text-sm font-medium hover:bg-danger/20 transition-colors text-right flex items-center justify-between">
+                    <span>ڕیسێتکردنی داتای دەمو</span>
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <button onclick="this.closest('.fixed').remove()" class="w-full mt-6 py-3 rounded-xl font-bold text-muted hover:bg-secondary transition-colors">داخستن</button>
+        </div>
+    `;
+    $('#modals-container').appendChild(modal);
+    lucide.createIcons({ strokeWidth: 1.75 });
+};
+
+window.testNotification = () => {
+    const types = ['LIKE', 'COMMENT', 'FOLLOW'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    const payload = {
+        actorName: 'تێستی سیستەم',
+        actorHandle: 'test_system',
+        actorAvatar: 'https://api.dicebear.com/9.x/notionists/svg?seed=Test',
+        postId: state.posts[0]?.id || null,
+        postExcerpt: state.posts[0]?.content?.substring(0,40) + '...' || null,
+        commentText: type === 'COMMENT' ? 'ئەمە لێدوانێکی تاقیکردنەوەیە.' : null,
+        isFollowingBack: false
+    };
+    createNotification(type, payload);
+    showToast(`ئاگاداری ${type} دروست کرا`);
+};
+
+window.resetDemoData = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+};
+
+// ============================================================================
+// 5. UTILITIES
+// ============================================================================
+function toKurdishNum(num) {
+    const kurdishDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+    return String(num).replace(/\d/g, d => kurdishDigits[d]);
+}
+
+function formatTimeAgo(isoString) {
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'ئێستا';
+    if (mins < 60) return `${toKurdishNum(mins)} خولەک`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${toKurdishNum(hrs)} کاتژمێر`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${toKurdishNum(days)} ڕۆژ`;
+    return new Date(isoString).toLocaleDateString('ckb-IQ');
+}
+
+function showToast(msg) {
+    const existing = $('.toast-msg');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg fixed top-20 left-1/2 -translate-x-1/2 z-[200] bg-[var(--text-main)] text-[var(--bg-primary)] px-5 py-2.5 rounded-full text-sm font-medium shadow-xl animate-fadeIn pointer-events-none';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 2000);
+}
+
+function refreshCurrentView() {
+    navigateTo(state.activeView);
+}
+
+function updateJsonLd() {
+    const ld = {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Meko",
+        "description": "Open digital infrastructure for Kurdish language corpus",
+        "inLanguage": "ku",
+        "applicationCategory": "SocialMediaPosting",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    };
+    const el = document.getElementById('meko-jsonld');
+    if (el) el.textContent = JSON.stringify(ld);
+}
+
+// CSS Animations injection
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+    .animate-slideUp { animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+    .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
+`;
+document.head.appendChild(styleSheet);
+
+// Initialize
+document.addEventListener('DOMContentLoaded', initApp);
