@@ -1,28 +1,85 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl" class="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>مەکۆ</title>
-<meta name="description" content="مەکۆ · ژێرخانی کراوەی زمانی کوردی">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300..800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Vazirmatn','sans-serif'],serif:['Amiri','serif']}}}}</script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="styles.css">
-<script id="meko-jsonld" type="application/ld+json">{"@context":"https://schema.org","@graph":[]}</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Meko | ژێرخانی کراوەی زمانی کوردی</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                        serif: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        primary: 'var(--bg-primary)',
+                        secondary: 'var(--bg-secondary)',
+                        accent: '#0084ff',
+                        danger: '#ef4444',
+                        success: '#10b981',
+                        muted: 'var(--text-muted)',
+                        hairline: 'var(--border-hairline)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- JSON-LD Injection Point -->
+    <script id="meko-jsonld" type="application/ld+json">{}</script>
 </head>
-<body>
-<main class="app-shell" id="app"></main>
-<nav class="bottom-bar" id="bar" aria-label="سەرەکی"></nav>
-<div id="backdrop" data-a="dx"></div>
-<aside id="drawer" aria-label="لیستی لای چەپ"></aside>
-<section id="creator" aria-label="پۆستی نوێ"></section>
-<div id="modal"></div>
-<div id="toast" role="status"></div>
-<script src="unicode-engine.js"></script>
-<script src="app.js"></script>
+<body class="bg-primary text-[#09090b] dark:text-[#fafafa] transition-colors duration-300 overflow-x-hidden antialiased selection:bg-blue-500/30">
+
+    <!-- App Shell -->
+    <div id="app-shell" class="app-shell bg-primary min-h-screen relative">
+        
+        <!-- Header (Dynamic based on view) -->
+        <header id="main-header" class="sticky top-0 z-40 bg-primary/80 backdrop-blur-md border-b border-hairline px-4 h-14 flex items-center justify-between transition-all">
+            <h1 class="font-bold text-xl tracking-tight">مەکۆ</h1>
+            <button id="header-action-btn" class="p-2 rounded-full hover:bg-secondary transition-colors hidden">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+            </button>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="pb-24 pt-2 w-full">
+            <!-- Views injected here by app.js -->
+        </main>
+
+    </div>
+
+    <!-- Left Slide-Out Drawer (Sidebar) -->
+    <div id="drawer-backdrop" class="fixed inset-0 bg-black/45 backdrop-blur-sm z-[110] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <aside id="sidebar-drawer" class="fixed top-0 bottom-0 left-0 w-[310px] max-w-[85vw] z-[120] bg-primary shadow-[10px_0_35px_rgba(0,0,0,0.18)] transform -translate-x-full transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col border-r border-hairline">
+        <!-- Drawer Content Injected by app.js -->
+    </aside>
+
+    <!-- Floating Bottom Bar -->
+    <nav id="bottom-bar" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 h-[62px] px-5 rounded-full flex items-center gap-[22px] glass-bottom-bar">
+        <!-- Icons injected by app.js to ensure correct RTL order and active states -->
+    </nav>
+
+    <!-- Modals Container -->
+    <div id="modals-container"></div>
+
+    <!-- Scripts -->
+    <script src="unicode-engine.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
