@@ -1,32 +1,414 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl" class="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>مەکۆ · ژێرخانی کراوەی زمانی کوردی</title>
-<meta name="description" content="مەکۆ: تۆڕی کراوەی دەقی کوردی">
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300..800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Vazirmatn'],serif:['Amiri']}}}}</script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="styles.css">
-<script id="meko-jsonld" type="application/ld+json">{}</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>مەکۆ (Meko) — ژێرخانی کراوەی دیجیتاڵی زمانی کوردی</title>
+  <meta name="description" content="مەکۆ؛ تۆڕی کۆمەڵایەتیی ئەدەبی و ژێرخانی کراوەی دەقی خاوی کوردی بۆ بزوێنەرەکانی گەڕان، ژیریی دەستکرد و زمانەوانیی کوردی." />
+  <meta name="inLanguage" content="ku" />
+  <meta property="og:title" content="مەکۆ — ژێرخانی کراوەی زمانی کوردی" />
+  <meta property="og:description" content="تۆڕی ئەدەبی و کتێبخانەی کراوەی دەقی خاوی کوردی" />
+  <meta property="og:locale" content="ku_IQ" />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts: Vazirmatn & Amiri -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'system-ui', 'sans-serif'],
+            serif: ['Amiri', 'Georgia', 'serif']
+          },
+          colors: {
+            lightBg: '#ffffff',
+            lightSurface: '#f8fafc',
+            lightDivider: '#f0f2f5',
+            lightText: '#09090b',
+            lightMuted: '#64748b',
+            lightBorder: '#e2e8f0',
+            darkBg: '#09090b',
+            darkSurface: '#121215',
+            darkDivider: '#18181b',
+            darkText: '#fafafa',
+            darkMuted: '#94a3b8',
+            darkBorder: '#27272a',
+            messengerBlue: '#0084ff'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Platform Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Dynamic JSON-LD Structured Data Container -->
+  <script id="meko-jsonld" type="application/ld+json"></script>
 </head>
-<body>
-<div class="app-shell"><main id="view"></main></div>
-<nav id="bar" class="glass-bar" aria-label="ناوەندی سەرەکی">
-  <button data-go="home" aria-label="سەرەکی"><i data-lucide="home"></i></button>
-  <button data-go="notifs" class="rel" aria-label="ئاگادارییەکان"><i data-lucide="bell"></i><span id="badge" class="badge" hidden></span></button>
-  <button data-act="create" class="plus" aria-label="نوێ"><i data-lucide="plus"></i></button>
-  <button data-go="chat" aria-label="چات"><i data-lucide="message-circle"></i></button>
-  <button data-act="drawer" class="rel" aria-label="مینیو"><img id="barAv" class="bar-av" alt=""><span class="menu-badge"><i data-lucide="menu"></i></span></button>
-</nav>
-<div id="backdrop" data-act="closedrawer"></div>
-<aside id="drawer" aria-label="مینیو"></aside>
-<section id="creator" hidden></section>
-<div id="modal" hidden></div>
-<div id="toast" role="status"></div>
-<script src="unicode-engine.js"></script>
-<script src="app.js"></script>
+<body class="antialiased selection:bg-blue-500/20">
+
+  <!-- Main Application Shell -->
+  <div class="app-shell" id="app-shell">
+    <!-- Dynamic Semantic Main Content Container -->
+    <main id="app-view" role="main" aria-live="polite"></main>
+
+    <!-- 5-Icon iOS Glassmorphism Floating Bottom Bar (Ordered Right-to-Left in RTL) -->
+    <nav id="bottom-nav" class="ios-glass-bar" aria-label="ڕێنیشاندەری سەرەکی">
+      <!-- 1. Home (Rightmost in RTL) -->
+      <button type="button" class="nav-icon-btn active" data-nav="feed" aria-label="سەرەکی">
+        <i data-lucide="home"></i>
+      </button>
+
+      <!-- 2. Notifications -->
+      <button type="button" class="nav-icon-btn relative" data-nav="notifications" aria-label="ئاگادارییەکان">
+        <i data-lucide="bell"></i>
+        <span id="nav-notif-badge" class="notif-badge hidden">٠</span>
+      </button>
+
+      <!-- 3. Create (Centered Solid Circle) -->
+      <button type="button" id="open-creator-btn" class="nav-create-btn" aria-label="پۆستی نوێ">
+        <i data-lucide="plus"></i>
+      </button>
+
+      <!-- 4. Chat -->
+      <button type="button" class="nav-icon-btn relative" data-nav="chat" aria-label="پەیامەکان">
+        <i data-lucide="message-circle"></i>
+        <span id="nav-chat-dot" class="chat-unread-dot"></span>
+      </button>
+
+      <!-- 5. Menu / User Avatar (Leftmost in RTL -> Opens Left Slide-Out Drawer) -->
+      <button type="button" id="open-drawer-btn" class="nav-avatar-btn" aria-label="لیستی لاوەکی">
+        <img id="bottom-bar-avatar" src="" alt="وێنەی پڕۆفایل" class="nav-avatar-img" />
+        <span class="nav-avatar-menu-badge">
+          <i data-lucide="menu"></i>
+        </span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Left Slide-Out Navigation Drawer (Sidebar) -->
+  <div id="drawer-backdrop" class="drawer-backdrop hidden" aria-hidden="true"></div>
+  <aside id="left-drawer" class="left-drawer" aria-label="لیستی ڕێنیشاندەری لاوەکی" aria-hidden="true">
+    <!-- 1. Profile Summary Card (Top) -->
+    <div id="drawer-profile-card" class="drawer-profile-card" role="button" tabindex="0">
+      <div class="flex items-center justify-between">
+        <img id="drawer-avatar" src="" alt="وێنەی پڕۆفایل" class="avatar-md ring-2 ring-black/5 dark:ring-white/10" />
+        <span class="drawer-location-pill">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+          <span id="drawer-location-text">کوردستان، کەرکووک</span>
+        </span>
+      </div>
+      <div class="mt-3">
+        <h2 id="drawer-display-name" class="text-base font-bold leading-snug">والی</h2>
+        <p id="drawer-handle" dir="ltr" class="text-xs muted-text text-right font-medium mt-0.5">@wali_kurd</p>
+      </div>
+      <div class="flex items-center gap-4 mt-3 pt-3 border-t hairline-border text-xs">
+        <div><strong id="drawer-following-count" class="font-bold">١٤٢</strong> <span class="muted-text">شوێنکەوتوو</span></div>
+        <div><strong id="drawer-followers-count" class="font-bold">١,٢٨٠</strong> <span class="muted-text">شوێنکەوتووان</span></div>
+      </div>
+    </div>
+
+    <!-- 2. Navigation List (Middle) -->
+    <nav class="drawer-nav-list" aria-label="بەشەکانی پلاتفۆرم">
+      <button type="button" class="drawer-nav-item" data-drawer-nav="profile">
+        <i data-lucide="user"></i>
+        <span>پڕۆفایلەکەم</span>
+      </button>
+      <button type="button" class="drawer-nav-item" data-drawer-nav="library">
+        <i data-lucide="book-open"></i>
+        <span>کتێبخانە و ئەرشیف</span>
+      </button>
+      <button type="button" class="drawer-nav-item justify-between" data-drawer-nav="saved">
+        <div class="flex items-center gap-3.5">
+          <i data-lucide="bookmark"></i>
+          <span>پاشەکەوتکراوەکان</span>
+        </div>
+        <span id="drawer-saved-count" class="drawer-count-pill">٠</span>
+      </button>
+      <button type="button" class="drawer-nav-item" data-drawer-nav="settings">
+        <i data-lucide="settings"></i>
+        <span>ڕێکخستنەکان</span>
+      </button>
+    </nav>
+
+    <!-- 3. Quick Theme Switcher Footer (Bottom) -->
+    <footer class="drawer-footer">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5 text-sm font-medium">
+          <i id="drawer-theme-icon" data-lucide="moon" class="w-4 h-4"></i>
+          <span id="drawer-theme-label">دۆخی تاریک</span>
+        </div>
+        <button type="button" id="drawer-theme-toggle" class="theme-switch-pill" aria-label="گۆڕینی ڕووکار">
+          <span class="theme-switch-thumb"></span>
+        </button>
+      </div>
+      <p class="text-[11px] muted-text leading-relaxed">مەکۆ · ژێرخانی کراوەی زمانی کوردی</p>
+    </footer>
+  </aside>
+
+  <!-- Full-Screen Creator Canvas Modal -->
+  <section id="creator-modal" class="creator-canvas hidden" role="dialog" aria-modal="true" aria-label="پۆستی نوێ">
+    <header class="creator-header">
+      <button type="button" id="close-creator-btn" class="icon-circle-btn" aria-label="داخستن">
+        <i data-lucide="x"></i>
+      </button>
+      <h2 class="text-base font-bold">پۆستی نوێ</h2>
+      <button type="button" id="publish-post-btn" class="publish-pill-btn">بڵاوکردنەوە</button>
+    </header>
+
+    <div class="creator-body">
+      <img id="creator-avatar" src="" alt="وێنەی پڕۆفایل" class="avatar-sm mt-1" />
+      <div class="flex-1 min-w-0">
+        <textarea
+          id="creator-textarea"
+          rows="8"
+          class="creator-textarea"
+          placeholder="چی لە دڵتدایە؟ لێرە بینووسە..."
+        ></textarea>
+      </div>
+    </div>
+
+    <footer class="creator-footer">
+      <button type="button" id="toggle-poetry-mode-btn" class="poetry-mode-toggle" aria-pressed="false">
+        <i data-lucide="feather"></i>
+        <span>شێوازی شیعر</span>
+      </button>
+      <span id="creator-char-counter" class="text-xs muted-text">٠ پیت</span>
+    </footer>
+  </section>
+
+  <!-- Ultra-Modern Edit Profile Modal -->
+  <div id="edit-profile-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+    <div class="edit-profile-card">
+      <header class="modal-header">
+        <div class="flex items-center gap-2">
+          <button type="button" id="close-edit-profile-btn" class="icon-circle-btn" aria-label="پاشگەزبوونەوە">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="edit-profile-title" class="text-base font-bold">دەستکاریکردنی پڕۆفایل</h2>
+        </div>
+        <button type="button" id="save-profile-btn" class="publish-pill-btn">پاشەکەوتکردن</button>
+      </header>
+
+      <div class="modal-scroll-body">
+        <!-- Avatar Editor at Top Center -->
+        <div class="flex flex-col items-center py-4">
+          <div class="relative group cursor-pointer" id="avatar-upload-trigger">
+            <img id="edit-profile-avatar-preview" src="" alt="وێنەی پڕۆفایل" class="avatar-lg ring-4 ring-black/5 dark:ring-white/10" />
+            <span class="avatar-camera-badge">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+            </span>
+          </div>
+          <button type="button" id="avatar-upload-btn" class="mt-2.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            گۆڕینی وێنەی پڕۆفایل
+          </button>
+          <input type="file" id="avatar-file-input" accept="image/*" class="hidden" />
+        </div>
+
+        <!-- Form Fields -->
+        <div class="space-y-4">
+          <!-- 1. Display Name -->
+          <div class="modern-field-group">
+            <label for="edit-display-name" class="modern-field-label">ناوی پیشاندراو</label>
+            <input type="text" id="edit-display-name" class="modern-input" maxlength="50" placeholder="ناوی خۆت بنووسە" />
+          </div>
+
+          <!-- 2. Username Handle (@handle) -->
+          <div class="modern-field-group">
+            <label for="edit-username-handle" class="modern-field-label">نازناو / یوزەرنەیم</label>
+            <div class="username-input-wrapper" dir="ltr">
+              <span class="username-at-badge">@</span>
+              <input
+                type="text"
+                id="edit-username-handle"
+                class="username-input"
+                maxlength="30"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="wali_kurd"
+              />
+            </div>
+          </div>
+
+          <!-- 3. Bio -->
+          <div class="modern-field-group">
+            <div class="flex items-center justify-between mb-1">
+              <label for="edit-bio" class="modern-field-label mb-0">ژیاننامە</label>
+              <span id="edit-bio-count" class="text-[11px] muted-text">٠ / ١٦٠</span>
+            </div>
+            <textarea
+              id="edit-bio"
+              rows="3"
+              maxlength="160"
+              class="modern-input resize-none"
+              placeholder="کورتەیەک دەربارەی خۆت و بوارەکەت..."
+            ></textarea>
+          </div>
+
+          <!-- 4. Country & City Dropdowns -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="modern-field-group">
+              <label for="edit-country" class="modern-field-label">وڵات</label>
+              <select id="edit-country" class="modern-input">
+                <option value="کوردستان">کوردستان</option>
+                <option value="ئەڵمانیا">ئەڵمانیا</option>
+                <option value="سوید">سوید</option>
+                <option value="بەریتانیا">بەریتانیا</option>
+                <option value="فەڕەنسا">فەڕەنسا</option>
+                <option value="ئەمریکا">ئەمریکا</option>
+                <option value="کەنەدا">کەنەدا</option>
+              </select>
+            </div>
+            <div class="modern-field-group">
+              <label for="edit-city" class="modern-field-label">شار</label>
+              <select id="edit-city" class="modern-input"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgraded Distraction-Free Reader Modal -->
+  <section id="reader-modal" class="reader-modal surface-white hidden" role="dialog" aria-modal="true" aria-label="خوێنەری دەق">
+    <header class="reader-sticky-bar">
+      <button type="button" id="close-reader-btn" class="icon-circle-btn" aria-label="داخستنی خوێنەر">
+        <i data-lucide="x"></i>
+      </button>
+
+      <div class="reader-controls-group">
+        <!-- Font Size Controls -->
+        <div class="reader-pill-group">
+          <button type="button" id="reader-font-inc" class="reader-ctrl-btn font-bold text-xs" title="گەورەکردنی فۆنت">A+</button>
+          <span class="reader-divider"></span>
+          <button type="button" id="reader-font-dec" class="reader-ctrl-btn font-bold text-xs" title="بچووککردنی فۆنت">A-</button>
+        </div>
+
+        <!-- 3 Reading Surfaces: White, Warm Sepia, Night -->
+        <div class="reader-surface-dots" role="radiogroup" aria-label="ڕەنگی پەڕە">
+          <button type="button" class="surface-dot dot-white active" data-surface="white" title="سپی"></button>
+          <button type="button" class="surface-dot dot-sepia" data-surface="sepia" title="کاغەزی کۆن"></button>
+          <button type="button" class="surface-dot dot-night" data-surface="night" title="تاریک"></button>
+        </div>
+
+        <!-- Live Book Script Converter (Aramaic <-> Latin Hawar) -->
+        <button type="button" id="reader-script-toggle" class="reader-action-pill">
+          <i data-lucide="languages" class="w-3.5 h-3.5"></i>
+          <span id="reader-script-label">لاتینی</span>
+        </button>
+
+        <!-- Copy Raw Text -->
+        <button type="button" id="reader-copy-btn" class="icon-circle-btn" title="کۆپیکردنی دەقی خاو">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Download TXT with UTF-8 BOM -->
+        <button type="button" id="reader-download-btn" class="reader-download-pill" title="داگرتنی TXT">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>TXT</span>
+        </button>
+      </div>
+    </header>
+
+    <article class="reader-content-wrapper">
+      <div class="reader-meta-header">
+        <span id="reader-category-badge" class="reader-category-tag">دیوانی شیعر</span>
+        <h1 id="reader-book-title" class="reader-title font-serif">ناونیشانی بەرهەم</h1>
+        <p id="reader-book-author" class="reader-author">ناوی نووسەر</p>
+        <div id="reader-book-stats" class="reader-stats-row"></div>
+      </div>
+      <div id="reader-body-text" class="reader-body-text"></div>
+    </article>
+  </section>
+
+  <!-- Contribute New Raw Text to Library Modal -->
+  <div id="submit-text-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submit-text-title">
+    <div class="edit-profile-card">
+      <header class="modal-header">
+        <div class="flex items-center gap-2">
+          <button type="button" id="close-submit-text-btn" class="icon-circle-btn" aria-label="داخستن">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="submit-text-title" class="text-base font-bold">ناردنی دەقی خاو بۆ ئەرشیف</h2>
+        </div>
+        <button type="button" id="save-library-text-btn" class="publish-pill-btn">تۆمارکردن</button>
+      </header>
+      <div class="modal-scroll-body space-y-4">
+        <div class="modern-field-group">
+          <label for="lib-input-title" class="modern-field-label">ناونیشانی کتێب یان بەرهەم</label>
+          <input type="text" id="lib-input-title" class="modern-input" placeholder="بۆ نموونە: دیوانی وەفایی" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="modern-field-group">
+            <label for="lib-input-author" class="modern-field-label">نووسەر / شاعیر</label>
+            <input type="text" id="lib-input-author" class="modern-input" placeholder="میرزا عەبدوڕەحیمی سابڵاغی" />
+          </div>
+          <div class="modern-field-group">
+            <label for="lib-input-category" class="modern-field-label">هاوپۆل</label>
+            <select id="lib-input-category" class="modern-input">
+              <option value="دیوانی شیعر">دیوانی شیعر</option>
+              <option value="لێکۆڵینەوە">لێکۆڵینەوە</option>
+              <option value="فەرهەنگ و زمان">فەرهەنگ و زمان</option>
+              <option value="دەقی خاو TXT">دەقی خاو TXT</option>
+            </select>
+          </div>
+        </div>
+        <div class="modern-field-group">
+          <label for="lib-input-content" class="modern-field-label">دەقی تەواو</label>
+          <textarea id="lib-input-content" rows="7" class="modern-input" placeholder="دەقی بەرهەمەکە لێرە دابنێ..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start New DM / Group Chat Modal -->
+  <div id="new-chat-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="new-chat-title">
+    <div class="edit-profile-card">
+      <header class="modal-header">
+        <div class="flex items-center gap-2">
+          <button type="button" id="close-new-chat-btn" class="icon-circle-btn" aria-label="داخستن">
+            <i data-lucide="x"></i>
+          </button>
+          <h2 id="new-chat-title" class="text-base font-bold">دەستپێکردنی گفتوگۆی نوێ</h2>
+        </div>
+        <button type="button" id="create-chat-submit-btn" class="publish-pill-btn">دروستکردن</button>
+      </header>
+      <div class="modal-scroll-body space-y-4">
+        <div class="modern-field-group">
+          <label for="new-chat-type" class="modern-field-label">جۆری گفتوگۆ</label>
+          <select id="new-chat-type" class="modern-input">
+            <option value="dm">پەیامی تایبەت (چات)</option>
+            <option value="group">گرووپی ئەدەبی و زمانەوانی</option>
+          </select>
+        </div>
+        <div class="modern-field-group">
+          <label for="new-chat-name" class="modern-field-label">ناوی کەس یان گرووپ</label>
+          <input type="text" id="new-chat-name" class="modern-input" placeholder="بۆ نموونە: ئەنجومەنی زمانەوانانی کورد" />
+        </div>
+        <div class="modern-field-group">
+          <label for="new-chat-first-msg" class="modern-field-label">یەکەم نامە</label>
+          <input type="text" id="new-chat-first-msg" class="modern-input" placeholder="سڵاو و ڕێز..." />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Silent Kurdish Unicode Engine & Core Application -->
+  <script src="unicode-engine.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
