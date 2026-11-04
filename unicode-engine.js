@@ -1,34 +1,75 @@
-(function(){
-  var MAP={'\u0643':'\u06A9','\u064A':'\u06CC','\u0649':'\u06CC','\u0629':'\u06D5','\u0624':'\u06C6','\u0625':'\u0626\u06CC','\u0623':'\u0626\u06D5','\u0640':''};
-  var RE=/[\u0643\u064A\u0649\u0629\u0624\u0625\u0623\u0640]/g;
-  var TEST=/[\u0643\u064A\u0649\u0629\u0624\u0625\u0623\u0640]/;
-  var SKIP=/^(file|checkbox|radio|button|submit|range|color|number|date|time)$/;
-  function fix(s){return s.replace(RE,function(c){return MAP[c];});}
-  function ok(el){
-    if(!el||!el.matches||!el.matches('input,textarea'))return false;
-    return !(el.tagName==='INPUT'&&SKIP.test(el.type));
-  }
-  function convert(el){
-    var v=el.value;
-    if(!TEST.test(v))return;
-    var s=el.selectionStart,e=el.selectionEnd;
-    var ns=fix(v.slice(0,s)).length,ne=fix(v.slice(0,e)).length;
-    el.value=fix(v);
-    try{el.setSelectionRange(ns,ne);}catch(_){}
-  }
-  document.addEventListener('input',function(ev){
-    if(ok(ev.target))convert(ev.target);
-  },true);
-  document.addEventListener('paste',function(ev){
-    var el=ev.target;
-    if(!ok(el)||!ev.clipboardData)return;
-    var txt=ev.clipboardData.getData('text');
-    if(!TEST.test(txt))return;
-    ev.preventDefault();
-    var s=el.selectionStart,e=el.selectionEnd,out=fix(txt);
-    el.value=el.value.slice(0,s)+out+el.value.slice(e);
-    var p=s+out.length;
-    try{el.setSelectionRange(p,p);}catch(_){}
-    el.dispatchEvent(new Event('input',{bubbles:true}));
-  },true);
+/**
+ * MEKO SILENT KURDISH UNICODE ENGINE
+ * Intercepts all input/paste events globally and normalizes legacy Arabic chars
+ * to standard Kurdish UTF-8 without disrupting cursor position or showing UI.
+ */
+(function() {
+    'use strict';
+
+    const CHAR_MAP = {
+        '\u0643': '\u06A9', // ك -> ک
+        '\u064A': '\u06CC', // ي -> ی
+        '\u0649': '\u06CC', // ى -> ی
+        '\u0629': '\u06D5', // ة -> ە
+        '\u0624': '\u06C6', // ؤ -> ۆ
+        '\u0625': '\u0626\u06CC', // إ -> ئی
+        '\u0623': '\u0626\u06D5', // أ -> ئە
+        '\u0640': ''          // ـ (Tatweel) -> remove
+    };
+
+    const REGEX = new RegExp(Object.keys(CHAR_MAP).join('|'), 'g');
+
+    function normalizeKurdish(text) {
+        if (!text || typeof text !== 'string') return text;
+        return text.replace(REGEX, (char) => CHAR_MAP[char]);
+    }
+
+    function handleInputEvent(e) {
+        const target = e.target;
+        if (!target || !(target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
+        
+        // Only process if value actually contains problematic chars
+        if (!REGEX.test(target.value)) return;
+        
+        // Reset regex lastIndex since we use global flag
+        REGEX.lastIndex = 0;
+
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+        const originalValue = target.value;
+        const newValue = normalizeKurdish(originalValue);
+
+        if (originalValue !== newValue) {
+            // Calculate cursor shift based on length difference before cursor
+            const beforeCursor = originalValue.substring(0, start);
+            const normalizedBefore = normalizeKurdish(beforeCursor);
+            const diff = normalizedBefore.length - beforeCursor.length;
+
+            target.value = newValue;
+            
+            // Restore cursor position adjusted for character expansion/removal
+            try {
+                target.setSelectionRange(start + diff, end + diff);
+            } catch (err) {
+                // Fallback for inputs that don't support setSelectionRange (e.g. email/number)
+                console.warn('Unicode Engine: Could not restore cursor', err);
+            }
+            
+            // Dispatch a synthetic input event so frameworks/state managers pick up the change
+            // Use bubbles: true but mark it to avoid infinite loops if needed
+            const syntheticEvent = new Event('input', { bubbles: true });
+            Object.defineProperty(syntheticEvent, '_mekoNormalized', { value: true });
+            target.dispatchEvent(syntheticEvent);
+        }
+    }
+
+    // Attach globally using capture phase to intercept before other handlers
+    document.addEventListener('input', handleInputEvent, true);
+    document.addEventListener('paste', (e) => {
+        // Allow paste to complete, then normalize on next tick
+        setTimeout(() => handleInputEvent(e), 0);
+    }, true);
+
+    // Expose utility for programmatic use in app.js
+    window.MekoUnicode = { normalize: normalizeKurdish };
 })();
