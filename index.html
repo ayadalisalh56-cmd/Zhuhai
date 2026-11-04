@@ -2,26 +2,30 @@
 <html lang="ku" dir="rtl" class="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مەکۆ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مەکۆ · ژێرخانی کراوەی زمانی کوردی</title>
+<meta name="description" content="مەکۆ: تۆڕی کراوەی دەقی کوردی">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300..800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Vazirmatn'],serif:['Amiri']}}}}</script>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="styles.css">
 <script id="meko-jsonld" type="application/ld+json">{}</script>
 </head>
 <body>
-<main id="app" class="app-shell"></main>
-<nav id="bottom-nav" class="glass-nav" aria-label="سەرەکی">
-<button id="n-home" data-a="home" aria-label="ماڵەوە"><i data-lucide="home"></i></button>
-<button class="plus" data-a="create" aria-label="نووسین"><i data-lucide="plus"></i></button>
-<button id="n-chat" data-a="chat" aria-label="نامەدان"><i data-lucide="message-circle"></i><span id="n-dot" class="dot hidden"></span></button>
-<button id="n-menu" data-a="menu" aria-label="مێنیو"><img id="nav-avatar" class="nav-av" src="" alt=""><span class="badge"><i data-lucide="menu"></i></span></button>
+<div class="app-shell"><main id="view"></main></div>
+<nav id="bar" class="glass-bar" aria-label="ناوەندی سەرەکی">
+  <button data-go="home" aria-label="سەرەکی"><i data-lucide="home"></i></button>
+  <button data-go="notifs" class="rel" aria-label="ئاگادارییەکان"><i data-lucide="bell"></i><span id="badge" class="badge" hidden></span></button>
+  <button data-act="create" class="plus" aria-label="نوێ"><i data-lucide="plus"></i></button>
+  <button data-go="chat" aria-label="چات"><i data-lucide="message-circle"></i></button>
+  <button data-act="drawer" class="rel" aria-label="مینیو"><img id="barAv" class="bar-av" alt=""><span class="menu-badge"><i data-lucide="menu"></i></span></button>
 </nav>
-<div id="overlay-root"></div>
+<div id="backdrop" data-act="closedrawer"></div>
+<aside id="drawer" aria-label="مینیو"></aside>
+<section id="creator" hidden></section>
+<div id="modal" hidden></div>
 <div id="toast" role="status"></div>
-<footer class="hidden"></footer>
 <script src="unicode-engine.js"></script>
 <script src="app.js"></script>
 </body>
