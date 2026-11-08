@@ -1,90 +1,104 @@
-/* ==========================================================================
-   MEKO (مەکۆ) — COMPLETE PRODUCTION STYLESHEET (PHASE 2)
-   File: styles.css
-   Architecture: True Glassmorphism + Facebook Soft Timeline + OLED Dark Mode
+Works alongside the Tailwind CDN from Phase 1. This file is linked BEFORE
+   Tailwind's runtime <style> tag, so on equal specificity Tailwind wins.
+   Every rule that must beat a Tailwind utility therefore uses an ID selector,
+   a compound selector, or !important (only where the contract demands it).
+
+   RULE OF THUMB USED HERE
+   - Contract class names (.bottom-bar-glass, .drawer-*, .avatar-*,
+     .text-poetry, .text-prose, .chat-bubble-*, .post-card, .post-actions)
+     are implemented exactly as specified.
+   - Each of them is ALSO bridged to the Phase 1 markup (#bottom-bar,
+     #sidebar-drawer, .chat-message-*, ...) so the app looks right whether
+     app.js adds the contract classes or not.
+   - No rule here sets `display` on an element that app.js shows/hides with the
+     `hidden` class, so toggling is never broken.
+
+   CONTENTS
+     1. Theme variables (light / dark)
+     2. Structural failsafes & reset
+     3. RTL & typography
+     4. Avatar utilities
+     5. Bottom bar: true glassmorphism
+     6. Timeline & posts: Facebook-style soft dividers
+     7. Left slide-out drawer
+     8. Messenger-style chat
+     9. Phase 1 markup bridge (surfaces, headers, lists, toasts)
+    10. Motion, focus, scrollbars, reduced motion
    ========================================================================== */
 
+
 /* ==========================================================================
-   1. DESIGN TOKENS & THEME VARIABLES (LIGHT & TRUE OLED DARK)
+   1. THEME VARIABLES
    ========================================================================== */
+
 :root,
-html.light,
-body.light {
+.light {
   color-scheme: light;
 
-  --bg-outer: #e4e6ea;
+  /* Contract variables */
   --bg-primary: #ffffff;
   --bg-secondary: #f0f2f5;
   --surface: #ffffff;
-  --surface-elevated: #ffffff;
   --divider: #e9ebef;
-  --border-subtle: rgba(0, 0, 0, 0.08);
-
   --text-main: #1c1e21;
   --text-muted: #65676b;
-
   --accent-blue: #0084ff;
-  --accent-blue-hover: #0073e6;
-  --accent-blue-soft: rgba(0, 132, 255, 0.12);
-
   --accent-red: #ef4444;
+
+  /* Extended tokens */
+  --bg-outer: #e4e6ea;
+  --surface-raised: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --header-bg: rgba(255, 255, 255, 0.82);
+  --accent-blue-soft: rgba(0, 132, 255, 0.12);
   --accent-red-soft: rgba(239, 68, 68, 0.12);
-
-  --accent-amber: #f59e0b;
-  --accent-amber-soft: rgba(245, 158, 11, 0.14);
-
-  --header-frosted: rgba(255, 255, 255, 0.85);
-  --drawer-backdrop: rgba(0, 0, 0, 0.45);
-  --drawer-shadow: 16px 0 48px rgba(0, 0, 0, 0.2);
-
+  --overlay: rgba(0, 0, 0, 0.45);
+  --shadow-drawer: 16px 0 48px rgba(0, 0, 0, 0.22);
   --bubble-theirs-bg: #f0f2f5;
   --bubble-theirs-text: #1c1e21;
   --bubble-mine-bg: #0084ff;
   --bubble-mine-text: #ffffff;
-
-  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.22);
+  --selection: rgba(0, 132, 255, 0.25);
 }
 
-html.dark,
-body.dark {
+:root.dark,
+.dark {
   color-scheme: dark;
 
-  --bg-outer: #000000;
+  /* Contract variables: rich OLED-friendly black */
   --bg-primary: #09090b;
-  --bg-secondary: #121215;
-  --surface: #121215;
-  --surface-elevated: #18181c;
+  --bg-secondary: #111113;
+  --surface: #131316;
   --divider: #18181b;
-  --border-subtle: rgba(255, 255, 255, 0.09);
-
   --text-main: #fafafa;
   --text-muted: #a1a1aa;
-
   --accent-blue: #0084ff;
-  --accent-blue-hover: #1a91ff;
-  --accent-blue-soft: rgba(0, 132, 255, 0.18);
-
   --accent-red: #ef4444;
+
+  /* Extended tokens */
+  --bg-outer: #000000;
+  --surface-raised: #1a1a1e;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(9, 9, 11, 0.82);
+  --accent-blue-soft: rgba(0, 132, 255, 0.18);
   --accent-red-soft: rgba(239, 68, 68, 0.18);
-
-  --accent-amber: #fbbf24;
-  --accent-amber-soft: rgba(251, 191, 36, 0.18);
-
-  --header-frosted: rgba(9, 9, 11, 0.85);
-  --drawer-backdrop: rgba(0, 0, 0, 0.65);
-  --drawer-shadow: 16px 0 56px rgba(0, 0, 0, 0.75);
-
+  --overlay: rgba(0, 0, 0, 0.45);
+  --shadow-drawer: 16px 0 56px rgba(0, 0, 0, 0.7);
   --bubble-theirs-bg: #27272a;
   --bubble-theirs-text: #fafafa;
   --bubble-mine-bg: #0084ff;
   --bubble-mine-text: #ffffff;
-
-  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --selection: rgba(0, 132, 255, 0.35);
 }
 
+
 /* ==========================================================================
-   2. STRUCTURAL FAILSAFES & BASE RESET
+   2. STRUCTURAL FAILSAFES & RESET
+   Keeps the layout intact if Tailwind's runtime is slow to arrive.
    ========================================================================== */
+
 *,
 *::before,
 *::after {
@@ -92,47 +106,43 @@ body.dark {
 }
 
 html {
-  direction: rtl;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   background-color: var(--bg-outer);
-  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  font-family: 'Vazirmatn', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
   font-size: 15.5px;
   line-height: 1.75;
-  background-color: var(--bg-outer) !important;
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* !important: outranks Tailwind's bg utilities on <body> so the page behind
+     the 600px column follows the theme (pure black in OLED dark mode). */
+  background-color: var(--bg-outer) !important;
 }
 
-body.drawer-lock {
-  overflow: hidden !important;
-}
-
-/* Main centered 600px mobile-first column */
+/* The app column */
 .app-shell {
   max-width: 600px;
-  width: 100%;
   margin: 0 auto;
   min-height: 100dvh;
   position: relative;
-  padding-bottom: 96px;
+  padding-bottom: 90px;
+  /* !important: beats Tailwind's bg-white / dark:bg-night-900 on the shell. */
   background-color: var(--bg-primary) !important;
   color: var(--text-main);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
 }
 
-html.dark .app-shell {
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+/* The shell already reserves room for the floating bar (90px above), so the
+   Phase 1 `pb-32` on <main> would double it. */
+#main-content {
+  padding-bottom: 0;
 }
 
 img {
@@ -142,83 +152,130 @@ img {
   object-fit: cover;
 }
 
+/* Icon fallback size: :where() keeps specificity at zero so Tailwind's
+   h-*/w-* utilities always win once loaded. */
+:where(svg.lucide) {
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+}
+
 button,
 input,
 select,
 textarea {
-  font-family: inherit;
+  font: inherit;
   color: inherit;
 }
 
 button {
+  background: none;
+  border: 0;
+  padding: 0;
   cursor: pointer;
   touch-action: manipulation;
-  user-select: none;
 }
 
 button:disabled {
   cursor: not-allowed;
 }
 
-/* Failsafe utility visibility */
-[hidden],
-.hidden {
+textarea {
+  resize: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, p, figure {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Visibility failsafes (identical to Tailwind's own definitions, so loading
+   order can never change behaviour). */
+[hidden] {
   display: none !important;
 }
 
-/* Protect Kurdish/Arabic script cursive ligatures from letter-spacing */
-[lang='ku'],
-[dir='rtl'],
-.text-prose,
-.text-poetry {
-  letter-spacing: 0 !important;
+.hidden {
+  display: none;
 }
 
-/* ==========================================================================
-   3. STRICT CIRCULAR AVATAR UTILITIES
-   ========================================================================== */
-.avatar-xs,
-.avatar-sm,
-.avatar-md,
-.avatar-lg {
-  display: block;
-  flex-shrink: 0;
-  aspect-ratio: 1 / 1;
-  border-radius: 9999px;
-  object-fit: cover;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  background-color: var(--bg-secondary);
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
-.avatar-xs {
-  width: 28px;
-  height: 28px;
-}
-
-.avatar-sm {
-  width: 42px;
-  height: 42px;
-}
-
-.avatar-md {
-  width: 52px;
-  height: 52px;
-}
-
-.avatar-lg {
-  width: 84px;
-  height: 84px;
-}
 
 /* ==========================================================================
-   4. KURDISH PROSE & CLASSICAL POETRY TYPOGRAPHY
+   3. RTL & TYPOGRAPHY
    ========================================================================== */
 
-/* Standard Prose (Vazirmatn) */
-.text-prose {
+html[dir='rtl'],
+[dir='rtl'] {
+  direction: rtl;
+}
+
+/* Arabic-script joining breaks if letters are spaced apart. */
+[class*='tracking-'] {
+  letter-spacing: normal !important;
+}
+
+/* Inputs follow the reading direction; technical fields stay LTR but are
+   aligned to the start edge of the RTL layout. */
+input,
+textarea,
+select {
+  text-align: start;
+}
+
+input[type='email'],
+input[type='url'],
+input[type='tel'],
+input[type='number'] {
+  direction: ltr;
+  text-align: right;
+}
+
+::placeholder {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+/* Handles, URLs, numbers inside RTL sentences */
+.ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+bdi {
+  unicode-bidi: isolate;
+}
+
+/* Standard text — Vazirmatn, right-aligned. Latin-only posts (resolved by
+   dir="auto") fall back to the left edge so mixed-language feeds stay natural. */
+.text-prose,
+.post-text.text-prose,
+.post-text:not(.text-poetry) {
   font-family: 'Vazirmatn', system-ui, sans-serif;
   font-size: 15.5px;
-  line-height: 1.8;
+  line-height: 1.75;
   font-weight: 400;
   text-align: right;
   color: var(--text-main);
@@ -227,76 +284,125 @@ button:disabled {
   word-break: normal;
 }
 
-/* When prose post is converted to Latin Hawar script (dir="ltr") */
-.text-prose[dir='ltr'] {
+.text-prose:dir(ltr),
+.post-text:not(.text-poetry):dir(ltr) {
   text-align: left;
 }
 
-/* Classical & Modern Kurdish Poetry (Amiri Serif, Centered) */
+/* Poetry — Amiri serif, centred, generous leading */
 .text-poetry,
-#creator-textarea.text-poetry {
-  font-family: 'Amiri', Georgia, serif !important;
-  font-size: 19px !important;
-  line-height: 2.2 !important;
+.post-text.text-poetry {
+  font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 18.5px;
+  line-height: 2.15;
   font-weight: 400;
-  text-align: center !important;
+  text-align: center;
   color: var(--text-main);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  padding: 6px 8px;
-  border-radius: 16px;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 132, 255, 0.03) 0%,
-    rgba(0, 132, 255, 0.01) 100%
-  );
+  word-break: normal;
 }
 
-html.dark .text-poetry,
-html.dark #creator-textarea.text-poetry {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+::selection {
+  background-color: var(--selection);
 }
+
 
 /* ==========================================================================
-   5. TRUE GLASSMORPHISM 5-ICON FLOATING BOTTOM BAR
+   4. AVATAR UTILITIES
+   Strictly circular, never squashed by flex layouts.
    ========================================================================== */
+
+.avatar-xs,
+.avatar-sm,
+.avatar-md,
+.avatar-lg {
+  display: block;
+  flex-shrink: 0;
+  flex-grow: 0;
+  max-width: none;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  object-fit: cover;
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+}
+
+.avatar-xs {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+
+.avatar-sm {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+}
+
+.avatar-md {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+}
+
+.avatar-lg {
+  width: 84px;
+  height: 84px;
+  min-width: 84px;
+}
+
+
+/* ==========================================================================
+   5. BOTTOM BAR: TRUE GLASSMORPHISM
+   `.bottom-bar-glass` is the contract class. In the Phase 1 markup the same
+   pill is `#bottom-bar > ul` (the <nav> is only the positioning shell), so
+   both are covered. If the class is put on the <nav> itself, the inner <ul>
+   is flattened so the glass is never doubled.
+   ========================================================================== */
+
+/* 5.1 Position */
 .bottom-bar-glass,
 #bottom-bar {
   position: fixed;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  bottom: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 36px);
+  width: calc(100% - 40px);
   max-width: 560px;
+  z-index: 50;
+}
+
+/* 5.2 Pill + light glass */
+.bottom-bar-glass,
+#bottom-bar:not(.bottom-bar-glass) > ul {
   height: 62px;
-  padding: 0 18px;
+  margin: 0;
+  padding: 0 20px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.62) !important;
+  background: rgba(255, 255, 255, 0.58) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.09);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-html.dark .bottom-bar-glass,
-html.dark #bottom-bar {
-  background: rgba(18, 18, 22, 0.66) !important;
+/* 5.3 Dark glass */
+.dark .bottom-bar-glass,
+.dark #bottom-bar:not(.bottom-bar-glass) > ul {
+  background: rgba(18, 18, 22, 0.62) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-#bottom-bar > ul {
+/* 5.4 Class on the <nav>: the inner list becomes a plain, transparent row */
+#bottom-bar.bottom-bar-glass > ul {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -304,311 +410,570 @@ html.dark #bottom-bar {
   height: 100%;
   margin: 0;
   padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* 5.5 Browsers without backdrop-filter: stay readable instead of see-through */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bottom-bar-glass,
+  #bottom-bar:not(.bottom-bar-glass) > ul {
+    background: rgba(255, 255, 255, 0.94) !important;
+  }
+
+  .dark .bottom-bar-glass,
+  .dark #bottom-bar:not(.bottom-bar-glass) > ul {
+    background: rgba(18, 18, 22, 0.96) !important;
+  }
+}
+
+/* 5.6 Items */
+#bottom-bar li,
+.bottom-bar-glass li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   list-style: none;
 }
 
-#bottom-bar button {
+#bottom-bar button,
+.bottom-bar-glass button {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 9999px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: transparent;
   color: var(--text-muted);
-  transition: all 0.18s ease;
+  transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
-#bottom-bar button:hover {
+#bottom-bar button:hover,
+.bottom-bar-glass button:hover {
   color: var(--text-main);
-  background-color: rgba(128, 128, 128, 0.1);
 }
 
-#bottom-bar button[aria-current='page'] {
+#bottom-bar button[aria-current='page'],
+.bottom-bar-glass button[aria-current='page'],
+.bottom-bar-glass button.is-active {
   color: var(--accent-blue);
   background-color: var(--accent-blue-soft);
 }
 
-/* Solid Center "+" Create Post Button */
+/* 5.7 Centre "+" — solid, distinct, contrasting icon */
 #bottom-bar #nav-create,
-.bottom-bar-create {
-  width: 48px !important;
-  height: 48px !important;
-  background-color: var(--accent-blue) !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 18px rgba(0, 132, 255, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+.bottom-bar-glass .bottom-bar-create {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 132, 255, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 #bottom-bar #nav-create:hover,
-.bottom-bar-create:hover {
-  background-color: var(--accent-blue-hover) !important;
-  transform: translateY(-1px) scale(1.03);
+.bottom-bar-glass .bottom-bar-create:hover {
+  background-color: #0a8fff;
+  color: #ffffff;
 }
 
 #bottom-bar #nav-create:active,
-.bottom-bar-create:active {
-  transform: scale(0.93);
+.bottom-bar-glass .bottom-bar-create:active {
+  transform: scale(0.92);
 }
 
-/* Automatically hide Bottom Bar when Chat Room is active */
-.app-shell:has(#view-chat-room:not(.hidden)) #bottom-bar {
-  transform: translate(-50%, 130%);
-  opacity: 0;
-  pointer-events: none;
+/* 5.8 Avatar / menu button */
+#bottom-bar #nav-menu[aria-expanded='true'] > span {
+  box-shadow: 0 0 0 2px var(--accent-blue);
 }
+
+/* 5.9 Unread badge */
+#notif-badge,
+.bottom-bar-glass .badge {
+  background-color: var(--accent-red);
+  color: #ffffff;
+  box-shadow: 0 0 0 2px var(--bg-primary);
+}
+
+/* 5.10 The chat room is a full-height layer: tuck the bar away while it is
+   open, whichever way app.js reveals it (class or attribute). */
+.app-shell:has(#view-chat-room:not(.hidden):not([hidden])) #bottom-bar {
+  display: none;
+}
+
 
 /* ==========================================================================
-   6. FACEBOOK-STYLE TIMELINE & SOFT BLOCK DIVIDERS
+   6. TIMELINE & POSTS: FACEBOOK-STYLE SOFT DIVIDERS
    ========================================================================== */
 
-/* Composer row & Post cards use soft 6px block dividers (ZERO 1px harsh lines) */
-.composer-trigger-row {
-  background-color: var(--bg-primary);
-  border-bottom: 6px solid var(--divider);
-}
-
-.post-card {
+/* Edge-to-edge block, no side borders, no radius, 6px soft separator.
+   `#main-content .post-card` out-ranks Tailwind's `divide-y` (1px lines) that
+   the Phase 1 containers carry. */
+.post-card,
+#main-content .post-card {
   position: relative;
   width: 100%;
+  max-width: none;
   margin: 0;
   background-color: var(--bg-primary);
   border-radius: 0;
   border-left: 0;
   border-right: 0;
-  border-top: 0;
+  border-top-width: 0;
   border-bottom: 6px solid var(--divider);
-  transition: background-color 0.15s ease;
+  box-shadow: none;
 }
 
-/* Interaction bar flows seamlessly below post body — NO top border */
-.post-actions {
+.post-card:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: -2px;
+}
+
+/* Loading skeletons use the same soft blocks instead of thin lines */
+#feed-skeleton > *,
+#profile-skeleton > *,
+#saved-skeleton > * {
+  border-top-width: 0;
+  border-bottom: 6px solid var(--divider);
+}
+
+/* The composer row that sits above the feed gets the same soft block */
+#view-home > div:has(> #home-composer-trigger) {
+  border-bottom: 6px solid var(--divider);
+}
+
+/* Post header */
+#main-content .post-author {
+  color: var(--text-main);
+}
+
+#main-content .post-handle,
+#main-content .post-time,
+#main-content .post-more {
+  color: var(--text-muted);
+}
+
+#main-content .post-media {
+  border-color: var(--divider);
+  border-radius: 12px;
+}
+
+#main-content .post-media img {
+  object-fit: cover;
+}
+
+/* Interaction bar: flows straight out of the post body.
+   ABSOLUTELY no border-top (or any other line) above the icons. */
+.post-actions,
+#main-content .post-actions {
+  border: 0 !important;
   border-top: none !important;
-  padding-top: 2px;
+  box-shadow: none;
+  background: transparent;
+  padding-top: 0;
 }
 
 .post-actions::before,
 .post-actions::after {
-  display: none !important;
+  content: none !important;
 }
 
-/* Like Button Active State (Red Heart Pop) */
-.post-actions [data-action='like']:hover {
-  color: var(--accent-red);
-  background-color: var(--accent-red-soft);
+.post-actions button {
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
-.post-actions [data-action='like'][aria-pressed='true'] {
-  color: var(--accent-red) !important;
-  background-color: var(--accent-red-soft);
-}
-
-.post-actions [data-action='like'][aria-pressed='true'] svg {
-  fill: currentColor;
-  animation: meko-heart-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Reply & Share Hover States */
-.post-actions [data-action='reply']:hover,
-.post-actions [data-action='share']:hover {
+#main-content .post-actions [data-action='reply']:hover,
+#main-content .post-actions [data-action='share']:hover,
+#main-content .post-actions [data-action='bookmark']:hover,
+#main-content .post-actions [data-action='bookmark'][aria-pressed='true'] {
   color: var(--accent-blue);
   background-color: var(--accent-blue-soft);
 }
 
-/* Bookmark Active State */
-.post-actions [data-action='bookmark']:hover {
-  color: var(--accent-amber);
-  background-color: var(--accent-amber-soft);
+#main-content .post-actions [data-action='like']:hover,
+#main-content .post-actions [data-action='like'][aria-pressed='true'],
+#main-content .post-actions .is-liked {
+  color: var(--accent-red);
+  background-color: var(--accent-red-soft);
 }
 
-.post-actions [data-action='bookmark'][aria-pressed='true'] {
-  color: var(--accent-amber) !important;
-  background-color: var(--accent-amber-soft);
+#main-content .post-actions [data-action='like'][aria-pressed='true'] svg,
+#main-content .post-actions .is-liked svg {
+  fill: currentColor;
+  animation: meko-like-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.post-actions [data-action='bookmark'][aria-pressed='true'] svg {
+#main-content .post-actions [data-action='bookmark'][aria-pressed='true'] svg {
   fill: currentColor;
 }
 
-@keyframes meko-heart-pop {
-  0% {
-    transform: scale(1);
-  }
-  45% {
-    transform: scale(1.32);
-  }
-  100% {
-    transform: scale(1);
-  }
+@keyframes meko-like-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
 
+
 /* ==========================================================================
-   7. LEFT SLIDE-OUT SIDEBAR DRAWER
+   7. LEFT SLIDE-OUT DRAWER
+   Contract API:  .drawer-open / .drawer-closed on an ancestor of
+                  .drawer-backdrop + .drawer-panel
+   Phase 1 API:   #sidebar-drawer[data-state="open|closed"] with
+                  #sidebar-backdrop + #sidebar-panel
    ========================================================================== */
+
+/* 7.1 Phase 1 wrapper: sits above the bottom bar, only interactive when open.
+   Visibility is delayed on close so the slide-out animation stays visible. */
 #sidebar-drawer {
-  position: fixed;
-  inset: 0;
   z-index: 110;
-  pointer-events: none;
   visibility: hidden;
+  pointer-events: none;
   transition: visibility 0s linear 0.28s;
 }
 
 #sidebar-drawer[data-state='open'],
 #sidebar-drawer.drawer-open {
-  pointer-events: auto;
   visibility: visible;
+  pointer-events: auto;
   transition-delay: 0s;
 }
 
+/* 7.2 Backdrop */
 .drawer-backdrop,
 #sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background-color: var(--drawer-backdrop);
+  background: rgba(0, 0, 0, 0.45);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 110;
   opacity: 0;
-  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.28s;
 }
 
-#sidebar-drawer[data-state='open'] #sidebar-backdrop,
-#sidebar-drawer.drawer-open #sidebar-backdrop {
-  opacity: 1;
-}
-
+/* 7.3 Panel */
 .drawer-panel,
 #sidebar-panel {
   position: fixed;
+  left: 0;
   top: 0;
   bottom: 0;
-  left: 0;
-  width: 315px;
-  max-width: 86vw;
+  height: auto;
+  width: 310px;
+  max-width: 88vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background-color: var(--bg-primary);
   color: var(--text-main);
   border-radius: 0 24px 24px 0;
-  box-shadow: var(--drawer-shadow);
+  box-shadow: var(--shadow-drawer);
   z-index: 120;
   transform: translateX(-100%);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow-y: auto;
+  visibility: hidden;
+  will-change: transform;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.28s;
 }
 
-#sidebar-drawer[data-state='open'] #sidebar-panel,
-#sidebar-drawer.drawer-open #sidebar-panel {
+/* 7.4 States */
+.drawer-open .drawer-panel,
+.drawer-open #sidebar-panel,
+#sidebar-drawer[data-state='open'] .drawer-panel,
+#sidebar-drawer[data-state='open'] #sidebar-panel {
   transform: translateX(0);
+  visibility: visible;
+  transition-delay: 0s;
 }
 
-#sidebar-drawer[data-state='closed'] #sidebar-panel,
-#sidebar-drawer.drawer-closed #sidebar-panel {
+.drawer-closed .drawer-panel,
+.drawer-closed #sidebar-panel,
+#sidebar-drawer[data-state='closed'] .drawer-panel,
+#sidebar-drawer[data-state='closed'] #sidebar-panel {
   transform: translateX(-100%);
 }
 
+.drawer-open .drawer-backdrop,
+.drawer-open #sidebar-backdrop,
+#sidebar-drawer[data-state='open'] .drawer-backdrop,
+#sidebar-drawer[data-state='open'] #sidebar-backdrop {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+/* 7.5 Panel content */
+#sidebar-panel {
+  overscroll-behavior: contain;
+}
+
+#sidebar-profile-card {
+  background-image: none;
+  background-color: var(--bg-secondary);
+  box-shadow: none;
+}
+
+#sidebar-panel > div:last-child {
+  border-top-color: var(--divider);
+}
+
+/* Keep the page from scrolling behind an open drawer (app.js adds the class) */
+body.drawer-lock,
+body.has-drawer-open {
+  overflow: hidden;
+}
+
+
 /* ==========================================================================
-   8. MESSENGER-STYLE CHAT BUBBLES (PHYSICAL LEFT/RIGHT ALIGNMENT)
+   8. MESSENGER-STYLE CHAT
+   Mine = right edge, Theirs = left edge (physical sides, as in Messenger).
    ========================================================================== */
 
-/* Incoming messages sit physically on the LEFT edge */
-#chat-messages .chat-message-incoming {
-  align-self: flex-end;
-  margin-right: auto;
+/* 8.1 Contract bubble classes + the Phase 1 bubble elements */
+.chat-bubble-theirs,
+.chat-bubble-mine,
+#chat-messages .chat-message-incoming > div,
+#chat-messages .chat-message-outgoing > div {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: 9px 14px;
+  font-size: 15.5px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.chat-bubble-theirs,
+.chat-bubble-mine {
+  max-width: 78%;
+}
+
+.chat-bubble-theirs,
+#chat-messages .chat-message-incoming > div {
   margin-left: 0;
-  max-width: 80%;
-}
-
-/* Outgoing messages sit physically on the RIGHT edge */
-#chat-messages .chat-message-outgoing {
-  align-self: flex-start;
-  margin-left: auto;
-  margin-right: 0;
-  max-width: 80%;
-}
-
-.chat-bubble-theirs {
+  margin-right: auto;
   background-color: var(--bubble-theirs-bg);
   color: var(--bubble-theirs-text);
-  padding: 10px 14px;
   border-radius: 18px 18px 18px 4px;
-  font-size: 14.5px;
-  line-height: 1.65;
-  overflow-wrap: anywhere;
 }
 
-.chat-bubble-mine {
+.chat-bubble-mine,
+#chat-messages .chat-message-outgoing > div {
+  margin-left: auto;
+  margin-right: 0;
   background-color: var(--bubble-mine-bg);
   color: var(--bubble-mine-text);
-  padding: 10px 14px;
   border-radius: 18px 18px 4px 18px;
-  font-size: 14.5px;
-  line-height: 1.65;
-  overflow-wrap: anywhere;
-  box-shadow: 0 4px 12px rgba(0, 132, 255, 0.2);
 }
+
+/* 8.2 Phase 1 message wrappers: align to the correct physical edge.
+   Auto margins on the cross axis override align-self / align-items. */
+#chat-messages .chat-message-incoming {
+  align-self: auto;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+#chat-messages .chat-message-outgoing {
+  align-self: auto;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+#chat-messages .chat-message-incoming > * {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+#chat-messages .chat-message-outgoing > * {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+#chat-messages .message-time,
+#chat-messages .chat-message-outgoing > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+#chat-messages .chat-date-label {
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+}
+
+/* 8.3 Chat room surface, composer, and send button */
+#view-chat-room {
+  background-color: var(--bg-primary);
+}
+
+#view-chat-room > header,
+#chat-form {
+  background-color: var(--bg-primary);
+  border-color: var(--divider);
+}
+
+#chat-input {
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+}
+
+#chat-send {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 132, 255, 0.35);
+}
+
+#chat-send:disabled {
+  box-shadow: none;
+}
+
+#chat-scroll-bottom {
+  background-color: var(--surface-raised);
+  color: var(--text-main);
+}
+
+#chat-room-online-dot,
+.chat-item-online {
+  border-color: var(--bg-primary);
+}
+
+/* 8.4 Chat list */
+#main-content .chat-item-unread {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+}
+
+#main-content .chat-item-time,
+#main-content .chat-item-preview {
+  color: var(--text-muted);
+}
+
 
 /* ==========================================================================
-   9. TOAST NOTIFICATIONS, ANIMATIONS & SCROLLBARS
+   9. PHASE 1 MARKUP BRIDGE
+   Pulls the Phase 1 surfaces onto the theme variables so dark mode is true
+   OLED black (#09090b) everywhere, not Tailwind's default night palette.
+   None of these rules touch `display`.
    ========================================================================== */
-.toast {
-  background-color: #18181b;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  animation: meko-toast-enter 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+/* Sticky page headers (frosted) */
+#main-content .app-view > header {
+  background-color: var(--header-bg);
+  border-color: var(--divider);
 }
 
-html.dark .toast {
-  background-color: #fafafa;
-  color: #09090b;
+/* Tab bars (feed / profile / notifications) */
+#profile-tabs {
+  background-color: var(--header-bg);
+}
+
+/* Modals and sheets */
+#creator-canvas,
+#creator-discard-sheet > div,
+#edit-profile-modal > .relative {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+#creator-discard-sheet {
+  background-color: var(--overlay);
+}
+
+#edit-profile-backdrop {
+  background-color: var(--overlay);
+}
+
+#edit-profile-modal :is(input, textarea, select) {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+}
+
+#edit-profile-modal :is(input, textarea, select):focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 4px var(--accent-blue-soft);
+}
+
+#creator-submit {
+  background-color: var(--accent-blue);
+  box-shadow: 0 6px 16px rgba(0, 132, 255, 0.3);
+}
+
+#creator-submit:disabled {
+  box-shadow: none;
+}
+
+/* Profile identity */
+#profile-avatar {
+  border-radius: 50%;
+}
+
+/* Toast region */
+#toast-region {
+  z-index: 200;
+}
+
+.toast {
+  background-color: var(--text-main);
+  color: var(--bg-primary);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  animation: meko-toast-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .toast.is-leaving {
-  animation: meko-toast-leave 0.2s ease-in forwards;
+  animation: meko-toast-out 0.2s ease-in both;
 }
 
-@keyframes meko-toast-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-14px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+@keyframes meko-toast-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes meko-toast-leave {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
+@keyframes meko-toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
 }
 
+
+/* ==========================================================================
+   10. MOTION, FOCUS, SCROLLBARS, REDUCED MOTION
+   ========================================================================== */
+
+/* Opacity-only entrance so fixed/translated views are never disturbed */
 .app-view {
-  animation: meko-view-fade 0.18s ease-out;
+  animation: meko-fade-in 0.2s ease-out;
 }
 
-@keyframes meko-view-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes meko-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-/* Custom Minimal Scrollbars */
+:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -620,9 +985,13 @@ html.dark .toast {
   background: transparent;
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent-blue);
-  outline-offset: 2px;
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -630,6 +999,9 @@ html.dark .toast {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }
