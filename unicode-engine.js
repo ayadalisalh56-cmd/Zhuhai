@@ -1,1059 +1,540 @@
-/**
- * ============================================================================
- * MEKO (مەکۆ) — ADVANCED KURDISH LINGUISTIC, UNICODE & AI CORPUS ENGINE
- * Phase 3 of 4 · File: unicode-engine.js
- * ============================================================================
- * Capabilities:
- * 1. Real-Time Zero-Jump UTF-8 Kurdish Normalizer (Input & Paste)
- * 2. Morphological Stemmer & Context-Aware Aramaic-to-Latin (Hawar) Engine
- * 3. Phonotactic Epenthesis (Automatic Bizroke 'i' Insertion)
- * 4. Proper Noun & Poetic Verse Auto-Capitalizer
- * 5. Prosodic Syllable Counter (کێشی بڕگەیی) & Open AI Corpus JSONL Builder
- * ============================================================================
- */
+Pure language utilities. This file never renders anything and never looks up
+   page elements: its only DOM contact is three global, delegated listeners
+   (input / paste / compositionend) that work on the element an event targets.
 
-(function (global) {
+   PUBLIC API  (all attached to `window`, loaded before app.js)
+     normalizeKurdishText(text)        legacy Arabic / Ali-font code points
+                                       -> standard Kurdish UTF-8
+     kurdishToLatin(text[, options])   Kurdish (Arabic script) -> Hawar Latin
+     capitalizeLatinKurdish(text)      capitalise the first letter of sentences
+     MekoUnicode                       namespace: the three functions above plus
+                                       normalizeControl(el), config, defaults
+
+   kurdishToLatin OPTIONS (all optional)
+     strict    false  true = apply ONLY the contract rules, nothing else
+     medialRR  true   medial ڕ -> "rr"   (false: always "r")
+     doubleLL  false  ڵ -> "ll"          (false: "l")
+
+   JUDGMENT CALLS (active unless { strict: true })
+   The contract's contextual rules leave three very common cases wrong, so a
+   refinement is applied to each. Pass { strict: true } for the literal rules.
+     1. و after a vowel letter (ا ە ێ ۆ) is the semivowel "w", not "u":
+        ئاو -> aw, ئەو -> ew, سڵاو -> slaw  (literal rule would give "au")
+     2. Word-initial وو is consonant + vowel: ووشە -> wuşe.
+        A long û never starts a word in Sorani; it is written ئوو (-> û).
+     3. Word-initial ی is the consonant "y": یونان -> yunan.
+        A word-initial î is written ئی (-> î).
+
+   KNOWN LIMIT
+     Sorani spelling does not write the short vowel /i/, so it cannot appear in
+     the Latin output: من -> mn, کتێب -> ktêb. Restoring it needs a dictionary.
+   ========================================================================== */
+(function (root) {
   'use strict';
 
-  /* ==========================================================================
-   * 1. SILENT REAL-TIME KURDISH UTF-8 NORMALIZER
-   * ========================================================================== */
+  if (root.__MEKO_UNICODE_ENGINE__) { return; }
+  root.__MEKO_UNICODE_ENGINE__ = true;
 
-  /**
-   * Converts legacy Arabic, Persian, and non-standard keyboard characters
-   * into strict, canonical Central Kurdish UTF-8 Unicode.
-   * @param {string} input
-   * @returns {string}
-   */
-  function normalizeKurdishText(input) {
-    if (!input || typeof input !== 'string') return '';
-
-    let text = input;
-
-    // 1.1 Normalize Arabic Presentation Forms & Lam-Alef Ligatures
-    text = text
-      .replace(/\uFEFB|\uFEFC/g, 'لا')
-      .replace(/\uFEF7|\uFEF8/g, 'لئە')
-      .replace(/\uFEF9|\uFEFA/g, 'لئی')
-      .replace(/\uFEF5|\uFEF6/g, 'لئا');
-
-    // 1.2 Convert Compound Arabic Hamza / Maddah forms into Kurdish Onsets
-    text = text
-      .replace(/\u0622/g, 'ئا') // آ -> ئا
-      .replace(/\u0623/g, 'ئە') // أ -> ئە
-      .replace(/\u0625/g, 'ئی') // إ -> ئی
-      .replace(/\u0624/g, 'ۆ')  // ؤ -> ۆ
-      .replace(/\u0675/g, 'ئا') // ٵ -> ئا
-      .replace(/\u0676/g, 'ئۆ') // ٶ -> ئۆ
-      .replace(/\u0677/g, 'ئو') // ٷ -> ئو
-      .replace(/\u0678/g, 'ئی'); // ٸ -> ئی
-
-    // 1.3 Normalize Heh + Zero-Width Non-Joiner (ه‍) into standard Kurdish Ae (ە)
-    text = text
-      .replace(/\u0647\u200C/g, 'ە')
-      .replace(/\u06BE\u200C/g, 'ە')
-      .replace(/\u06C1\u200C/g, 'ە');
-
-    // 1.4 Canonical Single-Codepoint Replacements
-    text = text
-      .replace(/\u0643/g, 'ک') // Arabic Kaf (ك) -> Kurdish Ke (ک \u06A9)
-      .replace(/\u06AC/g, 'گ') // Old Gaf -> Kurdish Ge (گ \u06AF)
-      .replace(/\u06AD/g, 'گ')
-      .replace(/\u06AF/g, 'گ')
-      .replace(/\u064A/g, 'ی') // Arabic Yeh (ي) -> Kurdish Ye (ی \u06CC)
-      .replace(/\u0649/g, 'ی') // Alef Maksura (ى) -> Kurdish Ye (ی \u06CC)
-      .replace(/\u06D2/g, 'ێ') // Yeh Barree -> Kurdish Ee (ێ \u06CE)
-      .replace(/\u0629/g, 'ە') // Teh Marbuta (ة) -> Kurdish Ae (ە \u06D5)
-      .replace(/\u06C0/g, 'ە') // Heh with Yeh above (ۀ) -> Kurdish Ae (ە \u06D5)
-      .replace(/\u06C2/g, 'ە')
-      .replace(/\u06C1/g, 'ه') // Heh Goal (ہ) -> Kurdish Heh (ه \u0647)
-      .replace(/\u06BE/g, 'ه') // Heh Doachashmee (ھ) -> Kurdish Heh (ه \u0647)
-      .replace(/\u0695/g, 'ڕ') // Canonical Rre (\u0695)
-      .replace(/\u0692/g, 'ڕ')
-      .replace(/\u06B5/g, 'ڵ') // Canonical Lle (\u06B5)
-      .replace(/\u06B6/g, 'ڵ')
-      .replace(/\u06B7/g, 'ڵ')
-      .replace(/\u06C6/g, 'ۆ') // Canonical Oe (\u06C6)
-      .replace(/\u06CE/g, 'ێ') // Canonical Ee (\u06CE)
-      .replace(/\u06A4/g, 'ڤ'); // Canonical Ve (\u06A4)
-
-    // 1.5 Normalize Eastern Persian digits (۰-۹) into standard Kurdish/Arabic-Indic digits (٠-٩)
-    const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-    const kurdishDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    for (let i = 0; i < 10; i++) {
-      text = text.replace(new RegExp(persianDigits[i], 'g'), kurdishDigits[i]);
-    }
-
-    // 1.6 Clean decorative Tatweel / Kashida (ـ \u0640)
-    // Keep only single tatweel after ه when used as standalone phoneme display "هـ", strip everywhere else
-    text = text.replace(/([^\u0647])\u0640+/g, '$1');
-    text = text.replace(/^\u0640+/g, '');
-    text = text.replace(/\u0647\u0640+(?=[\u0621-\u06FF])/g, 'ه');
-    text = text.replace(/\u0647\u0640{2,}/g, 'هـ');
-
-    return text;
-  }
-
-  /**
-   * Normalizes an HTML <input> or <textarea> element in-place while
-   * mathematically recalculating selectionStart and selectionEnd so the
-   * user's cursor never jumps during live typing or pasting.
-   * @param {HTMLInputElement|HTMLTextAreaElement} el
-   */
-  function normalizeInputElement(el) {
-    if (!el || typeof el.value !== 'string') return;
-
-    const inputType = (el.getAttribute('type') || 'text').toLowerCase();
-    if (['password', 'email', 'url', 'number', 'date', 'time', 'file', 'color', 'range'].includes(inputType)) {
-      return;
-    }
-
-    // Respect Latin-only fields (such as @username handles)
-    if (
-      (el.dataset && (el.dataset.latinOnly === 'true' || el.dataset.noUnicode === 'true')) ||
-      el.id === 'edit-username' ||
-      el.name === 'username'
-    ) {
-      return;
-    }
-
-    const original = el.value;
-    const normalized = normalizeKurdishText(original);
-
-    if (original === normalized) return;
-
-    const selStart = typeof el.selectionStart === 'number' ? el.selectionStart : original.length;
-    const selEnd = typeof el.selectionEnd === 'number' ? el.selectionEnd : original.length;
-
-    // Normalize the exact prefix before the cursor to compute the true post-normalization offset
-    const nextStart = normalizeKurdishText(original.slice(0, selStart)).length;
-    const nextEnd = normalizeKurdishText(original.slice(0, selEnd)).length;
-
-    el.value = normalized;
-
-    try {
-      el.setSelectionRange(nextStart, nextEnd);
-    } catch (_) {
-      // Ignore on inputs that do not support selection ranges
-    }
-  }
-
-  /**
-   * Attaches global capture-phase listeners for all text inputs and textareas.
-   */
-  function bindGlobalUnicodeListeners() {
-    if (typeof document === 'undefined') return;
-
-    document.addEventListener(
-      'input',
-      function (e) {
-        const target = e.target;
-        if (!target) return;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-          normalizeInputElement(target);
-        }
-      },
-      true
-    );
-
-    document.addEventListener(
-      'paste',
-      function (e) {
-        const target = e.target;
-        if (!target) return;
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-          requestAnimationFrame(function () {
-            normalizeInputElement(target);
-          });
-        }
-      },
-      true
-    );
-  }
-
-  /* ==========================================================================
-   * 2. MORPHOLOGICAL & CONTEXTUAL ARAMAIC-TO-LATIN (HAWAR) ENGINE
-   * ========================================================================== */
-
-  const VOWEL_CHARS = new Set(['ا', 'ە', 'ێ', 'ۆ', 'ی', 'و']);
-  const PURE_VOWELS = new Set(['ا', 'ە', 'ێ', 'ۆ']);
-
-  /**
-   * Comprehensive Root & Word Lexicon for Central Kurdish words containing
-   * unwritten short 'i' (بزرۆکە / Bizroke), classical poetry terms, philosophical
-   * neologisms, and proper nouns.
-   */
-  const BIZROKE_LEXICON = {
-    // Pronouns & Particles
-    'من': 'min',
-    'منیش': 'minîş',
-    'تۆ': 'to',
-    'ئەو': 'ew',
-    'ئێمە': 'ême',
-    'ئێوە': 'êwe',
-    'ئەوان': 'ewan',
-    'ئەم': 'em',
-    'ئەمانە': 'emane',
-    'ئەوانە': 'ewane',
-    'چۆن': 'çon',
-    'چەند': 'çend',
-    'کام': 'kam',
-    'کێ': 'kê',
-    'لە': 'le',
-    'بە': 'be',
-    'لەگەڵ': 'legel',
-    'وەک': 'wek',
-    'پێش': 'pêş',
-    'دوای': 'dway',
-    'ژێر': 'jêr',
-    'سەر': 'ser',
-
-    // High-Frequency Nouns & Classical Poetic Vocabulary (Baban School)
-    'دڵ': 'dil',
-    'دڵم': 'dilim',
-    'دڵت': 'dilit',
-    'دڵی': 'dilî',
-    'دڵدار': 'dildar',
-    'دڵداری': 'dildarî',
-    'دڵبەر': 'dilber',
-    'دڵتەنگ': 'dilteng',
-    'دڵشکاو': 'dilşikaw',
-    'گوڵ': 'gul',
-    'گوڵی': 'gulî',
-    'گوڵزار': 'gulzar',
-    'گوڵستان': 'gulistan',
-    'گوڵشەن': 'gulşen',
-    'بلبل': 'bilbil',
-    'بولبول': 'bulbul',
-    'عەشق': 'eşq',
-    'عیشق': 'îşq',
-    'عاشق': 'aşiq',
-    'مەعشووق': 'meşûq',
-    'فیراق': 'fîraq',
-    'هیجران': 'hîcran',
-    'هیجر': 'hîcir',
-    'وەسڵ': 'wesil',
-    'ویساڵ': 'wîsal',
-    'غەزەل': 'xezel',
-    'شیعر': 'şîr',
-    'شاعیر': 'şaîr',
-    'بەیت': 'beyt',
-    'چوارینە': 'çwarîne',
-    'کێش': 'kêş',
-    'عەرووز': 'erûz',
-    'بڕگە': 'birge',
-    'بڕگەیی': 'birgeyî',
-    'قافیە': 'qafiye',
-    'ڕەدیف': 'redîf',
-    'مەجاز': 'mecaz',
-    'خەیاڵ': 'xeyal',
-    'حوجرە': 'hucre',
-    'دیوان': 'dîwan',
-    'قەڵەم': 'qelem',
-    'مەرەکەب': 'merekeb',
-    'پەڕە': 'pere',
-    'کتێب': 'kitêb',
-    'زمان': 'ziman',
-    'زمانی': 'zimanî',
-    'زاراوە': 'zarawe',
-    'ڕێزمان': 'rêziman',
-    'ڕێنووس': 'rênûs',
-    'چاوگ': 'çawig',
-    'فەرهەنگ': 'ferheng',
-    'وشە': 'wişe',
-    'وشەی': 'wişey',
-    'وشەکان': 'wişekan',
-    'وشەیەک': 'wişeyek',
-    'ڕستە': 'riste',
-    'پەخشان': 'pexşan',
-    'ئەدەب': 'edeb',
-    'ئەدەبیات': 'edebiyat',
-    'داڤین': 'davîn',
-    'ئاوەز': 'awez',
-    'هزر': 'hizir',
-    'بیر': 'bîr',
-    'ژیری': 'jîrî',
-    'ژیریی': 'jîrîy',
-    'دەستکرد': 'destkird',
-    'جوانی': 'ciwanî',
-    'جوان': 'ciwan',
-    'حەقیقەت': 'heqîqet',
-    'ڕۆح': 'roh',
-    'گیان': 'giyan',
-    'ژین': 'jîn',
-    'ژیان': 'jiyan',
-    'مەرگ': 'merg',
-    'عومر': 'umir',
-    'بەخت': 'bext',
-    'چارەنووس': 'çarenûs',
-    'زەمانە': 'zemane',
-    'چەرخ': 'çerx',
-    'گەردوون': 'gerdûn',
-    'ئاسمان': 'asman',
-    'ئەستێرە': 'estêre',
-    'ستێر': 'stêr',
-    'مانگ': 'mang',
-    'خۆر': 'xor',
-    'ڕۆژ': 'roj',
-    'شەو': 'şew',
-    'شەوان': 'şewan',
-    'بەیانی': 'beyanî',
-    'ئێوارە': 'êware',
-    'فرمێسک': 'firmêsk',
-    'گریان': 'giryan',
-    'پێکەنین': 'pêkenîn',
-    'خەندە': 'xende',
-    'برین': 'birîn',
-    'بریندار': 'birîndar',
-    'ژان': 'jan',
-    'ئازار': 'azar',
-    'خەم': 'xem',
-    'خەفەت': 'xefet',
-    'سەبر': 'sebir',
-    'ئارام': 'aram',
-    'تەمەن': 'temen',
-    'وڵات': 'wilat',
-    'نیشتمان': 'nîştiman',
-    'خاک': 'xak',
-    'ئاگر': 'agir',
-    'ئاو': 'aw',
-    'با': 'ba',
-    'باران': 'baran',
-    'بەفر': 'befir',
-    'شاخ': 'şax',
-    'چیا': 'çiya',
-    'دەشت': 'deşt',
-    'ڕووبار': 'rûbar',
-    'دەریا': 'derya',
-    'درەخت': 'dirext',
-    'گەڵا': 'gela',
-    'سێبەر': 'sêber',
-    'تریفە': 'tirîfe',
-    'شنە': 'şine',
-    'نەسیم': 'nesîm',
-    'زووڵف': 'zûlf',
-    'پرچ': 'pirç',
-    'چاو': 'çaw',
-    'برۆ': 'biro',
-    'مژۆڵ': 'mijol',
-    'لێو': 'lêw',
-    'ڕووخسار': 'rûxsar',
-    'نیگا': 'nîga',
-    'باڵا': 'bala',
-    'قەد': 'qed',
-    'سینگ': 'sîng',
-    'مشت': 'mişt',
-    'پەنجە': 'pence',
-    'مل': 'mil',
-    'پشت': 'pişt',
-    'ژن': 'jin',
-    'پیاو': 'piyaw',
-    'مرۆڤ': 'mirov',
-    'منداڵ': 'mindal',
-    'هاوڕێ': 'hawrê',
-    'دۆست': 'dost',
-    'دوژمن': 'dujmin',
-    'غەریب': 'xerîb',
-    'غوربەت': 'xurbet',
-
-    // Adjectives & Adverbs with Bizroke
-    'بڵند': 'bilind',
-    'بلند': 'bilind',
-    'نزم': 'nizim',
-    'نزیک': 'nizîk',
-    'دوور': 'dûr',
-    'درێژ': 'dirêj',
-    'کورت': 'kurt',
-    'پان': 'pan',
-    'تەسک': 'tesk',
-    'قووڵ': 'qûl',
-    'درەنگ': 'direng',
-    'زوو': 'zû',
-    'ورد': 'wird',
-    'وردە': 'wirde',
-    'گەورە': 'gewre',
-    'بچووک': 'biçûk',
-    'ترس': 'tirs',
-    'ترسناک': 'tirsnak',
-    'برسی': 'birsî',
-    'تینوێتی': 'tînwêtî',
-    'سارد': 'sard',
-    'گەرم': 'germ',
-    'وشک': 'wişk',
-    'تەڕ': 'ter',
-    'پڕ': 'pir',
-    'خاڵی': 'xalî',
-    'ڕۆشن': 'roşin',
-    'تاریک': 'tarîk',
-    'سپی': 'spî',
-    'ڕەش': 'reş',
-    'سوور': 'sûr',
-    'شین': 'şîn',
-    'سەوز': 'sewz',
-    'زەرد': 'zerd',
-    'چل': 'çil',
-    'چوار': 'çwar',
-
-    // Infinitives (چاوگەکان) & Common Verb Stems
-    'کردن': 'kirdin',
-    'کرد': 'kird',
-    'کردووە': 'kirdûwe',
-    'بکە': 'bike',
-    'بکات': 'bikat',
-    'مردن': 'mirdin',
-    'مرد': 'mird',
-    'نەمر': 'nemir',
-    'بردن': 'birdin',
-    'برد': 'bird',
-    'گرتن': 'girtin',
-    'گرت': 'girt',
-    'خستن': 'xistin',
-    'خست': 'xist',
-    'وتن': 'witin',
-    'وت': 'wit',
-    'وتم': 'witim',
-    'وتی': 'witî',
-    'گوتن': 'gutin',
-    'گوت': 'gut',
-    'دیتن': 'dîtin',
-    'بینین': 'bînîn',
-    'نووستن': 'nûstin',
-    'خەوتن': 'xewtin',
-    'دانیشتن': 'danîştin',
-    'هەستان': 'hestan',
-    'ڕۆیشتن': 'royştin',
-    'هاتن': 'hatin',
-    'بوون': 'bûn',
-    'نەبوون': 'nebûn',
-    'زانین': 'zanîn',
-    'نەزانین': 'nezanîn',
-    'خوێندن': 'xwêndin',
-    'خوێندنەوە': 'xwêndinewe',
-    'نووسین': 'nûsîn',
-    'بیستن': 'bîstin',
-    'پرسیار': 'pirsiyar',
-    'پرسی': 'pirsî',
-    'ناردن': 'nardin',
-    'شکاندن': 'şikandin',
-    'شکا': 'şika',
-    'سووتان': 'sûtan',
-    'ڕژان': 'rijan',
-    'فڕین': 'firîn',
-    'کەوتن': 'kewtin',
-
-    // Proper Nouns: Poets, Figures, & Greater Kurdistan Cities
-    'مەکۆ': 'Meko',
-    'والی': 'Walî',
-    'نالی': 'Nalî',
-    'مەحوی': 'Mehwî',
-    'سالم': 'Salim',
-    'کوردی': 'Kurdî',
-    'مەولەوی': 'Mewlewî',
-    'حاجی': 'Hacî',
-    'قادر': 'Qadir',
-    'کۆیی': 'Koyî',
-    'وەفایی': 'Wefayî',
-    'ئەدەب': 'Edeb',
-    'تاهیر': 'Tahîr',
-    'بەگ': 'Beg',
-    'پیرەمێرد': 'Pîremêrd',
-    'گۆران': 'Goran',
-    'هێمن': 'Hêmin',
-    'هەژار': 'Hejar',
-    'شێرکۆ': 'Şêrko',
-    'بێکەس': 'Bêkes',
-    'پەشێو': 'Peşêw',
-    'دیلان': 'Dîlan',
-    'ئاوات': 'Awat',
-    'ئەحمەد': 'Ehmed',
-    'موحەممەد': 'Muhemmed',
-    'خانی': 'Xanî',
-    'جزیری': 'Cizîrî',
-    'فەقێ': 'Feqê',
-    'تەیران': 'Teyran',
-    'مەستوورە': 'Mestûre',
-    'ئەردەڵان': 'Erdelan',
-    'بابان': 'Baban',
-    'سۆران': 'Soran',
-    'بادینان': 'Badînan',
-    'هەورامان': 'Hewraman',
-    'هەورامی': 'Hewramî',
-    'کەڵهوڕی': 'Kelhurî',
-    'کورمانجی': 'Kurmancî',
-    'سۆرانی': 'Soranî',
-    'زازاکی': 'Zazakî',
-    'کورد': 'Kurd',
-    'کوردستان': 'Kurdistan',
-    'کوردستانی': 'Kurdistanî',
-    'کەرکووک': 'Kerkûk',
-    'هەولێر': 'Hewlêr',
-    'سلێمانی': 'Silêmanî',
-    'دهۆک': 'Dihok',
-    'هەڵەبجە': 'Helebce',
-    'ئامەد': 'Amed',
-    'مێردین': 'Mêrdîn',
-    'ماردین': 'Mêrdîn',
-    'وان': 'Wan',
-    'ئورفا': 'Urfa',
-    'دێرسیم': 'Dêrsim',
-    'بێدلیس': 'Bêdlîs',
-    'باتمان': 'Batman',
-    'جۆلەمێرگ': 'Colemêrg',
-    'شرنەخ': 'Şirnex',
-    'سێرت': 'Sêrt',
-    'مووش': 'Mûş',
-    'قارس': 'Qars',
-    'سنە': 'Sine',
-    'کرماشان': 'Kirmaşan',
-    'مەهاباد': 'Mehabad',
-    'ورمێ': 'Wirmê',
-    'ئیلام': 'Îlam',
-    'بۆکان': 'Bokan',
-    'سەقز': 'Seqiz',
-    'مەریوان': 'Merîwan',
-    'بانە': 'Bane',
-    'سەردەشت': 'Serdeşt',
-    'پیرانشار': 'Pîranşar',
-    'شنۆ': 'Şino',
-    'نەغەدە': 'Nexede',
-    'جوانڕۆ': 'Ciwanro',
-    'پاوە': 'Pawe',
-    'قامیشلۆ': 'Qamişlo',
-    'کۆبانێ': 'Kobanê',
-    'عەفرین': 'Efrîn',
-    'حەسەکە': 'Heseke',
-    'سەرێکانی': 'Serêkanî',
-    'زاخۆ': 'Zaxo',
-    'ئاکرێ': 'Akrê',
-    'ئامێدی': 'Amêdî',
-    'شنگال': 'Şingal',
-    'خانەقین': 'Xaneqîn',
-    'کەلار': 'Kelar',
-    'کفری': 'Kifrî',
-    'چەمچەماڵ': 'Çemçemal',
-    'کۆیە': 'Koye',
-    'ڕانیە': 'Raniye',
-    'قەڵادزێ': 'Qeladzê',
-    'ڕەواندز': 'Rewandiz',
-    'شەقڵاوە': 'Şeqlawe',
-    'پێنجوێن': 'Pêncwên',
-    'خورماتوو': 'Xurmatû'
+  var engine = {
+    version: '1.0.0',
+    config: { autoNormalizeInputs: true },
+    transliterationDefaults: { strict: false, medialRR: true, doubleLL: false }
   };
 
-  // Set of lowercase proper nouns that should always be capitalized in Latin output
-  const PROPER_NOUN_SET = new Set([
-    'meko', 'walî', 'nalî', 'mehwî', 'salim', 'kurdî', 'mewlewî', 'wefayî',
-    'pîremêrd', 'goran', 'hêmin', 'hejar', 'şêrko', 'bêkes', 'peşêw', 'dîlan',
-    'xanî', 'cizîrî', 'mestûre', 'baban', 'erdelan', 'soran', 'badînan', 'hewraman',
-    'kurd', 'kurdistan', 'kurdistanî', 'soranî', 'kurmancî', 'hewramî', 'kelhurî', 'zazakî',
-    'kerkûk', 'hewlêr', 'silêmanî', 'dihok', 'helebce', 'amed', 'mêrdîn', 'wan', 'urfa',
-    'dêrsim', 'bêdlîs', 'batman', 'colemêrg', 'şirnex', 'sêrt', 'mûş', 'qars',
-    'sine', 'kirmaşan', 'mehabad', 'wirmê', 'îlam', 'bokan', 'seqiz', 'merîwan',
-    'bane', 'serdeşt', 'pîranşar', 'şino', 'nexede', 'ciwanro', 'pawe',
-    'qamişlo', 'kobanê', 'efrîn', 'heseke', 'serêkanî', 'zaxo', 'akrê', 'amêdî',
-    'şingal', 'xaneqîn', 'kelar', 'kifrî', 'çemçemal', 'koye', 'raniye', 'qeladzê',
-    'rewandiz', 'şeqlawe', 'pêncwên', 'xurmatû'
-  ]);
+  function toStr(value) {
+    return value === null || value === undefined ? '' : String(value);
+  }
 
-  // Common Kurdish agglutinative suffixes (Ordered longest-first for greedy stripping)
-  const KURDISH_SUFFIXES = [
-    { ar: 'ەکەماندا', lat: 'ekemanda' },
-    { ar: 'ەکانمان', lat: 'ekanman' },
-    { ar: 'ەکانتان', lat: 'ekantan' },
-    { ar: 'ەکانیان', lat: 'ekaniyan' },
-    { ar: 'ەکەمان', lat: 'ekeman' },
-    { ar: 'ەکەتان', lat: 'eketan' },
-    { ar: 'ەکەیان', lat: 'ekeyan' },
-    { ar: 'ەکانم', lat: 'ekanim' },
-    { ar: 'ەکانت', lat: 'ekanit' },
-    { ar: 'ەکانی', lat: 'ekanî' },
-    { ar: 'ەکەدا', lat: 'ekeda' },
-    { ar: 'ەکان', lat: 'ekan' },
-    { ar: 'ەکەم', lat: 'ekem' },
-    { ar: 'ەکەت', lat: 'eket' },
-    { ar: 'ەکەی', lat: 'ekey' },
-    { ar: 'ەکە', lat: 'eke' },
-    { ar: 'ێکیان', lat: 'êkiyan' },
-    { ar: 'ێکدا', lat: 'êkda' },
-    { ar: 'ێکم', lat: 'êkim' },
-    { ar: 'ێکت', lat: 'êkit' },
-    { ar: 'ێکی', lat: 'êkî' },
-    { ar: 'ێکە', lat: 'êke' },
-    { ar: 'ێک', lat: 'êk' },
-    { ar: 'انە', lat: 'ane' },
-    { ar: 'انی', lat: 'anî' },
-    { ar: 'انم', lat: 'anim' },
-    { ar: 'انت', lat: 'anit' },
-    { ar: 'مان', lat: 'man' },
-    { ar: 'تان', lat: 'tan' },
-    { ar: 'یان', lat: 'yan' },
-    { ar: 'ەوە', lat: 'ewe' },
-    { ar: 'یشدا', lat: 'îşda' },
-    { ar: 'یشە', lat: 'îşe' },
-    { ar: 'یشم', lat: 'îşim' },
-    { ar: 'یش', lat: 'îş' },
-    { ar: 'دا', lat: 'da' },
-    { ar: 'تر', lat: 'tir' },
-    { ar: 'ترین', lat: 'tirîn' }
+
+  /* ========================================================================
+     1. GLOBAL INVISIBLE UNICODE NORMALIZER
+     ======================================================================== */
+
+  var LEGACY_REPLACEMENTS = {
+    'ك': 'ک',          // ك  ARABIC KAF            -> ک  KEHEH
+    'ي': 'ی',          // ي  ARABIC YEH            -> ی  FARSI YEH
+    'ى': 'ی',          // ى  ALEF MAKSURA          -> ی  FARSI YEH
+    'ة': 'ە',          // ة  TEH MARBUTA           -> ە  AE
+    'ؤ': 'ۆ',          // ؤ  WAW WITH HAMZA ABOVE  -> ۆ  OE
+    'إ': 'ئی',    // إ  ALEF WITH HAMZA BELOW -> ئی
+    'أ': 'ئە',    // أ  ALEF WITH HAMZA ABOVE -> ئە
+    'ـ': ''                 // ـ  TATWEEL (kashida)     -> removed
+  };
+
+  var LEGACY_RE = /[كيىةؤإأـ]/g;
+
+  function normalizeKurdishText(text) {
+    var s = toStr(text);
+    if (!s) { return s; }
+    return s.replace(LEGACY_RE, function (ch) { return LEGACY_REPLACEMENTS[ch]; });
+  }
+
+  /* Index of `index` inside the normalised text. Normalisation is a per-character
+     replacement, so normalising the prefix gives the exact new caret offset even
+     when a character expands (إ -> 2 chars) or disappears (tatweel). */
+  function mapIndex(original, index) {
+    return normalizeKurdishText(original.slice(0, index)).length;
+  }
+
+
+  /* ---- 1.1 Text controls ------------------------------------------------ */
+
+  var TEXT_CONTROL_TYPES = { text: true, search: true, tel: true };
+
+  function isEditableControl(el) {
+    if (!el || el.nodeType !== 1) { return false; }
+    var tag = el.tagName;
+    if (tag !== 'TEXTAREA' && tag !== 'INPUT') { return false; }
+    if (el.disabled || el.readOnly) { return false; }
+    if (el.hasAttribute('data-no-normalize')) { return false; }
+    if (tag === 'INPUT') {
+      var type = String(el.type || 'text').toLowerCase();
+      if (!TEXT_CONTROL_TYPES[type]) { return false; }   // password, email, number, ...
+    }
+    return true;
+  }
+
+  function readSelection(el) {
+    try {
+      if (typeof el.selectionStart !== 'number') { return null; }
+      return {
+        start: el.selectionStart,
+        end: el.selectionEnd,
+        dir: el.selectionDirection || 'none'
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writeSelection(el, start, end, dir) {
+    try { el.setSelectionRange(start, end, dir || 'none'); } catch (err) { /* unsupported type */ }
+  }
+
+  function fireInput(el, inputType, data) {
+    var ev;
+    try {
+      ev = new root.InputEvent('input', { bubbles: true, inputType: inputType, data: data || null });
+    } catch (err) {
+      ev = root.document.createEvent('Event');
+      ev.initEvent('input', true, false);
+    }
+    el.dispatchEvent(ev);
+  }
+
+  /* While true, input events are our own edit commands: swallowed so app.js sees
+     exactly one `input` event (the original one) carrying the final value. */
+  var swallowNested = false;
+
+  /* Replace value[start, end) through the browser's edit pipeline so the native
+     undo stack survives. Returns false when the browser refuses. */
+  function replaceViaEditCommand(el, start, end, text) {
+    var ok = false;
+    swallowNested = true;
+    try {
+      el.setSelectionRange(start, end);
+      ok = text
+        ? root.document.execCommand('insertText', false, text)
+        : root.document.execCommand('delete', false, null);
+    } catch (err) {
+      ok = false;
+    } finally {
+      swallowNested = false;
+    }
+    return ok;
+  }
+
+  /* Normalise the live value of one control and put the caret / selection back
+     exactly where the user had it. Returns true when the value changed. */
+  function normalizeControl(el) {
+    var before = el.value;
+    var after = normalizeKurdishText(before);
+    if (after === before) { return false; }
+
+    var sel = readSelection(el);
+    var focused = root.document.activeElement === el;
+    var scrollTop = el.scrollTop;
+    var scrollLeft = el.scrollLeft;
+
+    // Smallest window that differs (common prefix / suffix are kept untouched).
+    var head = 0;
+    var headMax = Math.min(before.length, after.length);
+    while (head < headMax && before.charCodeAt(head) === after.charCodeAt(head)) { head++; }
+    var tailBefore = before.length;
+    var tailAfter = after.length;
+    while (tailBefore > head && tailAfter > head &&
+           before.charCodeAt(tailBefore - 1) === after.charCodeAt(tailAfter - 1)) {
+      tailBefore--;
+      tailAfter--;
+    }
+    var replacement = after.slice(head, tailAfter);
+
+    var done = false;
+    if (focused && sel) {
+      done = replaceViaEditCommand(el, head, tailBefore, replacement) && el.value === after;
+    }
+    if (!done) { el.value = after; }
+
+    if (sel && focused) {
+      writeSelection(el, mapIndex(before, sel.start), mapIndex(before, sel.end), sel.dir);
+    }
+    el.scrollTop = scrollTop;
+    el.scrollLeft = scrollLeft;
+    return true;
+  }
+
+  /* Insert already-normalised text at the caret (used by the paste handler). */
+  function insertTextAtSelection(el, text) {
+    var focused = root.document.activeElement === el;
+    var ok = false;
+    if (focused) {
+      try { ok = root.document.execCommand('insertText', false, text); } catch (err) { ok = false; }
+    }
+    if (ok) { return; }
+
+    // Fallback: splice by hand, honouring maxlength like a native paste would.
+    var sel = readSelection(el);
+    var value = el.value;
+    var start = sel ? sel.start : value.length;
+    var end = sel ? sel.end : value.length;
+    var max = el.maxLength;
+    if (typeof max === 'number' && max >= 0) {
+      var room = max - (value.length - (end - start));
+      text = room > 0 ? text.slice(0, room) : '';
+    }
+    if (typeof el.setRangeText === 'function') {
+      el.setRangeText(text, start, end, 'end');
+    } else {
+      el.value = value.slice(0, start) + text + value.slice(end);
+      writeSelection(el, start + text.length, start + text.length);
+    }
+    if (text) { fireInput(el, 'insertFromPaste', text); }
+  }
+
+  engine.normalizeControl = normalizeControl;
+
+
+  /* ---- 1.2 Global listeners (delegated, capture phase) ------------------- */
+
+  if (typeof root.document !== 'undefined' && root.document.addEventListener) {
+
+    // Typing, drop, autocorrect, voice input ...
+    root.document.addEventListener('input', function (ev) {
+      if (swallowNested) {
+        ev.stopImmediatePropagation();
+        return;
+      }
+      if (!engine.config.autoNormalizeInputs) { return; }
+      var el = ev.target;
+      if (!isEditableControl(el)) { return; }
+      if (ev.isComposing) { return; }          // never edit text mid-IME-composition
+      normalizeControl(el);
+    }, true);
+
+    // Paste: normalise the clipboard text before it reaches the field.
+    root.document.addEventListener('paste', function (ev) {
+      if (ev.defaultPrevented) { return; }
+      if (!engine.config.autoNormalizeInputs) { return; }
+      var el = ev.target;
+      if (!isEditableControl(el)) { return; }
+      var data = ev.clipboardData;
+      if (!data || typeof data.getData !== 'function') { return; }
+
+      var raw = '';
+      try { raw = data.getData('text/plain'); } catch (err) { raw = ''; }
+      if (!raw) { return; }
+
+      var fixed = normalizeKurdishText(raw);
+      if (fixed === raw) { return; }            // nothing to fix: native paste runs untouched
+
+      ev.preventDefault();
+      if (el.tagName === 'INPUT') { fixed = fixed.replace(/[\r\n]+/g, ' '); }
+      insertTextAtSelection(el, fixed);
+    }, true);
+
+    // IME: once a composition is committed, normalise what it produced.
+    root.document.addEventListener('compositionend', function (ev) {
+      var el = ev.target;
+      if (!engine.config.autoNormalizeInputs || !isEditableControl(el)) { return; }
+      root.setTimeout(function () {
+        if (normalizeControl(el)) { fireInput(el, 'insertText', null); }
+      }, 0);
+    }, true);
+  }
+
+
+  /* ========================================================================
+     2. ARAMAIC (KURDISH ARABIC SCRIPT) -> LATIN (HAWAR) TRANSLITERATION
+     ======================================================================== */
+
+  // A "word" is a maximal run of Arabic-script letters. Everything else (spaces,
+  // digits, punctuation, Latin text) is a word boundary and passes through.
+  var WORD_RE = /[ء-ؿف-يٮٯٱ-ۓەݐ-ݿ]+/g;
+  var LETTER_RE = /[ء-ؿف-يٮٯٱ-ۓەݐ-ݿ]/g;
+
+  // Invisible / decorative characters that must not leak into Latin output:
+  // soft hyphen, ZWNJ, ZWJ, LRM, RLM, bidi embeddings and isolates, BOM, tatweel,
+  // and Arabic vowel marks (harakat, superscript alef, Quranic marks).
+  var STRIP_RE = /[­‌-‏‪-‮⁦-⁩﻿ـً-ٰٟۖ-ۜ۟-۪ۤۧۨ-ۭ]/g;
+
+  // Arabic presentation forms (copied from PDFs / legacy fonts) -> base letters.
+  var PRESENTATION_RE = /[ﭐ-﷿ﹰ-ﻼ]+/g;
+
+  var DIGIT_RE = /[٠-٩۰-۹]/g;        // ٠-٩ and ۰-۹
+  var PUNCT_RE = /[،؛؟٪٫٬۔]/g;
+
+  var PUNCT_MAP = {
+    '؟': '?',   // ؟
+    '،': ',',   // ،
+    '؛': ';',   // ؛
+    '٪': '%',   // ٪
+    '٫': '.',   // ٫  Arabic decimal separator
+    '٬': ',',   // ٬  Arabic thousands separator
+    '۔': '.'    // ۔  Arabic full stop
+  };
+
+  // Single character table (applied LAST, after every contextual rule).
+  var SINGLE_MAP = {
+    // vowels
+    'ا': 'a',          // ا
+    'ە': 'e',          // ە
+    'ێ': 'ê',     // ێ -> ê
+    'ۆ': 'o',          // ۆ
+    'و': 'u',          // و  (safety net: resolved earlier by the contextual stage)
+    'ی': 'î',     // ی  (safety net: resolved earlier by the contextual stage)
+
+    // consonants
+    'ب': 'b',          // ب
+    'پ': 'p',          // پ
+    'ت': 't',          // ت
+    'ج': 'c',          // ج
+    'چ': 'ç',     // چ -> ç
+    'ح': 'h',          // ح
+    'خ': 'x',          // خ
+    'د': 'd',          // د
+    'ر': 'r',          // ر
+    'ڕ': 'r',          // ڕ  (positional: "rr" when medial, see mapSingles)
+    'ز': 'z',          // ز
+    'ژ': 'j',          // ژ
+    'س': 's',          // س
+    'ش': 'ş',     // ش -> ş
+    'ع': '\'',         // ع
+    'غ': 'x',          // غ
+    'ف': 'f',          // ف
+    'ڤ': 'v',          // ڤ
+    'ق': 'q',          // ق
+    'ک': 'k',          // ک
+    'گ': 'g',          // گ
+    'ل': 'l',          // ل
+    'ڵ': 'l',          // ڵ  (positional: "ll" when options.doubleLL)
+    'م': 'm',          // م
+    'ن': 'n',          // ن
+    'ه': 'h',          // ه
+    'ھ': 'h',          // ھ
+
+    // hamza: word-initial ئ is removed earlier, so any ئ left here is non-initial
+    'ئ': '\'',         // ئ
+    'ء': '\'',         // ء
+
+    // letters that only occur in Arabic loan words (kept so no Arabic script leaks)
+    'آ': 'a',          // آ
+    'ٱ': 'a',          // ٱ
+    'ث': 's',          // ث
+    'ذ': 'z',          // ذ
+    'ص': 's',          // ص
+    'ض': 'z',          // ض
+    'ط': 't',          // ط
+    'ظ': 'z',          // ظ
+    'ڪ': 'k',          // ڪ
+    'ہ': 'h'           // ہ
+  };
+
+  var HAS_OWN = Object.prototype.hasOwnProperty;
+
+  // Stage 1 — word-initial ئ. A vowel follows -> the glottal stop is dropped and
+  // the vowel is written alone. Any other word-initial ئ is silent as well.
+  var INITIAL_HAMZA_RULES = [
+    [/^ئوو/, 'û'],   // ئوو -> û
+    [/^ئا/,       'a'],        // ئا  -> a
+    [/^ئە/,       'e'],        // ئە  -> e
+    [/^ئی/,       'î'],   // ئی  -> î
+    [/^ئێ/,       'ê'],   // ئێ  -> ê
+    [/^ئۆ/,       'o'],        // ئۆ  -> o
+    [/^ئ/,             '']          // ئ + anything else -> silent
   ];
 
-  // Exhaustive Single-Character Map
-  const SINGLE_CHAR_MAP = {
-    'ا': 'a',
-    'ە': 'e',
-    'ێ': 'ê',
-    'ۆ': 'o',
-    'ب': 'b',
-    'پ': 'p',
-    'ت': 't',
-    'ج': 'c',
-    'چ': 'ç',
-    'ح': 'h',
-    'خ': 'x',
-    'د': 'd',
-    'ر': 'r',
-    'ڕ': 'r',
-    'ز': 'z',
-    'ژ': 'j',
-    'س': 's',
-    'ش': 'ş',
-    'ع': "'",
-    'غ': 'x',
-    'ف': 'f',
-    'ڤ': 'v',
-    'ق': 'q',
-    'ک': 'k',
-    'گ': 'g',
-    'ل': 'l',
-    'ڵ': 'l',
-    'م': 'm',
-    'ن': 'n',
-    'ه': 'h',
-    'ھ': 'h',
-    'ئ': ''
-  };
+  // Stage 2 — double waw.
+  var DOUBLE_WAW_INITIAL = /^وو/;     // وو at the start of a word
+  var DOUBLE_WAW = /وو/g;             // وو anywhere
 
-  const DIGIT_MAP = {
-    '٠': '0',
-    '١': '1',
-    '٢': '2',
-    '٣': '3',
-    '٤': '4',
-    '٥': '5',
-    '٦': '6',
-    '٧': '7',
-    '٨': '8',
-    '٩': '9'
-  };
+  // Stage 3 — fixed waw sequences (longest first).
+  var WAW_RULES = [
+    [/وان/g, 'wan'],              // وان -> wan
+    [/وا/g,       'wa'],               // وا  -> wa
+    [/وێ/g,       'wê']           // وێ  -> wê
+  ];
 
-  const PUNCTUATION_MAP = {
-    '؟': '?',
-    '،': ',',
-    '؛': ';',
-    '«': '«',
-    '»': '»',
-    'ـ': ''
-  };
+  // Letter groups used by the contextual و / ی stage.
+  var AR_VOWELS = 'اەێۆ';           // ا ە ێ ۆ
+  var WAW_NEXT_VOWELS = 'اەیێۆ'; // ا ە ی ێ ۆ  (contract list for و)
+  var LATIN_VOWELS = 'aeoêûî';           // a e o ê û î
+  var LATIN_DIPHTHONG_BASE = 'aeoêî';         // vowels that can precede a semivowel w
 
-  /**
-   * Phonotactic Epenthesis (Bizroke Insertion):
-   * Analyzes Latin output for unpronounceable consonant clusters and inserts
-   * short 'i' according to Kurdish syllable structure (CV / CVC / CVCC).
-   * @param {string} word
-   * @returns {string}
-   */
-  function applyKurdishPhonotactics(word) {
-    if (!word || word.length < 2) return word;
-
-    let w = word;
-
-    // 1. Common verbal/nominal consonant cluster endings
-    w = w
-      .replace(/krdn$/i, 'kirdin')
-      .replace(/mrdn$/i, 'mirdin')
-      .replace(/brdn$/i, 'birdin')
-      .replace(/grtn$/i, 'girtin')
-      .replace(/xstn$/i, 'xistin')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])tn$/i, '$1tin')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])dn$/i, '$1din')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])mn$/i, '$1min')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])şn$/i, '$1şin')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])rn$/i, '$1rin')
-      .replace(/([bcçdfghjklmnpqrstvxwzş])ln$/i, '$1lin');
-
-    // 2. Word-initial 3-consonant clusters (CCC -> CiCC)
-    w = w.replace(
-      /^([bcçdfghjklmnpqrstvxwzş])([bcçdfghjklmnpqrstvxwzş]{2})/i,
-      '$1i$2'
-    );
-
-    // 3. Word-initial 2-consonant clusters (CC -> CiC), except valid Kurdish glides (kw, xw, جوان->ciwan handled)
-    w = w.replace(
-      /^([bcçdfghjklmnpqrstvxzş])([bcçdfghjklmnpqrstvxwzş])(?=[aeêiîouû])/i,
-      function (match, c1, c2) {
-        const pair = (c1 + c2).toLowerCase();
-        if (['xw', 'kw', 'gw', 'dw', 'tw', 'çw', 'şw', 'sp', 'st', 'şk'].includes(pair)) {
-          return match;
-        }
-        return c1 + 'i' + c2;
-      }
-    );
-
-    // 4. Completely vowelless words (e.g. "dl", "krd", "jrn") -> insert 'i'
-    if (!/[aeêiîouûAEÊIÎOUÛ]/.test(w) && /^[bcçdfghjklmnpqrstvxwzş']+$/i.test(w)) {
-      if (w.length === 2) {
-        w = w[0] + 'i' + w[1];
-      } else if (w.length === 3) {
-        w = w[0] + 'i' + w.slice(1);
-      } else if (w.length >= 4) {
-        w = w[0] + 'i' + w.slice(1, -1) + 'i' + w.slice(-1);
-      }
-    }
-
-    return w;
-  }
-
-  /**
-   * Core algorithmic converter for a single Kurdish Aramaic stem/word.
-   * @param {string} stem
-   * @returns {string}
-   */
-  function convertAramaicStem(stem) {
-    if (!stem) return '';
-
-    if (Object.prototype.hasOwnProperty.call(BIZROKE_LEXICON, stem)) {
-      return BIZROKE_LEXICON[stem];
-    }
-
-    let w = stem;
-
-    // 1. Word-initial Hamza (ئ) + Vowel combinations (Drop glottal stop carrier cleanly)
-    w = w
-      .replace(/^ئوو/g, 'û')
-      .replace(/^ئوا/g, 'wa')
-      .replace(/^ئوە/g, 'we')
-      .replace(/^ئوێ/g, 'wê')
-      .replace(/^ئوی/g, 'wî')
-      .replace(/^ئۆ/g, 'o')
-      .replace(/^ئا/g, 'a')
-      .replace(/^ئە/g, 'e')
-      .replace(/^ئێ/g, 'ê')
-      .replace(/^ئیا/g, 'ya')
-      .replace(/^ئیە/g, 'ye')
-      .replace(/^ئیۆ/g, 'yo')
-      .replace(/^ئی/g, 'î')
-      .replace(/^ئو(?=[بپتجچحخدرڕزژسشعغفڤقکگلڵمنهھ])/g, 'u')
-      .replace(/^ئو/g, 'u');
-
-    // 2. Word-initial Waw (و) before a consonant (like وشە, وڵات) -> "wi"
-    w = w.replace(/^و(?=[بپتجچحخدرڕزژسشعغفڤقکگلڵمنهھ])/g, 'wi');
-
-    // 3. High-priority multi-character sequences
-    w = w
-      .replace(/خوا/g, 'xwa')
-      .replace(/خوێ/g, 'xwê')
-      .replace(/خۆ/g, 'xo')
-      .replace(/وێ/g, 'wê')
-      .replace(/وا/g, 'wa')
-      .replace(/وان/g, 'wan')
-      .replace(/ییە/g, 'iye')
-      .replace(/یی/g, 'îy')
-      .replace(/وو(?=[اەێۆ])/g, 'uw')
-      .replace(/وو/g, 'û');
-
-    // 4. Contextual character-by-character scan for remaining letters
-    let out = '';
-    const chars = Array.from(w);
-
-    for (let i = 0; i < chars.length; i++) {
-      const ch = chars[i];
-      const prev = i > 0 ? chars[i - 1] : '';
-      const next = i < chars.length - 1 ? chars[i + 1] : '';
-
-      // Already converted Latin characters
-      if (/^[a-zA-ZêîûçşÊÎÛÇŞ0-9']$/.test(ch)) {
-        out += ch;
-        continue;
-      }
-
-      if (Object.prototype.hasOwnProperty.call(DIGIT_MAP, ch)) {
-        out += DIGIT_MAP[ch];
-        continue;
-      }
-
-      if (Object.prototype.hasOwnProperty.call(PUNCTUATION_MAP, ch)) {
-        out += PUNCTUATION_MAP[ch];
-        continue;
-      }
-
-      // Contextual Waw (و)
-      if (ch === 'و') {
-        const prevIsVowel = VOWEL_CHARS.has(prev) || /[aeêiîouû]/i.test(prev);
-        const nextIsVowel = VOWEL_CHARS.has(next) || /[aeêiîouû]/i.test(next);
-
-        if ((i === 0 && nextIsVowel) || prevIsVowel || nextIsVowel) {
-          out += 'w';
-        } else {
-          out += 'u';
-        }
-        continue;
-      }
-
-      // Contextual Ye (ی)
-      if (ch === 'ی') {
-        const prevIsPureVowel = PURE_VOWELS.has(prev) || /[aeêoû]/i.test(prev);
-        const nextIsPureVowel = PURE_VOWELS.has(next) || /[aeêoû]/i.test(next);
-
-        if ((i === 0 && (nextIsPureVowel || next === 'و')) || prevIsPureVowel || nextIsPureVowel) {
-          out += 'y';
-        } else {
-          out += 'î';
-        }
-        continue;
-      }
-
-      // Medial Hamza (ئ) between vowels acts as syllable boundary
-      if (ch === 'ئ') {
-        continue;
-      }
-
-      if (Object.prototype.hasOwnProperty.call(SINGLE_CHAR_MAP, ch)) {
-        out += SINGLE_CHAR_MAP[ch];
-      } else {
-        out += ch;
-      }
-    }
-
-    return applyKurdishPhonotactics(out);
-  }
-
-  /**
-   * Morphological Analyzer + Transliterator for a full Kurdish word token.
-   * Strips suffixes/prefixes to check if the root is in BIZROKE_LEXICON.
-   * @param {string} rawWord
-   * @returns {string}
-   */
-  function transliterateWordToken(rawWord) {
-    if (!rawWord) return '';
-
-    const word = normalizeKurdishText(rawWord).replace(/\u0640/g, '');
-
-    // 1. Standalone conjunction "و" -> "û"
-    if (word === 'و') return 'û';
-
-    // 2. Direct match in Lexicon
-    if (Object.prototype.hasOwnProperty.call(BIZROKE_LEXICON, word)) {
-      return BIZROKE_LEXICON[word];
-    }
-
-    // 3. Check if word is a Lexicon Stem + Agglutinative Suffix (e.g. دڵەکەم -> dil + ekem)
-    for (let i = 0; i < KURDISH_SUFFIXES.length; i++) {
-      const suf = KURDISH_SUFFIXES[i];
-      if (word.length > suf.ar.length + 1 && word.endsWith(suf.ar)) {
-        const stem = word.slice(0, word.length - suf.ar.length);
-        if (Object.prototype.hasOwnProperty.call(BIZROKE_LEXICON, stem)) {
-          const baseLat = BIZROKE_LEXICON[stem];
-          // Avoid double vowels when joining stem + suffix
-          if (/[aeêiîouû]$/i.test(baseLat) && /^[aeêiîouû]/i.test(suf.lat)) {
-            return baseLat + 'y' + suf.lat;
-          }
-          return baseLat + suf.lat;
-        }
-      }
-    }
-
-    // 4. Fallback to full phonological conversion
-    return convertAramaicStem(word);
-  }
-
-  /* ==========================================================================
-   * 3. AUTO-CAPITALIZATION & PROPER NOUN CASING
-   * ========================================================================== */
-
-  /**
-   * Capitalizes sentence starts, poetry verse lines, and proper nouns in Latin Hawar text.
-   * @param {string} text
-   * @returns {string}
-   */
-  function capitalizeLatinKurdish(text) {
-    if (!text || typeof text !== 'string') return '';
-
-    // 1. Capitalize proper nouns anywhere in the text
-    let formatted = text.replace(
-      /\b([a-zêîûçşA-ZÊÎÛÇŞ']+)\b/g,
-      function (word) {
-        const lower = word.toLowerCase();
-        if (PROPER_NOUN_SET.has(lower)) {
-          return lower.charAt(0).toUpperCase() + lower.slice(1);
-        }
-        return word;
-      }
-    );
-
-    // 2. Capitalize start of text, start of every new line (for poetry couplets), and after . ! ?
-    formatted = formatted.replace(
-      /(^|[\n\r]+|[.!?؟]+\s+)([a-zêîûçş])/g,
-      function (_, prefix, firstChar) {
-        return prefix + firstChar.toUpperCase();
-      }
-    );
-
-    // 3. Capitalize first letter inside opening guillemets/quotes «...» or "..."
-    formatted = formatted.replace(
-      /(^|\s)([«"“])([a-zêîûçş])/g,
-      function (_, space, quote, firstChar) {
-        return space + quote + firstChar.toUpperCase();
-      }
-    );
-
-    return formatted;
-  }
-
-  /**
-   * Primary Transliteration Entry Point: Converts full Kurdish Aramaic text
-   * (prose or multi-line classical poetry) into Latin Hawar script.
-   * @param {string} text
-   * @returns {string}
-   */
-  function kurdishToLatin(text) {
-    if (!text || typeof text !== 'string') return '';
-
-    const normalized = normalizeKurdishText(text);
-
-    // Tokenize into Kurdish script chunks vs whitespace/punctuation
-    const tokenPattern = /([\u0621-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]+)|([^\u0621-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]+)/g;
-    let match;
-    let output = '';
-
-    while ((match = tokenPattern.exec(normalized)) !== null) {
-      const kurdishChunk = match[1];
-      const otherChunk = match[2];
-
-      if (kurdishChunk) {
-        output += kurdishChunk.replace(
-          /([٠-٩؟،؛«»ـ]+)|([\u0621-\u06FF]+)/g,
-          function (_, digitsOrPunct, wordPart) {
-            if (digitsOrPunct) {
-              return Array.from(digitsOrPunct)
-                .map(function (c) {
-                  return DIGIT_MAP[c] || PUNCTUATION_MAP[c] || c;
-                })
-                .join('');
-            }
-            return transliterateWordToken(wordPart);
-          }
-        );
-      } else if (otherChunk) {
-        output += otherChunk;
-      }
-    }
-
-    return capitalizeLatinKurdish(output);
-  }
-
-  /* ==========================================================================
-   * 4. PROSODIC SYLLABIFIER (کێشی بڕگەیی) & AI CORPUS ANALYTICS
-   * ========================================================================== */
-
-  /**
-   * Counts vowels/syllables in a Latin Hawar string to estimate Kurdish
-   * syllabic meter (کێشی بڕگەیی) and provides NLP token metrics for AI indexing.
-   * @param {string} rawText
-   * @returns {Object}
-   */
-  function analyzeKurdishText(rawText) {
-    const cleanAramaic = normalizeKurdishText(rawText || '').trim();
-    const cleanLatin = kurdishToLatin(cleanAramaic);
-
-    const words = cleanAramaic
-      ? cleanAramaic.split(/\s+/).filter(Boolean)
-      : [];
-
-    const lines = cleanAramaic
-      ? cleanAramaic.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean)
-      : [];
-
-    // Count vowel nuclei in the Hawar representation for accurate syllable count
-    const syllablesPerLine = lines.map(function (line) {
-      const latinLine = kurdishToLatin(line);
-      const vowelMatches = latinLine.match(/[aeêiîouûAEÊIÎOUÛ]+/g);
-      return vowelMatches ? vowelMatches.length : 0;
-    });
-
-    const totalSyllables = syllablesPerLine.reduce(function (a, b) { return a + b; }, 0);
-
-    return {
-      text_ku_arab: cleanAramaic,
-      text_ku_latn: cleanLatin,
-      char_count: cleanAramaic.length,
-      word_count: words.length,
-      line_count: lines.length,
-      syllable_count: totalSyllables,
-      syllables_per_line: syllablesPerLine,
-      encoding: 'UTF-8',
-      language: 'ckb'
+  function resolveOptions(options) {
+    var defaults = engine.transliterationDefaults;
+    var out = {
+      strict: !!defaults.strict,
+      medialRR: defaults.medialRR !== false,
+      doubleLL: !!defaults.doubleLL
     };
-  }
-
-  /**
-   * Builds a clean, standard JSONL string from an array of Meko posts
-   * ready for LLM fine-tuning and NLP dataset export.
-   * @param {Array<Object>} posts
-   * @returns {string}
-   */
-  function buildCorpusJSONL(posts) {
-    if (!Array.isArray(posts)) return '';
-
-    return posts
-      .map(function (post) {
-        const metrics = analyzeKurdishText(post.text || '');
-        const record = {
-          id: post.id,
-          author: post.authorName,
-          handle: post.authorHandle,
-          genre: post.isPoetry ? 'poetry' : 'prose',
-          language: 'ckb',
-          script_primary: 'Arab',
-          text_aramaic: metrics.text_ku_arab,
-          text_latin_hawar: metrics.text_ku_latn,
-          word_count: metrics.word_count,
-          syllable_count: metrics.syllable_count,
-          syllables_per_line: metrics.syllables_per_line,
-          created_at: post.createdAt || new Date().toISOString(),
-          license: 'CC-BY-4.0'
-        };
-        return JSON.stringify(record);
-      })
-      .join('\n');
-  }
-
-  /* ==========================================================================
-   * 5. INITIALIZATION & GLOBAL EXPORTS
-   * ========================================================================== */
-
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bindGlobalUnicodeListeners);
-    } else {
-      bindGlobalUnicodeListeners();
+    // Anything that is not a plain object (e.g. the index argument passed by
+    // Array.prototype.map) is ignored.
+    if (options && typeof options === 'object') {
+      if (typeof options.strict === 'boolean') { out.strict = options.strict; }
+      if (typeof options.medialRR === 'boolean') { out.medialRR = options.medialRR; }
+      if (typeof options.doubleLL === 'boolean') { out.doubleLL = options.doubleLL; }
     }
+    return out;
   }
 
-  // Expose functions globally for Phase 4 (app.js)
-  global.normalizeKurdishText = normalizeKurdishText;
-  global.normalizeInputElement = normalizeInputElement;
-  global.kurdishToLatin = kurdishToLatin;
-  global.transliterateKurdishToLatin = kurdishToLatin;
-  global.capitalizeLatinKurdish = capitalizeLatinKurdish;
-  global.analyzeKurdishText = analyzeKurdishText;
-  global.buildCorpusJSONL = buildCorpusJSONL;
+  // Stage 4 — contextual و and ی, resolved left to right so each letter can see
+  // what the previous one became.
+  function resolveWawAndYa(word, opts) {
+    var roles = {};
+    return word.replace(/[وی]/g, function (ch, i, s) {
+      var prev = i > 0 ? s.charAt(i - 1) : '';
+      var next = i + 1 < s.length ? s.charAt(i + 1) : '';
+      var prevRole = i > 0 ? roles[i - 1] : undefined;
+      var out;
 
-  global.MekoUnicode = {
-    normalize: normalizeKurdishText,
-    normalizeElement: normalizeInputElement,
-    toLatin: kurdishToLatin,
-    capitalizeLatin: capitalizeLatinKurdish,
-    analyze: analyzeKurdishText,
-    buildJSONL: buildCorpusJSONL
-  };
-})(typeof window !== 'undefined' ? window : this);
+      if (ch === 'و') {
+        // و before a vowel letter -> w, otherwise u
+        if (next && WAW_NEXT_VOWELS.indexOf(next) !== -1) {
+          out = 'w';
+        } else if (!opts.strict && prev &&
+                   (AR_VOWELS.indexOf(prev) !== -1 ||
+                    LATIN_DIPHTHONG_BASE.indexOf(prev) !== -1 ||
+                    prevRole === 'î')) {
+          out = 'w';                              // diphthong: aw, ew, êw, ow, îw
+        } else {
+          out = 'u';
+        }
+      } else {
+        // ی before or after a vowel -> y, otherwise î
+        var vowelBefore = !!prev &&
+          (AR_VOWELS.indexOf(prev) !== -1 ||
+           LATIN_VOWELS.indexOf(prev) !== -1 ||
+           prevRole === 'u' || prevRole === 'î');
+        var vowelAfter = !!next && AR_VOWELS.indexOf(next) !== -1;
+        if (!opts.strict && i === 0) {
+          out = 'y';                              // a word never starts with î (that is ئی)
+        } else if (vowelBefore || vowelAfter) {
+          out = 'y';
+        } else {
+          out = 'î';
+        }
+      }
+
+      roles[i] = out;
+      return out;
+    });
+  }
+
+  // Stage 5 — everything that is left, one letter at a time.
+  function mapSingles(word, opts) {
+    return word.replace(LETTER_RE, function (ch, i, s) {
+      if (ch === 'ڕ') {                      // ڕ: r, or rr in the middle of a word
+        return (opts.medialRR && i > 0 && i < s.length - 1) ? 'rr' : 'r';
+      }
+      if (ch === 'ڵ') {                      // ڵ
+        return opts.doubleLL ? 'll' : 'l';
+      }
+      return HAS_OWN.call(SINGLE_MAP, ch) ? SINGLE_MAP[ch] : ch;
+    });
+  }
+
+  function transliterateWord(word, opts) {
+    var w = word;
+    var k;
+
+    // 1. word-initial ئ
+    for (k = 0; k < INITIAL_HAMZA_RULES.length; k++) {
+      w = w.replace(INITIAL_HAMZA_RULES[k][0], INITIAL_HAMZA_RULES[k][1]);
+    }
+
+    // 2. double waw
+    if (!opts.strict) { w = w.replace(DOUBLE_WAW_INITIAL, 'wu'); }
+    w = w.replace(DOUBLE_WAW, 'û');
+
+    // 3. وان / وا / وێ
+    for (k = 0; k < WAW_RULES.length; k++) {
+      w = w.replace(WAW_RULES[k][0], WAW_RULES[k][1]);
+    }
+
+    // 4. contextual و / ی
+    w = resolveWawAndYa(w, opts);
+
+    // 5. single character table
+    return mapSingles(w, opts);
+  }
+
+  function foldPresentationForms(text) {
+    if (typeof text.normalize !== 'function') { return text; }
+    return text.replace(PRESENTATION_RE, function (run) { return run.normalize('NFKC'); });
+  }
+
+  function kurdishToLatin(text, options) {
+    var opts = resolveOptions(options);
+    var s = toStr(text);
+    if (!s) { return s; }
+
+    s = foldPresentationForms(s);
+    s = normalizeKurdishText(s);
+    s = s.replace(STRIP_RE, '');
+
+    s = s.replace(WORD_RE, function (word) { return transliterateWord(word, opts); });
+
+    s = s.replace(DIGIT_RE, function (digit) {
+      var code = digit.charCodeAt(0);
+      return String(code >= 0x06F0 ? code - 0x06F0 : code - 0x0660);
+    });
+    s = s.replace(PUNCT_RE, function (mark) { return PUNCT_MAP[mark]; });
+
+    return s;
+  }
+
+
+  /* ========================================================================
+     3. AUTO-CAPITALISATION
+     ======================================================================== */
+
+  // A sentence starts at: the start of the text, after . ! ? … followed by
+  // whitespace, or after a line break. Opening quotes / brackets are skipped.
+  // Requiring whitespace after the full stop keeps "3.5" and "example.com" intact.
+  var SENTENCE_START_RE = /(^[ \t ]*|[.!?…]+["'”’»)\]]*[ \t ]+|[\r\n]+[ \t ]*)(["'“‘«(\[¿¡]*)(\S)/g;
+
+  // toUpperCase (not toLocaleUpperCase): on a Turkish-locale device the latter
+  // would turn "i" into "İ", which is not a Kurdish letter.
+  function capitalizeLatinKurdish(text) {
+    var s = toStr(text);
+    if (!s) { return s; }
+    return s.replace(SENTENCE_START_RE, function (match, lead, opening, letter) {
+      return lead + opening + letter.toUpperCase();
+    });
+  }
+
+
+  /* ========================================================================
+     4. EXPOSE
+     ======================================================================== */
+
+  engine.normalizeKurdishText = normalizeKurdishText;
+  engine.kurdishToLatin = kurdishToLatin;
+  engine.capitalizeLatinKurdish = capitalizeLatinKurdish;
+
+  root.normalizeKurdishText = normalizeKurdishText;
+  root.kurdishToLatin = kurdishToLatin;
+  root.capitalizeLatinKurdish = capitalizeLatinKurdish;
+  root.MekoUnicode = engine;
+
+}(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this)));
