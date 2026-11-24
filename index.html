@@ -1,28 +1,1094 @@
 <!DOCTYPE html>
 <html lang="ku" dir="rtl" class="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>مەکۆ</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Vazirmatn'],serif:['Amiri']}}}}</script>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest"></script>
-<link rel="stylesheet" href="styles.css">
-<script id="meko-jsonld" type="application/ld+json">{}</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="مەکۆ — تۆڕی کۆمەڵایەتی کوردی بۆ بڵاوکردنەوە، گفتوگۆ و پەیوەندی.">
+  <title>مەکۆ | Meko</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23059669'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white'%3E%D9%85%3C/text%3E%3C/svg%3E">
+
+  <!-- Structured data (populated by app.js) -->
+  <script id="meko-jsonld" type="application/ld+json"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'system-ui', 'sans-serif'],
+            serif: ['Amiri', 'Georgia', 'serif']
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b'
+            },
+            night: {
+              700: '#1e2733',
+              800: '#151c25',
+              900: '#0d1218',
+              950: '#070a0f'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
-<main id="app" class="app-shell"></main>
-<nav id="bottom-nav" class="glass-nav" aria-label="سەرەکی">
-<button id="n-home" data-a="home" aria-label="ماڵەوە"><i data-lucide="home"></i></button>
-<button class="plus" data-a="create" aria-label="نووسین"><i data-lucide="plus"></i></button>
-<button id="n-chat" data-a="chat" aria-label="نامەدان"><i data-lucide="message-circle"></i><span id="n-dot" class="dot hidden"></span></button>
-<button id="n-menu" data-a="menu" aria-label="مێنیو"><img id="nav-avatar" class="nav-av" src="" alt=""><span class="badge"><i data-lucide="menu"></i></span></button>
-</nav>
-<div id="overlay-root"></div>
-<div id="toast" role="status"></div>
-<footer class="hidden"></footer>
-<script src="unicode-engine.js"></script>
-<script src="app.js"></script>
+
+<body class="bg-slate-100 font-sans text-slate-900 antialiased dark:bg-night-950 dark:text-slate-100">
+
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:right-3 focus:top-3 focus:z-[80] focus:rounded-xl focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">بازدان بۆ ناوەڕۆک</a>
+
+  <noscript>
+    <div class="p-6 text-center text-sm font-semibold text-rose-600">بۆ بەکارهێنانی مەکۆ پێویستە جاڤاسکریپت چالاک بێت.</div>
+  </noscript>
+
+  <div class="app-shell relative mx-auto min-h-[100dvh] w-full max-w-[600px] bg-white shadow-sm dark:bg-night-900">
+
+    <!-- ==================================================================
+         LEFT SLIDE-OUT SIDEBAR DRAWER
+         app.js toggles data-state="open" | "closed" and aria-hidden.
+         ================================================================== -->
+    <aside id="sidebar-drawer" data-state="closed" aria-hidden="true" aria-label="مینوی لاتەنیشت"
+           class="group pointer-events-none invisible fixed inset-y-0 left-1/2 z-50 w-full max-w-[600px] -translate-x-1/2 overflow-hidden transition-[visibility] duration-300 data-[state=open]:pointer-events-auto data-[state=open]:visible">
+
+      <div id="sidebar-backdrop" class="absolute inset-0 bg-black/50 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-data-[state=open]:opacity-100" aria-hidden="true"></div>
+
+      <div id="sidebar-panel" class="absolute left-0 top-0 flex h-full w-[84%] max-w-[330px] -translate-x-full flex-col rounded-r-3xl bg-white shadow-2xl transition-transform duration-300 ease-out group-data-[state=open]:translate-x-0 dark:bg-night-900">
+
+        <!-- Panel header -->
+        <div class="flex items-center justify-between px-5 pb-2 pt-5">
+          <span class="font-serif text-3xl font-bold text-brand-700 dark:text-brand-400">مەکۆ</span>
+          <button id="sidebar-close" type="button" aria-label="داخستنی مینو"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 active:scale-95 dark:text-slate-300 dark:hover:bg-white/10">
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <!-- User profile card -->
+        <div id="sidebar-profile-card" class="mx-4 mt-2 rounded-3xl bg-gradient-to-bl from-brand-50 to-white p-4 ring-1 ring-brand-100 dark:from-brand-900/30 dark:to-night-800 dark:ring-white/10">
+          <button id="sidebar-profile-link" type="button" data-nav-target="profile" class="flex w-full items-center gap-3 text-start">
+            <img id="sidebar-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""
+                 class="h-14 w-14 shrink-0 rounded-full bg-slate-200 object-cover ring-2 ring-white dark:bg-night-700 dark:ring-night-900">
+            <span class="min-w-0 flex-1">
+              <span id="sidebar-display-name" class="block truncate text-base font-extrabold">بەکارهێنەری مەکۆ</span>
+              <span class="block text-sm text-slate-500 dark:text-slate-400"><span id="sidebar-handle" dir="ltr" class="inline-block">@meko_user</span></span>
+            </span>
+          </button>
+          <div class="mt-4 flex items-center gap-5 text-sm">
+            <span><strong id="sidebar-following-count" class="font-extrabold">0</strong> <span class="text-slate-500 dark:text-slate-400">شوێنکەوتراو</span></span>
+            <span><strong id="sidebar-followers-count" class="font-extrabold">0</strong> <span class="text-slate-500 dark:text-slate-400">شوێنکەوتوو</span></span>
+          </div>
+        </div>
+
+        <!-- Navigation list (Profile, Saved Posts, Settings only) -->
+        <nav id="sidebar-nav" aria-label="ڕێنیشاندەر" class="mt-4 flex-1 overflow-y-auto px-3">
+          <ul class="space-y-1">
+            <li>
+              <button type="button" data-nav-target="profile"
+                      class="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-start text-[15px] font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:text-slate-200 dark:hover:bg-white/10">
+                <i data-lucide="user" class="h-5 w-5"></i>
+                <span class="flex-1">پرۆفایل</span>
+                <i data-lucide="chevron-left" class="h-4 w-4 text-slate-400"></i>
+              </button>
+            </li>
+            <li>
+              <button type="button" data-nav-target="saved"
+                      class="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-start text-[15px] font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:text-slate-200 dark:hover:bg-white/10">
+                <i data-lucide="bookmark" class="h-5 w-5"></i>
+                <span class="flex-1">پۆستە پاشەکەوتکراوەکان</span>
+                <i data-lucide="chevron-left" class="h-4 w-4 text-slate-400"></i>
+              </button>
+            </li>
+            <li>
+              <button type="button" data-nav-target="settings"
+                      class="flex w-full items-center gap-3 rounded-2xl px-3 py-3.5 text-start text-[15px] font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-[0.98] dark:text-slate-200 dark:hover:bg-white/10">
+                <i data-lucide="settings" class="h-5 w-5"></i>
+                <span class="flex-1">ڕێکخستنەکان</span>
+                <i data-lucide="chevron-left" class="h-4 w-4 text-slate-400"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Theme toggle footer -->
+        <div class="border-t border-slate-200 p-4 dark:border-white/10">
+          <button id="theme-toggle" type="button" role="switch" aria-checked="false" aria-label="گۆڕینی دۆخی تاریک"
+                  class="flex w-full items-center justify-between rounded-2xl bg-slate-100 px-4 py-3 transition active:scale-[0.98] dark:bg-white/10">
+            <span class="flex items-center gap-3 text-sm font-semibold">
+              <i data-lucide="moon" class="h-5 w-5 dark:hidden"></i>
+              <i data-lucide="sun" class="hidden h-5 w-5 dark:block"></i>
+              <span>دۆخی تاریک</span>
+            </span>
+            <span class="relative h-6 w-11 rounded-full bg-slate-300 transition-colors dark:bg-brand-600" aria-hidden="true">
+              <span class="absolute start-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform dark:-translate-x-5"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================================================================
+         MAIN VIEWPORT
+         Views mount here. Only one top-level view is visible at a time.
+         ================================================================== -->
+    <main id="main-content" tabindex="-1" class="relative pb-32 focus:outline-none">
+
+      <!-- ============================ HOME / TIMELINE ============================ -->
+      <section id="view-home" class="app-view" data-view="home" aria-labelledby="home-title">
+        <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <div class="flex h-14 items-center justify-between px-4">
+            <h1 id="home-title" class="font-serif text-3xl font-bold text-brand-700 dark:text-brand-400">مەکۆ</h1>
+            <button id="feed-refresh" type="button" aria-label="نوێکردنەوە"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 active:scale-95 dark:text-slate-300 dark:hover:bg-white/10">
+              <i data-lucide="refresh-cw" class="h-5 w-5"></i>
+            </button>
+          </div>
+          <div id="feed-tabs" role="tablist" aria-label="جۆری پۆستەکان" class="flex">
+            <button type="button" role="tab" id="feed-tab-for-you" data-feed="for-you" aria-selected="true"
+                    class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">بۆ تۆ</button>
+            <button type="button" role="tab" id="feed-tab-following" data-feed="following" aria-selected="false"
+                    class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">شوێنکەوتراوەکان</button>
+          </div>
+        </header>
+
+        <!-- New posts pill -->
+        <div class="pointer-events-none sticky top-[6.5rem] z-20 flex justify-center">
+          <button id="new-posts-pill" type="button" class="pointer-events-auto mt-2 hidden items-center gap-2 rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-brand-600/30 transition active:scale-95">
+            <i data-lucide="arrow-up" class="h-4 w-4"></i>
+            <span>پۆستی نوێ</span>
+          </button>
+        </div>
+
+        <!-- Composer trigger -->
+        <div class="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-white/10">
+          <img id="home-composer-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""
+               class="h-11 w-11 shrink-0 rounded-full bg-slate-200 object-cover dark:bg-night-700">
+          <button id="home-composer-trigger" type="button"
+                  class="flex-1 rounded-full bg-slate-100 px-4 py-3 text-start text-[15px] text-slate-500 transition hover:bg-slate-200/70 dark:bg-white/10 dark:text-slate-400 dark:hover:bg-white/15">چی لە مێشکتدایە؟</button>
+          <button id="home-composer-image" type="button" aria-label="زیادکردنی وێنە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-brand-600 transition hover:bg-brand-50 active:scale-95 dark:text-brand-400 dark:hover:bg-white/10">
+            <i data-lucide="image" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <!-- Feed -->
+        <div id="feed-container">
+          <div id="feed-list" role="feed" aria-busy="true" aria-label="پۆستەکان" class="divide-y divide-slate-200 dark:divide-white/10"></div>
+
+          <!-- Loading skeleton -->
+          <div id="feed-skeleton" class="divide-y divide-slate-200 dark:divide-white/10" aria-hidden="true">
+            <div class="flex animate-pulse gap-3 px-4 py-4">
+              <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+              <div class="flex-1 space-y-3">
+                <div class="h-3.5 w-1/3 rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-4/5 rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-44 w-full rounded-2xl bg-slate-200 dark:bg-white/10"></div>
+              </div>
+            </div>
+            <div class="flex animate-pulse gap-3 px-4 py-4">
+              <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+              <div class="flex-1 space-y-3">
+                <div class="h-3.5 w-2/5 rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-3/5 rounded bg-slate-200 dark:bg-white/10"></div>
+              </div>
+            </div>
+            <div class="flex animate-pulse gap-3 px-4 py-4">
+              <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+              <div class="flex-1 space-y-3">
+                <div class="h-3.5 w-1/4 rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-3 w-2/3 rounded bg-slate-200 dark:bg-white/10"></div>
+                <div class="h-32 w-full rounded-2xl bg-slate-200 dark:bg-white/10"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div id="feed-empty" class="hidden flex-col items-center px-8 py-16 text-center">
+            <span class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+              <i data-lucide="feather" class="h-8 w-8"></i>
+            </span>
+            <h2 class="text-lg font-extrabold">هێشتا هیچ پۆستێک نییە</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">یەکەم کەس بە کە شتێک بڵاو دەکاتەوە.</p>
+            <button id="feed-empty-create" type="button" class="mt-5 rounded-full bg-brand-600 px-6 py-2.5 text-sm font-bold text-white transition active:scale-95">پۆستی نوێ</button>
+          </div>
+
+          <!-- Error state -->
+          <div id="feed-error" class="hidden flex-col items-center px-8 py-16 text-center" role="alert">
+            <span class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500 dark:bg-rose-500/15">
+              <i data-lucide="circle-alert" class="h-8 w-8"></i>
+            </span>
+            <h2 class="text-lg font-extrabold">کێشەیەک ڕوویدا</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">نەتوانرا پۆستەکان باربکرێن.</p>
+            <button id="feed-retry" type="button" class="mt-5 rounded-full border border-slate-300 px-6 py-2.5 text-sm font-bold transition active:scale-95 dark:border-white/20">دووبارە هەوڵبدەرەوە</button>
+          </div>
+
+          <!-- Infinite scroll sentinel + states -->
+          <div id="feed-sentinel" class="h-px w-full" aria-hidden="true"></div>
+          <div id="feed-loading-more" class="hidden items-center justify-center py-6 text-brand-600 dark:text-brand-400">
+            <i data-lucide="loader-circle" class="h-6 w-6 animate-spin"></i>
+          </div>
+          <p id="feed-end" class="hidden py-8 text-center text-sm text-slate-400">گەیشتیتە کۆتایی</p>
+        </div>
+      </section>
+
+      <!-- ============================ PROFILE ============================ -->
+      <section id="view-profile" class="app-view hidden" data-view="profile" aria-labelledby="profile-header-title">
+        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200/70 bg-white/80 px-2 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <button id="profile-back" type="button" aria-label="گەڕانەوە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+            <i data-lucide="arrow-right" class="h-5 w-5"></i>
+          </button>
+          <div class="min-w-0">
+            <h2 id="profile-header-title" class="truncate text-base font-extrabold leading-tight">پرۆفایل</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400"><span id="profile-posts-count">0</span> پۆست</p>
+          </div>
+        </header>
+
+        <div id="profile-cover" class="h-32 bg-gradient-to-l from-brand-400 via-brand-600 to-brand-800" role="img" aria-label="وێنەی بەرگی پرۆفایل"></div>
+
+        <div class="px-4 pb-3">
+          <div class="flex items-end justify-between">
+            <div class="-mt-12 rounded-full ring-4 ring-white dark:ring-night-900">
+              <img id="profile-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="وێنەی پرۆفایل"
+                   class="h-24 w-24 rounded-full bg-slate-200 object-cover dark:bg-night-700">
+            </div>
+            <div class="flex items-center gap-2 pt-3">
+              <button id="profile-edit-btn" type="button"
+                      class="rounded-full border border-slate-300 px-5 py-2 text-sm font-bold transition hover:bg-slate-100 active:scale-95 dark:border-white/20 dark:hover:bg-white/10">دەستکاریکردنی پرۆفایل</button>
+              <button id="profile-message-btn" type="button" aria-label="ناردنی نامە"
+                      class="hidden h-10 w-10 items-center justify-center rounded-full border border-slate-300 transition hover:bg-slate-100 active:scale-95 dark:border-white/20 dark:hover:bg-white/10">
+                <i data-lucide="mail" class="h-5 w-5"></i>
+              </button>
+              <button id="profile-follow-btn" type="button" aria-pressed="false"
+                      class="hidden rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white transition active:scale-95 aria-pressed:border aria-pressed:border-slate-300 aria-pressed:bg-transparent aria-pressed:text-slate-900 dark:bg-white dark:text-slate-900 dark:aria-pressed:border-white/20 dark:aria-pressed:text-white">شوێنکەوتن</button>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div class="flex items-center gap-1.5">
+              <h2 id="profile-display-name" class="text-xl font-extrabold">بەکارهێنەری مەکۆ</h2>
+              <i id="profile-verified" data-lucide="badge-check" class="hidden h-5 w-5 text-brand-500"></i>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400"><span id="profile-handle" dir="ltr" class="inline-block">@meko_user</span></p>
+            <p id="profile-bio" dir="auto" class="mt-3 whitespace-pre-wrap break-words text-[15px] leading-7"></p>
+            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+              <span id="profile-location-wrap" class="hidden items-center gap-1.5">
+                <i data-lucide="map-pin" class="h-4 w-4"></i>
+                <span id="profile-location"></span>
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <i data-lucide="calendar" class="h-4 w-4"></i>
+                <span>بەشداربوو لە <span id="profile-joined">—</span></span>
+              </span>
+            </div>
+            <div class="mt-3 flex items-center gap-5 text-sm">
+              <button id="profile-following-btn" type="button" class="hover:underline"><strong id="profile-following-count" class="font-extrabold">0</strong> <span class="text-slate-500 dark:text-slate-400">شوێنکەوتراو</span></button>
+              <button id="profile-followers-btn" type="button" class="hover:underline"><strong id="profile-followers-count" class="font-extrabold">0</strong> <span class="text-slate-500 dark:text-slate-400">شوێنکەوتوو</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div id="profile-tabs" role="tablist" aria-label="ناوەڕۆکی پرۆفایل" class="sticky top-14 z-20 flex border-b border-slate-200 bg-white/90 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/90">
+          <button type="button" role="tab" data-profile-tab="posts" aria-selected="true"
+                  class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">پۆست</button>
+          <button type="button" role="tab" data-profile-tab="replies" aria-selected="false"
+                  class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">وەڵام</button>
+          <button type="button" role="tab" data-profile-tab="media" aria-selected="false"
+                  class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">میدیا</button>
+          <button type="button" role="tab" data-profile-tab="likes" aria-selected="false"
+                  class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">پەسەندکراو</button>
+        </div>
+
+        <div id="profile-posts-list" class="divide-y divide-slate-200 dark:divide-white/10" aria-live="polite"></div>
+
+        <div id="profile-skeleton" class="divide-y divide-slate-200 dark:divide-white/10" aria-hidden="true">
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-3">
+              <div class="h-3.5 w-1/3 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-4/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-3">
+              <div class="h-3.5 w-2/5 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-3/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="profile-empty" class="hidden flex-col items-center px-8 py-14 text-center">
+          <span class="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-white/10">
+            <i data-lucide="file-text" class="h-7 w-7"></i>
+          </span>
+          <h3 class="text-base font-extrabold">هیچ شتێک لێرە نییە</h3>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">کاتێک شتێک بڵاو بکرێتەوە لێرە دەردەکەوێت.</p>
+        </div>
+      </section>
+
+      <!-- ============================ SAVED POSTS ============================ -->
+      <section id="view-saved" class="app-view hidden" data-view="saved" aria-labelledby="saved-title">
+        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200/70 bg-white/80 px-2 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <button id="saved-back" type="button" aria-label="گەڕانەوە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+            <i data-lucide="arrow-right" class="h-5 w-5"></i>
+          </button>
+          <h2 id="saved-title" class="text-base font-extrabold">پۆستە پاشەکەوتکراوەکان</h2>
+        </header>
+
+        <div id="saved-list" class="divide-y divide-slate-200 dark:divide-white/10" aria-live="polite"></div>
+
+        <div id="saved-skeleton" class="divide-y divide-slate-200 dark:divide-white/10" aria-hidden="true">
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-3">
+              <div class="h-3.5 w-1/3 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-4/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-11 w-11 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-3">
+              <div class="h-3.5 w-2/5 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-full rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-3/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="saved-empty" class="hidden flex-col items-center px-8 py-16 text-center">
+          <span class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+            <i data-lucide="bookmark" class="h-8 w-8"></i>
+          </span>
+          <h3 class="text-lg font-extrabold">هیچ پۆستێکت پاشەکەوت نەکردووە</h3>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">پۆستەکان پاشەکەوت بکە بۆ ئەوەی دواتر بیانبینیتەوە.</p>
+        </div>
+      </section>
+
+      <!-- ============================ SETTINGS ============================ -->
+      <section id="view-settings" class="app-view hidden" data-view="settings" aria-labelledby="settings-title">
+        <header class="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200/70 bg-white/80 px-2 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <button id="settings-back" type="button" aria-label="گەڕانەوە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+            <i data-lucide="arrow-right" class="h-5 w-5"></i>
+          </button>
+          <h2 id="settings-title" class="text-base font-extrabold">ڕێکخستنەکان</h2>
+        </header>
+
+        <div class="space-y-6 px-4 py-5">
+
+          <!-- Account -->
+          <section aria-labelledby="settings-account-title">
+            <h3 id="settings-account-title" class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">هەژمار</h3>
+            <div class="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10">
+              <button id="settings-edit-profile" type="button"
+                      class="flex w-full items-center gap-3 px-4 py-3.5 text-start transition hover:bg-slate-50 dark:hover:bg-white/5">
+                <i data-lucide="user-pen" class="h-5 w-5 text-slate-500"></i>
+                <span class="flex-1 text-[15px] font-semibold">دەستکاریکردنی پرۆفایل</span>
+                <i data-lucide="chevron-left" class="h-4 w-4 text-slate-400"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- Appearance -->
+          <section aria-labelledby="settings-appearance-title">
+            <h3 id="settings-appearance-title" class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">ڕووکار</h3>
+            <fieldset class="flex gap-2">
+              <legend class="sr-only">هەڵبژاردنی ڕووکار</legend>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="theme" value="light" class="peer sr-only">
+                <span class="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold transition peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:border-white/15 dark:peer-checked:bg-brand-900/40 dark:peer-checked:text-brand-300">
+                  <i data-lucide="sun" class="h-4 w-4"></i>ڕووناک
+                </span>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="theme" value="dark" class="peer sr-only">
+                <span class="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold transition peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:border-white/15 dark:peer-checked:bg-brand-900/40 dark:peer-checked:text-brand-300">
+                  <i data-lucide="moon" class="h-4 w-4"></i>تاریک
+                </span>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="theme" value="system" class="peer sr-only">
+                <span class="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold transition peer-checked:border-brand-600 peer-checked:bg-brand-50 peer-checked:text-brand-700 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:border-white/15 dark:peer-checked:bg-brand-900/40 dark:peer-checked:text-brand-300">
+                  <i data-lucide="monitor-smartphone" class="h-4 w-4"></i>سیستەم
+                </span>
+              </label>
+            </fieldset>
+          </section>
+
+          <!-- Notifications -->
+          <section aria-labelledby="settings-notifications-title">
+            <h3 id="settings-notifications-title" class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">ئاگادارکردنەوەکان</h3>
+            <div class="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 dark:divide-white/10 dark:border-white/10">
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">پەسەندکردنەکان</span>
+                <input id="setting-notif-likes" type="checkbox" class="peer sr-only" checked>
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">وەڵامەکان و ئاماژەکان</span>
+                <input id="setting-notif-replies" type="checkbox" class="peer sr-only" checked>
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">شوێنکەوتوانی نوێ</span>
+                <input id="setting-notif-follows" type="checkbox" class="peer sr-only" checked>
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">نامەکان</span>
+                <input id="setting-notif-messages" type="checkbox" class="peer sr-only" checked>
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Privacy -->
+          <section aria-labelledby="settings-privacy-title">
+            <h3 id="settings-privacy-title" class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">نهێنیپارێزی</h3>
+            <div class="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 dark:divide-white/10 dark:border-white/10">
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">هەژماری تایبەت</span>
+                <input id="setting-private-account" type="checkbox" class="peer sr-only">
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+              <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3.5">
+                <span class="text-[15px]">نیشاندانی ڕاپۆرتی خوێندنەوە</span>
+                <input id="setting-read-receipts" type="checkbox" class="peer sr-only" checked>
+                <span class="relative h-6 w-11 shrink-0 rounded-full bg-slate-300 transition-colors after:absolute after:start-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform after:content-[''] peer-checked:bg-brand-600 peer-checked:after:-translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 dark:bg-white/20" aria-hidden="true"></span>
+              </label>
+            </div>
+          </section>
+
+          <!-- About -->
+          <section aria-labelledby="settings-about-title">
+            <h3 id="settings-about-title" class="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">دەربارە</h3>
+            <div class="rounded-2xl border border-slate-200 px-4 py-4 text-center dark:border-white/10">
+              <p class="font-serif text-3xl font-bold text-brand-700 dark:text-brand-400">مەکۆ</p>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Meko · <span id="app-version" dir="ltr" class="inline-block">v1.0.0</span></p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============================ CHAT LIST ============================ -->
+      <section id="view-chat-list" class="app-view hidden" data-view="chat-list" aria-labelledby="chat-list-title">
+        <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <div class="flex h-14 items-center px-4">
+            <h2 id="chat-list-title" class="text-xl font-extrabold">نامەکان</h2>
+          </div>
+          <div class="px-4 pb-3">
+            <label for="chat-search" class="sr-only">گەڕان لە نامەکان</label>
+            <div class="relative">
+              <i data-lucide="search" class="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+              <input id="chat-search" type="search" placeholder="گەڕان لە نامەکان" autocomplete="off"
+                     class="w-full rounded-full bg-slate-100 py-2.5 pe-4 ps-11 text-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/40 dark:bg-white/10">
+            </div>
+          </div>
+        </header>
+
+        <ul id="chat-list" class="divide-y divide-slate-100 dark:divide-white/5" aria-label="لیستی گفتوگۆکان"></ul>
+
+        <div id="chat-list-skeleton" class="divide-y divide-slate-100 dark:divide-white/5" aria-hidden="true">
+          <div class="flex animate-pulse items-center gap-3 px-4 py-3">
+            <div class="h-12 w-12 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-1/3 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-3/4 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse items-center gap-3 px-4 py-3">
+            <div class="h-12 w-12 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-2/5 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-2/3 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse items-center gap-3 px-4 py-3">
+            <div class="h-12 w-12 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-1/4 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-4/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="chat-list-empty" class="hidden flex-col items-center px-8 py-16 text-center">
+          <span class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+            <i data-lucide="messages-square" class="h-8 w-8"></i>
+          </span>
+          <h3 class="text-lg font-extrabold">هێشتا هیچ گفتوگۆیەکت نییە</h3>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">لە پرۆفایلی کەسێکەوە نامەیەکی بۆ بنێرە.</p>
+        </div>
+
+        <div id="chat-list-no-results" class="hidden px-8 py-12 text-center text-sm text-slate-500 dark:text-slate-400">هیچ ئەنجامێک نەدۆزرایەوە.</div>
+      </section>
+
+      <!-- ============================ CHAT ROOM ============================
+           Full-height layer above the bottom bar (app.js hides #bottom-bar while open). -->
+      <section id="view-chat-room" class="app-view fixed inset-y-0 left-1/2 z-[45] hidden w-full max-w-[600px] -translate-x-1/2 flex-col bg-white dark:bg-night-900" data-view="chat-room" aria-label="ژووری گفتوگۆ">
+        <header class="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200/70 bg-white/90 px-2 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/90">
+          <button id="chat-back" type="button" aria-label="گەڕانەوە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+            <i data-lucide="arrow-right" class="h-5 w-5"></i>
+          </button>
+          <button id="chat-room-profile" type="button" class="flex min-w-0 flex-1 items-center gap-3 text-start">
+            <span class="relative shrink-0">
+              <img id="chat-room-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""
+                   class="h-10 w-10 rounded-full bg-slate-200 object-cover dark:bg-night-700">
+              <span id="chat-room-online-dot" class="absolute bottom-0 end-0 hidden h-3 w-3 rounded-full border-2 border-white bg-emerald-500 dark:border-night-900"></span>
+            </span>
+            <span class="min-w-0">
+              <span id="chat-room-name" class="block truncate text-[15px] font-extrabold leading-tight"></span>
+              <span id="chat-room-status" class="block truncate text-xs text-slate-500 dark:text-slate-400"></span>
+            </span>
+          </button>
+          <button id="chat-room-menu" type="button" aria-label="زیاتر"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+            <i data-lucide="ellipsis" class="h-5 w-5"></i>
+          </button>
+        </header>
+
+        <div class="relative min-h-0 flex-1">
+          <div id="chat-messages" role="log" aria-live="polite" aria-label="نامەکان" class="flex h-full flex-col gap-2 overflow-y-auto px-4 py-4"></div>
+
+          <div id="chat-messages-skeleton" class="absolute inset-0 hidden flex-col gap-3 px-4 py-4" aria-hidden="true">
+            <div class="h-10 w-1/2 animate-pulse self-start rounded-2xl bg-slate-200 dark:bg-white/10"></div>
+            <div class="h-14 w-2/3 animate-pulse self-end rounded-2xl bg-slate-200 dark:bg-white/10"></div>
+            <div class="h-10 w-2/5 animate-pulse self-start rounded-2xl bg-slate-200 dark:bg-white/10"></div>
+          </div>
+
+          <button id="chat-scroll-bottom" type="button" aria-label="چوونە خوارەوە"
+                  class="absolute bottom-3 end-4 hidden h-10 w-10 items-center justify-center rounded-full bg-white text-slate-700 shadow-lg ring-1 ring-slate-200 transition active:scale-95 dark:bg-night-800 dark:text-slate-200 dark:ring-white/10">
+            <i data-lucide="arrow-down" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <div id="chat-typing" class="hidden items-center gap-2 px-4 pb-1 text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+          <span class="inline-flex items-center gap-1" aria-hidden="true">
+            <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"></span>
+            <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:150ms]"></span>
+            <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:300ms]"></span>
+          </span>
+          <span>دەنووسێت...</span>
+        </div>
+
+        <form id="chat-form" autocomplete="off" class="flex shrink-0 items-end gap-2 border-t border-slate-200/70 bg-white px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 dark:border-white/10 dark:bg-night-900">
+          <button id="chat-emoji-btn" type="button" aria-label="ئیمۆجی"
+                  class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 active:scale-95 dark:text-slate-400 dark:hover:bg-white/10">
+            <i data-lucide="smile" class="h-6 w-6"></i>
+          </button>
+          <label for="chat-input" class="sr-only">نامەیەک بنووسە</label>
+          <textarea id="chat-input" rows="1" dir="auto" placeholder="نامەیەک بنووسە..."
+                    class="max-h-32 min-h-[44px] flex-1 resize-none rounded-3xl bg-slate-100 px-4 py-2.5 text-[15px] leading-7 outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/40 dark:bg-white/10"></textarea>
+          <button id="chat-send" type="submit" disabled aria-label="ناردن"
+                  class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-md shadow-brand-600/30 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">
+            <i data-lucide="send" class="h-5 w-5 -scale-x-100"></i>
+          </button>
+        </form>
+      </section>
+
+      <!-- ============================ NOTIFICATIONS ============================ -->
+      <section id="view-notifications" class="app-view hidden" data-view="notifications" aria-labelledby="notifications-title">
+        <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-lg dark:border-white/10 dark:bg-night-900/80">
+          <div class="flex h-14 items-center justify-between px-4">
+            <h2 id="notifications-title" class="text-xl font-extrabold">ئاگادارکردنەوەکان</h2>
+            <button id="notif-mark-all" type="button" aria-label="هەمووی وەک خوێندراوە دیاری بکە"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full text-brand-600 transition hover:bg-brand-50 active:scale-95 dark:text-brand-400 dark:hover:bg-white/10">
+              <i data-lucide="check-check" class="h-5 w-5"></i>
+            </button>
+          </div>
+          <div id="notif-tabs" role="tablist" aria-label="جۆری ئاگادارکردنەوە" class="flex">
+            <button type="button" role="tab" data-notif-filter="all" aria-selected="true"
+                    class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">هەموو</button>
+            <button type="button" role="tab" data-notif-filter="mentions" aria-selected="false"
+                    class="flex-1 border-b-2 border-transparent py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 aria-selected:border-brand-600 aria-selected:text-brand-700 dark:text-slate-400 dark:hover:bg-white/5 dark:aria-selected:border-brand-400 dark:aria-selected:text-brand-400">ئاماژەکان</button>
+          </div>
+        </header>
+
+        <ul id="notif-list" class="divide-y divide-slate-100 dark:divide-white/5" aria-label="لیستی ئاگادارکردنەوەکان"></ul>
+
+        <div id="notif-skeleton" class="divide-y divide-slate-100 dark:divide-white/5" aria-hidden="true">
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-9 w-9 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-3/4 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-1/2 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-9 w-9 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-2/3 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-2/5 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+          <div class="flex animate-pulse gap-3 px-4 py-4">
+            <div class="h-9 w-9 shrink-0 rounded-full bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex-1 space-y-2.5">
+              <div class="h-3.5 w-4/5 rounded bg-slate-200 dark:bg-white/10"></div>
+              <div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-white/10"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="notif-empty" class="hidden flex-col items-center px-8 py-16 text-center">
+          <span class="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+            <i data-lucide="bell-off" class="h-8 w-8"></i>
+          </span>
+          <h3 class="text-lg font-extrabold">هیچ ئاگادارکردنەوەیەک نییە</h3>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">کاتێک شتێکی نوێ ڕووبدات لێرە دەردەکەوێت.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ==================================================================
+         5-ICON FLOATING BOTTOM NAVIGATION (RTL order: right → left)
+         [1] Home  [2] Notifications  [3] Create  [4] Chat  [5] Menu/Avatar
+         ================================================================== -->
+    <nav id="bottom-bar" aria-label="ڕێنیشاندەری سەرەکی"
+         class="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-2rem)] max-w-[560px] -translate-x-1/2">
+      <ul class="grid h-16 grid-cols-5 place-items-center rounded-full border border-white/50 bg-white/70 px-2 shadow-xl shadow-slate-900/10 backdrop-blur-xl backdrop-saturate-150 dark:border-white/10 dark:bg-night-800/70 dark:shadow-black/40">
+
+        <li>
+          <button id="nav-home" type="button" data-nav-target="home" aria-label="سەرەکی" aria-current="page"
+                  class="relative inline-flex h-12 w-12 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900 active:scale-90 aria-[current=page]:bg-brand-50 aria-[current=page]:text-brand-600 dark:text-slate-400 dark:hover:text-white dark:aria-[current=page]:bg-brand-500/15 dark:aria-[current=page]:text-brand-400">
+            <i data-lucide="house" class="h-6 w-6"></i>
+          </button>
+        </li>
+
+        <li>
+          <button id="nav-notifications" type="button" data-nav-target="notifications" aria-label="ئاگادارکردنەوەکان"
+                  class="relative inline-flex h-12 w-12 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900 active:scale-90 aria-[current=page]:bg-brand-50 aria-[current=page]:text-brand-600 dark:text-slate-400 dark:hover:text-white dark:aria-[current=page]:bg-brand-500/15 dark:aria-[current=page]:text-brand-400">
+            <i data-lucide="bell" class="h-6 w-6"></i>
+            <span id="notif-badge" class="absolute end-1 top-1 hidden min-w-[18px] rounded-full bg-rose-500 px-1 text-center text-[10px] font-bold leading-[18px] text-white ring-2 ring-white dark:ring-night-800" aria-live="polite">0</span>
+          </button>
+        </li>
+
+        <li>
+          <button id="nav-create" type="button" aria-label="پۆستی نوێ" aria-haspopup="dialog" aria-controls="creator-canvas"
+                  class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-600/40 transition hover:bg-brand-700 active:scale-90">
+            <i data-lucide="plus" class="h-7 w-7"></i>
+          </button>
+        </li>
+
+        <li>
+          <button id="nav-chat" type="button" data-nav-target="chat-list" aria-label="نامەکان"
+                  class="relative inline-flex h-12 w-12 items-center justify-center rounded-full text-slate-500 transition hover:text-slate-900 active:scale-90 aria-[current=page]:bg-brand-50 aria-[current=page]:text-brand-600 dark:text-slate-400 dark:hover:text-white dark:aria-[current=page]:bg-brand-500/15 dark:aria-[current=page]:text-brand-400">
+            <i data-lucide="message-circle" class="h-6 w-6"></i>
+          </button>
+        </li>
+
+        <li>
+          <button id="nav-menu" type="button" aria-label="مینو" aria-controls="sidebar-drawer" aria-expanded="false"
+                  class="relative inline-flex h-12 w-12 items-center justify-center rounded-full transition active:scale-90">
+            <span class="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-slate-200 text-slate-500 ring-2 ring-white/80 dark:bg-white/15 dark:text-slate-300 dark:ring-white/10">
+              <i data-lucide="user" class="h-5 w-5"></i>
+              <img id="bottom-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" class="absolute inset-0 h-full w-full object-cover">
+            </span>
+          </button>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- ==================================================================
+         MODAL: CREATOR CANVAS (new post / reply) — hidden by default
+         ================================================================== -->
+    <div id="creator-canvas" role="dialog" aria-modal="true" aria-labelledby="creator-title" aria-hidden="true"
+         class="fixed inset-y-0 left-1/2 z-[60] hidden w-full max-w-[600px] -translate-x-1/2 flex-col bg-white dark:bg-night-900">
+
+      <header class="flex h-14 shrink-0 items-center justify-between px-3">
+        <button id="creator-close" type="button" aria-label="داخستن"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+        <h2 id="creator-title" class="sr-only">پۆستی نوێ</h2>
+        <button id="creator-submit" type="button" disabled
+                class="rounded-full bg-brand-600 px-6 py-2 text-sm font-bold text-white shadow-md shadow-brand-600/25 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none">بڵاوکردنەوە</button>
+      </header>
+
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+
+        <!-- Reply context (shown only when replying) -->
+        <div id="creator-reply-context" class="mb-3 hidden items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <i data-lucide="corner-up-left" class="h-4 w-4"></i>
+          <span>وەڵامدانەوەی <span id="creator-reply-handle" dir="ltr" class="inline-block font-semibold text-brand-600 dark:text-brand-400"></span></span>
+        </div>
+
+        <div class="flex gap-3">
+          <img id="creator-avatar" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""
+               class="h-11 w-11 shrink-0 rounded-full bg-slate-200 object-cover dark:bg-night-700">
+          <div class="min-w-0 flex-1">
+            <label for="creator-textarea" class="sr-only">دەقی پۆست</label>
+            <textarea id="creator-textarea" dir="auto" placeholder="چی لە مێشکتدایە؟" rows="6"
+                      class="min-h-[40vh] w-full resize-none bg-transparent py-2 text-lg leading-8 outline-none placeholder:text-slate-400"></textarea>
+
+            <!-- Media preview grid -->
+            <div id="creator-media-grid" class="mt-2 hidden grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <footer class="flex shrink-0 items-center justify-between border-t border-slate-200 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 dark:border-white/10">
+        <div class="flex items-center gap-1 text-brand-600 dark:text-brand-400">
+          <input id="creator-file-input" type="file" accept="image/*" multiple class="hidden">
+          <button id="creator-add-image" type="button" aria-label="زیادکردنی وێنە"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-brand-50 active:scale-95 dark:hover:bg-white/10">
+            <i data-lucide="image" class="h-5 w-5"></i>
+          </button>
+          <button id="creator-add-emoji" type="button" aria-label="ئیمۆجی"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-brand-50 active:scale-95 dark:hover:bg-white/10">
+            <i data-lucide="smile" class="h-5 w-5"></i>
+          </button>
+          <button id="creator-add-location" type="button" aria-label="زیادکردنی شوێن"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-brand-50 active:scale-95 dark:hover:bg-white/10">
+            <i data-lucide="map-pin" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 px-2">
+          <span id="creator-char-count" class="hidden text-xs tabular-nums text-slate-500" aria-live="polite">500</span>
+          <svg id="creator-counter-ring" class="h-6 w-6 -rotate-90" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="none" stroke-width="2" class="stroke-slate-200 dark:stroke-white/15"></circle>
+            <circle id="creator-counter-progress" cx="12" cy="12" r="10" fill="none" stroke-width="2" stroke-linecap="round" stroke-dasharray="62.83" stroke-dashoffset="62.83" class="stroke-brand-500 transition-all duration-200"></circle>
+          </svg>
+        </div>
+      </footer>
+
+      <!-- Discard confirmation sheet -->
+      <div id="creator-discard-sheet" class="absolute inset-0 z-10 hidden items-end bg-black/40" role="alertdialog" aria-modal="true" aria-labelledby="creator-discard-title">
+        <div class="w-full rounded-t-3xl bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl dark:bg-night-800">
+          <h3 id="creator-discard-title" class="text-center text-base font-extrabold">ئەم پۆستە فڕێبدرێت؟</h3>
+          <div class="mt-4 flex flex-col gap-2">
+            <button id="creator-discard-confirm" type="button" class="rounded-full bg-rose-500 py-3 text-sm font-bold text-white transition active:scale-95">فڕێدان</button>
+            <button id="creator-save-draft" type="button" class="rounded-full border border-slate-300 py-3 text-sm font-bold transition active:scale-95 dark:border-white/20">پاشەکەوتکردن وەک ڕەشنووس</button>
+            <button id="creator-discard-cancel" type="button" class="rounded-full py-3 text-sm font-bold text-slate-500 transition active:scale-95 dark:text-slate-400">بەردەوامبوون لە نووسین</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         MODAL: EDIT PROFILE — hidden by default
+         ================================================================== -->
+    <div id="edit-profile-modal" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title" aria-hidden="true"
+         class="fixed inset-0 z-[60] hidden items-end justify-center sm:items-center">
+
+      <div id="edit-profile-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-[2px]" aria-hidden="true"></div>
+
+      <div class="relative flex max-h-[92dvh] w-full max-w-[600px] flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl dark:bg-night-900">
+
+        <header class="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10">
+          <div class="flex items-center gap-2">
+            <button id="edit-profile-close" type="button" aria-label="داخستن"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:text-slate-200 dark:hover:bg-white/10">
+              <i data-lucide="x" class="h-5 w-5"></i>
+            </button>
+            <h2 id="edit-profile-title" class="text-base font-extrabold">دەستکاریکردنی پرۆفایل</h2>
+          </div>
+        </header>
+
+        <form id="edit-profile-form" novalidate class="flex min-h-0 flex-1 flex-col">
+          <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+
+            <!-- Display name -->
+            <div>
+              <div class="mb-1.5 flex items-center justify-between">
+                <label for="edit-display-name" class="text-sm font-semibold">ناوی پیشاندراو</label>
+                <span id="edit-name-count" class="text-xs tabular-nums text-slate-400">0/40</span>
+              </div>
+              <input id="edit-display-name" name="displayName" type="text" maxlength="40" autocomplete="name" required
+                     class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/15 dark:bg-night-800">
+              <p id="edit-name-error" class="mt-1 hidden text-xs text-rose-500" role="alert"></p>
+            </div>
+
+            <!-- Username -->
+            <div>
+              <div class="mb-1.5 flex items-center justify-between">
+                <label for="edit-username" class="text-sm font-semibold">ناوی بەکارهێنەر</label>
+                <span id="edit-username-count" class="text-xs tabular-nums text-slate-400">0/20</span>
+              </div>
+              <div class="relative" dir="ltr">
+                <span class="pointer-events-none absolute inset-y-0 start-4 flex items-center text-slate-400" aria-hidden="true">@</span>
+                <input id="edit-username" name="username" type="text" maxlength="20" minlength="3" autocomplete="username" autocapitalize="none" spellcheck="false" required
+                       pattern="[A-Za-z0-9_]{3,20}"
+                       class="w-full rounded-2xl border border-slate-200 bg-white py-3 pe-4 ps-9 text-[15px] outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/15 dark:bg-night-800">
+              </div>
+              <p id="edit-username-hint" class="mt-1 text-xs text-slate-500 dark:text-slate-400">تەنها پیتی ئینگلیزی، ژمارە و _ (لە ٣ بۆ ٢٠ پیت).</p>
+              <p id="edit-username-error" class="mt-1 hidden text-xs text-rose-500" role="alert"></p>
+            </div>
+
+            <!-- Bio -->
+            <div>
+              <div class="mb-1.5 flex items-center justify-between">
+                <label for="edit-bio" class="text-sm font-semibold">دەربارە</label>
+                <span id="edit-bio-count" class="text-xs tabular-nums text-slate-400">0/160</span>
+              </div>
+              <textarea id="edit-bio" name="bio" rows="4" maxlength="160" dir="auto"
+                        class="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] leading-7 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/15 dark:bg-night-800"></textarea>
+            </div>
+
+            <!-- Location dropdowns -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label for="edit-country" class="mb-1.5 block text-sm font-semibold">وڵات</label>
+                <select id="edit-country" name="country"
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/15 dark:bg-night-800">
+                  <option value="">هەڵبژێرە...</option>
+                  <option value="iraq">عێراق (کوردستان)</option>
+                  <option value="turkey">تورکیا</option>
+                  <option value="iran">ئێران</option>
+                  <option value="syria">سووریا</option>
+                  <option value="germany">ئەڵمانیا</option>
+                  <option value="sweden">سوید</option>
+                  <option value="uk">بەریتانیا</option>
+                  <option value="usa">ئەمریکا</option>
+                  <option value="other">وڵاتێکی تر</option>
+                </select>
+              </div>
+              <div>
+                <label for="edit-city" class="mb-1.5 block text-sm font-semibold">شار</label>
+                <select id="edit-city" name="city" disabled
+                        class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[15px] outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/15 dark:bg-night-800">
+                  <option value="">هەڵبژێرە...</option>
+                  <!-- Cities are filtered by app.js using data-country -->
+                  <option value="erbil" data-country="iraq">هەولێر</option>
+                  <option value="sulaymaniyah" data-country="iraq">سلێمانی</option>
+                  <option value="duhok" data-country="iraq">دهۆک</option>
+                  <option value="kirkuk" data-country="iraq">کەرکووک</option>
+                  <option value="halabja" data-country="iraq">هەڵەبجە</option>
+                  <option value="zakho" data-country="iraq">زاخۆ</option>
+                  <option value="ranya" data-country="iraq">ڕانیە</option>
+                  <option value="koya" data-country="iraq">کۆیە</option>
+                  <option value="khanaqin" data-country="iraq">خانەقین</option>
+                  <option value="amed" data-country="turkey">ئامەد</option>
+                  <option value="van" data-country="turkey">وان</option>
+                  <option value="mardin" data-country="turkey">ماردین</option>
+                  <option value="urfa" data-country="turkey">ئورفە</option>
+                  <option value="istanbul" data-country="turkey">ئیستانبوڵ</option>
+                  <option value="sanandaj" data-country="iran">سنە</option>
+                  <option value="kermanshah" data-country="iran">کرماشان</option>
+                  <option value="mahabad" data-country="iran">مەهاباد</option>
+                  <option value="urmia" data-country="iran">ورمێ</option>
+                  <option value="ilam" data-country="iran">ئیلام</option>
+                  <option value="qamishlo" data-country="syria">قامیشلۆ</option>
+                  <option value="kobani" data-country="syria">کۆبانێ</option>
+                  <option value="afrin" data-country="syria">عەفرین</option>
+                  <option value="hasakah" data-country="syria">حەسەکە</option>
+                  <option value="berlin" data-country="germany">بێرلین</option>
+                  <option value="hamburg" data-country="germany">هامبورگ</option>
+                  <option value="cologne" data-country="germany">کۆلن</option>
+                  <option value="munich" data-country="germany">میونیخ</option>
+                  <option value="stockholm" data-country="sweden">ستۆکهۆڵم</option>
+                  <option value="gothenburg" data-country="sweden">گۆتەبۆرگ</option>
+                  <option value="malmo" data-country="sweden">مالمۆ</option>
+                  <option value="london" data-country="uk">لەندەن</option>
+                  <option value="manchester" data-country="uk">مانچێستەر</option>
+                  <option value="birmingham" data-country="uk">بێرمنگهام</option>
+                  <option value="nashville" data-country="usa">نەشڤیل</option>
+                  <option value="new-york" data-country="usa">نیۆیۆرک</option>
+                  <option value="los-angeles" data-country="usa">لۆس ئەنجەلس</option>
+                  <option value="other-city" data-country="other">شارێکی تر</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <footer class="flex shrink-0 items-center justify-end gap-2 border-t border-slate-200 px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] dark:border-white/10">
+            <button id="edit-profile-cancel" type="button"
+                    class="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-bold transition hover:bg-slate-100 active:scale-95 dark:border-white/20 dark:hover:bg-white/10">پاشگەزبوونەوە</button>
+            <button id="edit-profile-save" type="submit"
+                    class="rounded-full bg-brand-600 px-7 py-2.5 text-sm font-bold text-white shadow-md shadow-brand-600/25 transition hover:bg-brand-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50">پاشەکەوتکردن</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast region -->
+    <div id="toast-region" aria-live="polite" aria-atomic="false"
+         class="pointer-events-none fixed inset-x-0 top-4 z-[70] mx-auto flex w-full max-w-[600px] flex-col items-center gap-2 px-4"></div>
+
+  </div>
+
+  <!-- ====================================================================
+       TEMPLATES (cloned by app.js; call lucide.createIcons() after mounting)
+       ==================================================================== -->
+
+  <!-- Post card -->
+  <template id="tpl-post">
+    <article class="post-card flex gap-3 px-4 py-3.5 transition hover:bg-slate-50/70 dark:hover:bg-white/[0.03]" data-post-id="" tabindex="0">
+      <button type="button" class="post-avatar-btn h-fit shrink-0" data-action="open-profile" aria-label="پرۆفایل">
+        <img class="post-avatar h-11 w-11 rounded-full bg-slate-200 object-cover dark:bg-night-700" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+      </button>
+      <div class="min-w-0 flex-1">
+        <header class="flex items-center gap-1.5 text-sm">
+          <button type="button" class="post-author truncate font-extrabold hover:underline" data-action="open-profile"></button>
+          <i data-lucide="badge-check" class="post-verified hidden h-4 w-4 shrink-0 text-brand-500"></i>
+          <span class="post-handle truncate text-slate-500 dark:text-slate-400" dir="ltr"></span>
+          <span class="text-slate-400" aria-hidden="true">·</span>
+          <time class="post-time whitespace-nowrap text-slate-500 dark:text-slate-400"></time>
+          <button type="button" class="post-more -me-2 ms-auto inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 dark:hover:bg-white/10" data-action="more" aria-label="زیاتر">
+            <i data-lucide="ellipsis" class="h-4 w-4"></i>
+          </button>
+        </header>
+
+        <p class="post-text mt-1 whitespace-pre-wrap break-words text-[15px] leading-7" dir="auto"></p>
+
+        <div class="post-media mt-3 hidden grid-cols-2 gap-1 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10"></div>
+
+        <footer class="post-actions -ms-2 mt-2 flex items-center justify-between text-slate-500 dark:text-slate-400">
+          <button type="button" data-action="reply" aria-label="وەڵامدانەوە" class="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/10">
+            <i data-lucide="message-circle" class="h-[18px] w-[18px]"></i>
+            <span class="post-reply-count tabular-nums">0</span>
+          </button>
+          <button type="button" data-action="repost" aria-label="دووبارە بڵاوکردنەوە" aria-pressed="false" class="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition hover:bg-emerald-50 hover:text-emerald-600 aria-pressed:text-emerald-600 dark:hover:bg-white/10">
+            <i data-lucide="repeat-2" class="h-[18px] w-[18px]"></i>
+            <span class="post-repost-count tabular-nums">0</span>
+          </button>
+          <button type="button" data-action="like" aria-label="پەسەندکردن" aria-pressed="false" class="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition hover:bg-rose-50 hover:text-rose-500 aria-pressed:text-rose-500 aria-pressed:[&_svg]:fill-current dark:hover:bg-white/10">
+            <i data-lucide="heart" class="h-[18px] w-[18px]"></i>
+            <span class="post-like-count tabular-nums">0</span>
+          </button>
+          <button type="button" data-action="bookmark" aria-label="پاشەکەوتکردن" aria-pressed="false" class="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition hover:bg-brand-50 hover:text-brand-600 aria-pressed:text-brand-600 aria-pressed:[&_svg]:fill-current dark:hover:bg-white/10">
+            <i data-lucide="bookmark" class="h-[18px] w-[18px]"></i>
+          </button>
+          <button type="button" data-action="share" aria-label="هاوبەشکردن" class="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-xs transition hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-white/10">
+            <i data-lucide="share" class="h-[18px] w-[18px]"></i>
+          </button>
+        </footer>
+      </div>
+    </article>
+  </template>
+
+  <!-- Chat list item -->
+  <template id="tpl-chat-item">
+    <li>
+      <button type="button" class="chat-item flex w-full items-center gap-3 px-4 py-3 text-start transition hover:bg-slate-50 dark:hover:bg-white/5" data-chat-id="">
+        <span class="relative shrink-0">
+          <img class="chat-item-avatar h-12 w-12 rounded-full bg-slate-200 object-cover dark:bg-night-700" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+          <span class="chat-item-online absolute bottom-0 end-0 hidden h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 dark:border-night-900"></span>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="flex items-center justify-between gap-2">
+            <span class="chat-item-name truncate text-[15px] font-bold"></span>
+            <time class="chat-item-time shrink-0 text-xs text-slate-500 dark:text-slate-400"></time>
+          </span>
+          <span class="mt-0.5 flex items-center justify-between gap-2">
+            <span class="chat-item-preview truncate text-sm text-slate-500 dark:text-slate-400"></span>
+            <span class="chat-item-unread hidden min-w-[20px] shrink-0 rounded-full bg-brand-600 px-1.5 text-center text-[11px] font-bold leading-5 text-white"></span>
+          </span>
+        </span>
+      </button>
+    </li>
+  </template>
+
+  <!-- Chat: date divider -->
+  <template id="tpl-chat-date-divider">
+    <div class="chat-date-divider my-2 flex items-center justify-center">
+      <span class="chat-date-label rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500 dark:bg-white/10 dark:text-slate-400"></span>
+    </div>
+  </template>
+
+  <!-- Chat: incoming message -->
+  <template id="tpl-message-incoming">
+    <div class="chat-message chat-message-incoming flex max-w-[80%] flex-col items-start self-start" data-message-id="">
+      <div class="rounded-2xl rounded-ss-md bg-slate-100 px-3.5 py-2 text-[15px] leading-7 dark:bg-night-700">
+        <p class="message-text whitespace-pre-wrap break-words" dir="auto"></p>
+      </div>
+      <time class="message-time mt-1 px-1 text-[11px] text-slate-400"></time>
+    </div>
+  </template>
+
+  <!-- Chat: outgoing message -->
+  <template id="tpl-message-outgoing">
+    <div class="chat-message chat-message-outgoing flex max-w-[80%] flex-col items-end self-end" data-message-id="">
+      <div class="rounded-2xl rounded-se-md bg-brand-600 px-3.5 py-2 text-[15px] leading-7 text-white">
+        <p class="message-text whitespace-pre-wrap break-words" dir="auto"></p>
+      </div>
+      <span class="mt-1 flex items-center gap-1 px-1 text-[11px] text-slate-400">
+        <time class="message-time"></time>
+        <i data-lucide="check" class="message-status h-3.5 w-3.5"></i>
+      </span>
+    </div>
+  </template>
+
+  <!-- Notification item -->
+  <template id="tpl-notification">
+    <li>
+      <button type="button" class="notif-item relative flex w-full gap-3 px-4 py-3.5 text-start transition hover:bg-slate-50 dark:hover:bg-white/5" data-notification-id="" data-type="">
+        <span class="notif-icon-slot mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+          <i data-lucide="bell" class="notif-icon h-5 w-5"></i>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="flex items-center gap-2">
+            <img class="notif-avatar h-7 w-7 rounded-full bg-slate-200 object-cover dark:bg-night-700" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+          </span>
+          <span class="notif-text mt-1.5 block text-[15px] leading-7" dir="auto"></span>
+          <span class="notif-preview mt-0.5 block truncate text-sm text-slate-500 dark:text-slate-400" dir="auto"></span>
+          <time class="notif-time mt-1 block text-xs text-slate-400"></time>
+        </span>
+        <span class="notif-unread-dot absolute end-4 top-4 hidden h-2.5 w-2.5 rounded-full bg-brand-600" aria-label="نەخوێندراوە"></span>
+      </button>
+    </li>
+  </template>
+
+  <!-- Creator: media thumbnail -->
+  <template id="tpl-creator-media">
+    <div class="creator-media-item relative overflow-hidden rounded-2xl bg-slate-100 dark:bg-night-800" data-media-id="">
+      <img class="creator-media-img aspect-square w-full object-cover" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+      <button type="button" class="creator-media-remove absolute end-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition active:scale-95" aria-label="لابردنی وێنە">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+  </template>
+
+  <!-- Toast -->
+  <template id="tpl-toast">
+    <div class="toast pointer-events-auto flex items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xl dark:bg-white dark:text-slate-900" role="status">
+      <i data-lucide="info" class="toast-icon h-5 w-5 shrink-0"></i>
+      <span class="toast-message"></span>
+    </div>
+  </template>
+
+  <!-- ====================================================================
+       SCRIPTS
+       ==================================================================== -->
+  <script src="unicode-engine.js" defer></script>
+  <script src="app.js" defer></script>
+  <script>lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });</script>
 </body>
 </html>
